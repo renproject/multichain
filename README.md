@@ -16,11 +16,11 @@ Adding an `Asset`:
 // from an existing chain, you must add a human-readable string to this set of
 // enumerated values. Assets must be listed in alphabetical order.
 const (
-	BCH  = Asset("BCH")  // Bitcoin Cash
+    BCH  = Asset("BCH")  // Bitcoin Cash
     BTC  = Asset("BTC")  // Bitcoin
     DOGE = Asset("DOGE") // Dogecoin (This is our new asset!)
     ETH  = Asset("ETH")  // Ether
-	ZEC  = Asset("ZEC")  // Zcash
+    ZEC  = Asset("ZEC")  // Zcash
 )
 ```
 
@@ -31,12 +31,12 @@ Adding a `Chain`:
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	Acala       = Chain("Acala")
-	Bitcoin     = Chain("Bitcoin")
+    Acala       = Chain("Acala")
+    Bitcoin     = Chain("Bitcoin")
     BitcoinCash = Chain("BitcoinCash")
     Dogecoin    = Chain("Dogecoin") // (This is our new chain!)
-	Ethereum    = Chain("Ethereum")
-	Zcash       = Chain("Zcash")
+    Ethereum    = Chain("Ethereum")
+    Zcash       = Chain("Zcash")
 )
 ```
 
@@ -104,15 +104,15 @@ Dogecoin is a fork of Bitcoin, so it is natural that we will support it by imple
 package dogecoin
 
 import (
-	"github.com/renproject/multichain/chain/bitcoin"
-	"github.com/renproject/multichain/compat/bitcoincompat"
+    "github.com/renproject/multichain/chain/bitcoin"
+    "github.com/renproject/multichain/compat/bitcoincompat"
 )
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Bitcoin Compat API, and exposes the functionality to build simple
 // Dogecoin transactions.
 func NewTxBuilder() bitcoincompat.TxBuilder {
-	return bitcoin.NewTxBuilder()
+    return bitcoin.NewTxBuilder()
 }
 
 // The Tx type is copied from Bitcoin.
