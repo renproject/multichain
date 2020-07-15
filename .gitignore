@@ -1,0 +1,12 @@
+# Binaries and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Tests
+*.test
+
+# Outputs from tools
+*.out
