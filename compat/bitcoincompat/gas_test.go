@@ -1,0 +1,1 @@
+package bitcoincompat_test
