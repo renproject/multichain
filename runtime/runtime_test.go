@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/compat/bitcoincompat"
@@ -14,6 +12,9 @@ import (
 	"github.com/renproject/multichain/compat/substratecompat"
 	"github.com/renproject/multichain/runtime"
 	"github.com/renproject/pack"
+	
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Bitcoin-compat", func() {
