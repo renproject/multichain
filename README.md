@@ -1,5 +1,16 @@
 # `🔗 multichain`
 
+## Layout
+
+`/` defines all of the functions/types/constants that are common to all underlying chains.
+
+`/compat` contains all of the Compat APIs. These APIs are the interfaces required to be implemented by underlying chains that are similar to each other. For example, the `/compat/bitcoincompat` folder defines the Bitcoin Compat API. The `Address`, `Client`, `Tx`, and `TxBuilder` interfaces must be implemented by all underlying chains that want to be compatible with the Bitcoin runtime. It also defines implementations that are likely to be common to these underlying chains (although, each underlying chain can override whatever it needs to).
+
+`/chain`  contains all the implementations of the Compat APIs. Each chain has its own sub-package. For example, Bitcoin, Bitcoin Cash, Dogecoin, and Zcash are all underyling chains that implement the Bitcoin Compat API (defined in `/compat/bitcoincompat`), and each of these implementations are in `/chain/bitcoin`, `/chain/bitcoincash`, `/chain/dogecoin`, and `/chain/zcash` respectively.
+
+`/docker` defines a local deployment of the multichain using `docker-compose`. All underlying chains provide a `Dockerfile` and service definition to make running node instances easy.
+
+`/runtime` contains all of the Runtime modules. There is exactly one Runtime module for each Compat API, and you can think of a Runtime module as a way of accessing all of the Compat APIs in one place. This is the primary package used by users of the multichain (including the RenVM execution engine). If your chain implements one of the existing Compat APIs, you will *not* need to modify any of the Runtime modules.
 
 ## Example
 
