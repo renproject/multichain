@@ -15,10 +15,9 @@ ARG TESTNET=0
 ARG PRUNESIZE=0
 
 
-RUN apt-get update && apt-get install --yes software-properties-common
-RUN apt-get install --yes curl
+RUN apt-get update && apt-get install --yes software-properties-common wget
 
-RUN curl https://github.com/DigiByte-Core/DigiByte/releases/download/v${VERSION}/digibyte-${VERSION}-${ARCH}-linux-gnu.tar.gz -O - | tar xz
+RUN wget -c https://github.com/DigiByte-Core/DigiByte/releases/download/v${VERSION}/digibyte-${VERSION}-${ARCH}-linux-gnu.tar.gz -O - | tar xz
 
 RUN mv ./digibyte-${VERSION} /app
 RUN chmod +x /app/bin/digibyted
