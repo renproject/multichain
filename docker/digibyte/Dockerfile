@@ -4,7 +4,7 @@ ARG VERSION=7.17.2
 ARG ARCH=x86_64
 ARG RPCUSERNAME=user
 ARG RPCPASSWORD=pass
-ARG ROOTDATADIR=/root/
+ARG ROOTDATADIR=/root
 
 # Set to 1 for running it in testnet mode
 ARG TESTNET=0
@@ -14,7 +14,9 @@ ARG TESTNET=0
 # Must have txindex=0 if set
 ARG PRUNESIZE=0
 
-RUN apt-get update && apt-get install --yes software-properties-common wget
+RUN apt-get update && \
+    apt-get install --yes software-properties-common wget && \
+    rm -rf /var/lib/apt/lists
 
 RUN wget -c https://github.com/DigiByte-Core/DigiByte/releases/download/v${VERSION}/digibyte-${VERSION}-${ARCH}-linux-gnu.tar.gz -O - | tar xz
 
@@ -22,6 +24,7 @@ RUN mv ./digibyte-${VERSION} /app
 RUN chmod +x /app/bin/digibyted
 RUN chmod +x /app/bin/digibyte-cli
 
+RUN mkdir -p "${ROOTDATADIR}/.digibyte"
 RUN echo -e "datadir=${ROOTDATADIR}/.digibyte/\n\
 server=1\n\
 prune=${PRUNESIZE}\n\

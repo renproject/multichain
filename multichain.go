@@ -10,9 +10,9 @@ type Asset string
 // enumerated values. Assets must be listed in alphabetical order.
 const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
-  BTC  = Asset("BTC")  // Bitcoin
-  DGB = Asset("DGB") // DigiByte
-  DOGE = Asset("DOGE") // Dogecoin
+	BTC  = Asset("BTC")  // Bitcoin
+	DGB = Asset("DGB") // DigiByte
+	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
 	ZEC  = Asset("ZEC")  // Zcash
 )
@@ -42,8 +42,8 @@ type Chain string
 const (
 	Acala       = Chain("Acala")
 	Bitcoin     = Chain("Bitcoin")
-  BitcoinCash = Chain("BitcoinCash")
-  DigiByte    = Chain("DigiByte")
+	BitcoinCash = Chain("BitcoinCash")
+	DigiByte    = Chain("DigiByte")
 	Ethereum    = Chain("Ethereum")
 	Zcash       = Chain("Zcash")
 )
