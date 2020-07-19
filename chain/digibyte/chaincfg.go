@@ -23,6 +23,7 @@ const (
 	DeploymentOdo
 	DeploymentEquihash
 	DeploymentEthash
+	DefinedDeployments
 )
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for
@@ -254,7 +255,7 @@ var DigiByteMainNetParams = &chaincfg.Params{
 	//   target proof of work timespan / target proof of work spacing
 	RuleChangeActivationThreshold: 1916, // 95% of MinerConfirmationWindow
 	MinerConfirmationWindow:       2016, //
-	Deployments: [8]chaincfg.ConsensusDeployment{
+	Deployments: [DefinedDeployments]chaincfg.ConsensusDeployment{
 		DeploymentTestDummy: {
 			BitNumber:  27,
 			StartTime:  1199145601, // January 1, 2008 UTC
