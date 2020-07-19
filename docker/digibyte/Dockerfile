@@ -14,7 +14,6 @@ ARG TESTNET=0
 # Must have txindex=0 if set
 ARG PRUNESIZE=0
 
-
 RUN apt-get update && apt-get install --yes software-properties-common wget
 
 RUN wget -c https://github.com/DigiByte-Core/DigiByte/releases/download/v${VERSION}/digibyte-${VERSION}-${ARCH}-linux-gnu.tar.gz -O - | tar xz
@@ -55,6 +54,5 @@ EXPOSE 14022
 
 # Allow Testnet RPC
 EXPOSE 14023
-
 
 ENTRYPOINT ["./root/run.sh"]
