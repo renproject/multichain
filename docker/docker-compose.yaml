@@ -26,18 +26,34 @@ services:
   #     - "./root/run.sh"
   #     - "${BITCOINCASH_ADDRESS}"
 
+
+
+  ##
+  ## DigiByte
+  ##
+
+  digibyte:
+    build:
+      context: ./digibyte
+    ports:
+      - "0.0.0.0:18132:18132"
+    entrypoint:
+      - "./root/run.sh"
+      - "${DIGIBYTE_ADDRESS}"
+
   ##
   ## Dogecoin
   ##
 
-  dogecoin:
-    build:
-      context: ./dogecoin
-    ports:
-      - "0.0.0.0:18332:18332"
-    entrypoint:
-      - "./root/run.sh"
-      - "${DOGECOIN_ADDRESS}"
+  # dogecoin:
+  #   build:
+  #     context: ./dogecoin
+  #   ports:
+  #     - "0.0.0.0:18332:18332"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${DOGECOIN_ADDRESS}"
+  
   # ##
   # ## Zcash
   # ##
