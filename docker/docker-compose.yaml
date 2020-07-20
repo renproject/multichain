@@ -30,14 +30,14 @@ services:
   ## Dogecoin
   ##
 
-  dogecoin:
-    build:
-      context: ./dogecoin
-    ports:
-      - "0.0.0.0:18332:18332"
-    entrypoint:
-      - "./root/run.sh"
-      - "${DOGECOIN_ADDRESS}"
+  #dogecoin:
+  #  build:
+  #    context: ./dogecoin
+  #  ports:
+  #    - "0.0.0.0:18332:18332"
+  #  entrypoint:
+  #    - "./root/run.sh"
+  #    - "${DOGECOIN_ADDRESS}"
   # ##
   # ## Zcash
   # ##
@@ -49,3 +49,17 @@ services:
   #   entrypoint:
   #     - "./root/run.sh"
   #     - "${ZCASH_ADDRESS}"
+
+  # ##
+  # ## Zcoin
+  # ##
+
+  zcoin:
+    build:
+      context: ./zcoin
+    ports:
+      - "0.0.0.0:19232:19232"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ZCOIN_ADDRESS}"
+ 

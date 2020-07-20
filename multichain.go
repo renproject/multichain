@@ -13,6 +13,7 @@ const (
 	BTC  = Asset("BTC")  // Bitcoin
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
+	XZC  = Asset("XZC")  // Zcoin
 	ZEC  = Asset("ZEC")  // Zcash
 )
 
@@ -44,6 +45,7 @@ const (
 	BitcoinCash = Chain("BitcoinCash")
 	Ethereum    = Chain("Ethereum")
 	Zcash       = Chain("Zcash")
+	Zcoin       = Chain("Zcoin")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
