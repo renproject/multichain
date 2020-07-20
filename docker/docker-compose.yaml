@@ -31,7 +31,7 @@ services:
     build:
       context: ./digibyte
     ports:
-      - "0.0.0.0:14023:14023"
+      - "0.0.0.0:18444:18444"
     entrypoint:
       - "/root/run.sh"
       - "${DIGIBYTE_ADDRESS}"
