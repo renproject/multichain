@@ -2,7 +2,7 @@
 ADDRESS=$1
 
 # Start
-digibyted -conf=/root/.digibyte/digibyte.conf # -server -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcuser=user -rpcpassword=password
+digibyted
 sleep 10
 
 # Print setup

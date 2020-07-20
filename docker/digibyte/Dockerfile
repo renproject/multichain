@@ -5,6 +5,7 @@ ARG ARCH=x86_64
 ARG RPCUSERNAME=user
 ARG RPCPASSWORD=pass
 ARG ROOTDATADIR=/app
+ARG RUN_AS_DAEMON=0
 
 # Set to 1 for running it in testnet mode
 ARG TESTNET=0
@@ -29,13 +30,12 @@ RUN ln -s "${ROOTDATADIR}/bin/digibyte-cli" "/usr/bin/digibyte-cli"
 RUN ln -s "${ROOTDATADIR}/bin/digibyted" "/usr/bin/digibyted"
 RUN export ROOTDATADIR="${ROOTDATADIR}"
 
-RUN mkdir -p "/${ROOTDATADIR}/.digibyte"
-RUN echo -e "datadir=/${ROOTDATADIR}/.digibyte/\n\
-server=1\n\
+RUN mkdir -p "/root/.digibyte"
+RUN bash -c 'echo -e "server=1\n\
 prune=${PRUNESIZE}\n\
 maxconnections=300\n\
 rpcallowip=127.0.0.1\n\
-daemon=1\n\
+daemon=${RUN_AS_DAEMON}\n\
 rpcuser=${RPCUSERNAME}\n\
 rpcpassword=$RPCPASSWORD}\n\
 txindex=1\n\
@@ -44,8 +44,9 @@ addresstype=bech32\n\
 #disabledandelion=1\n\
 testnet=${TESTNET}\n\
 regtest=1\n\
+\n\
 [regtest]\n\
-rpcbind=0.0.0.0\n" > "${ROOTDATADIR}/.digibyte/digibyte.conf"
+rpcbind=0.0.0.0\n"' > "/root/.digibyte/digibyte.conf"
 
 # Allow Mainnet RPC
 EXPOSE 14022
@@ -56,8 +57,7 @@ EXPOSE 14023
 # Allow Regtest RPC
 EXPOSE 18444
 
-COPY run.sh "${ROOTDATADIR}"
-RUN chmod +x "${ROOTDATADIR}/run.sh"
-WORKDIR "${ROOTDATADIR}"
+COPY run.sh "/root"
+RUN chmod +x "/root/run.sh"
 
-ENTRYPOINT ["./run.sh"]
+ENTRYPOINT ["/root/run.sh"]
