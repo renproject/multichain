@@ -1,79 +1,61 @@
 version: "2"
 services:
-  # ##
-  # ## Bitcoin
-  # ##
+  ##
+  ## Bitcoin
+  ##
+  bitcoin:
+    build:
+      context: ./bitcoin
+    ports:
+      - "0.0.0.0:18443:18443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOIN_ADDRESS}"
 
-  # bitcoin:
-  #   build:
-  #     context: ./bitcoin
-  #   ports:
-  #     - "0.0.0.0:18443:18443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${BITCOIN_ADDRESS}"
-
-  # ##
-  # ## Bitcoin Cash
-  # ##
-
-  # bitcoincash:
-  #   build:
-  #     context: ./bitcoincash
-  #   ports:
-  #     - "0.0.0.0:19443:19443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${BITCOINCASH_ADDRESS}"
-
-
+  ##
+  ## Bitcoin Cash
+  ##
+  bitcoincash:
+    build:
+      context: ./bitcoincash
+    ports:
+      - "0.0.0.0:19443:19443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOINCASH_ADDRESS}"
 
   ##
   ## DigiByte
   ##
-
   digibyte:
     build:
       context: ./digibyte
     ports:
-      - "0.0.0.0:18132:18132"
+      - "0.0.0.0:14023:14023"
     entrypoint:
       - "./root/run.sh"
       - "${DIGIBYTE_ADDRESS}"
 
-  ##
-  ## Dogecoin
-  ##
-
-  # dogecoin:
-  #   build:
-  #     context: ./dogecoin
-  #   ports:
-  #     - "0.0.0.0:18332:18332"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${DOGECOIN_ADDRESS}"
+  #
+  # Dogecoin
+  #
+  dogecoin:
+    build:
+      context: ./dogecoin
+    ports:
+      - "0.0.0.0:18332:18332"
+    entrypoint:
+      - "./root/run.sh"
+      - "${DOGECOIN_ADDRESS}"
   
-  # ##
-  # ## Zcash
-  # ##
-  # zcash:
-  #   build:
-  #     context: ./zcash
-  #   ports:
-  #     - "0.0.0.0:18232:18232"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${ZCASH_ADDRESS}"
-
-  # ##
-  # ## DigiByte
-  # ##
-  # digibyte:
-  #   build:
-  #     context: ./digibyte
-  #   ports:
-  #     - "0.0.0.0:18443:18443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${DIGIBYTE_ADDRESS}"
+  ##
+  ## Zcash
+  ##
+  zcash:
+    build:
+      context: ./zcash
+    ports:
+      - "0.0.0.0:18232:18232"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ZCASH_ADDRESS}"
