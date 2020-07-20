@@ -5,7 +5,7 @@ ARG ARCH=x86_64
 ARG RPCUSERNAME=user
 ARG RPCPASSWORD=pass
 ARG ROOTDATADIR=/app
-ARG RUN_AS_DAEMON=0
+ARG RUN_AS_DAEMON=1
 
 # Set to 1 for running it in testnet mode
 ARG TESTNET=0
