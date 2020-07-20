@@ -323,5 +323,5 @@ var DigiByteMainNetParams = &chaincfg.Params{
 
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
-	HDCoinType: 0,
+	HDCoinType: 0x14,
 }
