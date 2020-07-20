@@ -33,7 +33,7 @@ services:
     ports:
       - "0.0.0.0:14023:14023"
     entrypoint:
-      - "./root/run.sh"
+      - "/app/run.sh"
       - "${DIGIBYTE_ADDRESS}"
 
   #
