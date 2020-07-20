@@ -4,7 +4,7 @@ ARG VERSION=7.17.2
 ARG ARCH=x86_64
 ARG RPCUSERNAME=user
 ARG RPCPASSWORD=pass
-ARG ROOTDATADIR=/root
+ARG ROOTDATADIR=/app
 
 # Set to 1 for running it in testnet mode
 ARG TESTNET=0
@@ -14,18 +14,23 @@ ARG TESTNET=0
 # Must have txindex=0 if set
 ARG PRUNESIZE=0
 
+# Install and clean again
 RUN apt-get update && \
     apt-get install --yes software-properties-common wget && \
     rm -rf /var/lib/apt/lists
 
+# Download DigiByte Binary
 RUN wget -c https://github.com/DigiByte-Core/DigiByte/releases/download/v${VERSION}/digibyte-${VERSION}-${ARCH}-linux-gnu.tar.gz -O - | tar xz
 
-RUN mv ./digibyte-${VERSION} /app
-RUN chmod +x /app/bin/digibyted
-RUN chmod +x /app/bin/digibyte-cli
+RUN mv ./digibyte-${VERSION} "${ROOTDATADIR}"
+RUN chmod +x "${ROOTDATADIR}/bin/digibyted"
+RUN chmod +x "${ROOTDATADIR}/bin/digibyte-cli"
+RUN ln -s "${ROOTDATADIR}/bin/digibyte-cli" "/usr/bin/digibyte-cli"
+RUN ln -s "${ROOTDATADIR}/bin/digibyted" "/usr/bin/digibyted"
+RUN export ROOTDATADIR="${ROOTDATADIR}"
 
-RUN mkdir -p "${ROOTDATADIR}/.digibyte"
-RUN echo -e "datadir=${ROOTDATADIR}/.digibyte/\n\
+RUN mkdir -p "/${ROOTDATADIR}/.digibyte"
+RUN echo -e "datadir=/${ROOTDATADIR}/.digibyte/\n\
 server=1\n\
 prune=${PRUNESIZE}\n\
 maxconnections=300\n\
@@ -38,7 +43,9 @@ addresstype=bech32\n\
 # Uncomment below if you need Dandelion disabled for any reason but it is left on by default intentionally\n\
 #disabledandelion=1\n\
 testnet=${TESTNET}\n\
-regtest=1\n" > ${ROOTDATADIR}/.digibyte/digibyte.conf
+regtest=1\n\
+[regtest]\n\
+rpcbind=0.0.0.0\n" > "${ROOTDATADIR}/.digibyte/digibyte.conf"
 
 # Allow Mainnet RPC
 EXPOSE 14022
@@ -49,13 +56,8 @@ EXPOSE 14023
 # Allow Regtest RPC
 EXPOSE 18444
 
-COPY run.sh /root/
-RUN chmod +x /root/run.sh
+COPY run.sh "${ROOTDATADIR}"
+RUN chmod +x "${ROOTDATADIR}/run.sh"
+WORKDIR "${ROOTDATADIR}"
 
-# Allow Mainnet RPC
-EXPOSE 14022
-
-# Allow Testnet RPC
-EXPOSE 14023
-
-ENTRYPOINT ["./root/run.sh"]
+ENTRYPOINT ["./run.sh"]
