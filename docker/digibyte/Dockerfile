@@ -30,6 +30,7 @@ RUN ln -s "${ROOTDATADIR}/bin/digibyte-cli" "/usr/bin/digibyte-cli"
 RUN ln -s "${ROOTDATADIR}/bin/digibyted" "/usr/bin/digibyted"
 RUN export ROOTDATADIR="${ROOTDATADIR}"
 
+# Generate config
 RUN mkdir -p "/root/.digibyte"
 RUN bash -c 'echo -e "server=1\n\
 prune=${PRUNESIZE}\n\
@@ -37,7 +38,7 @@ maxconnections=300\n\
 rpcallowip=127.0.0.1\n\
 daemon=${RUN_AS_DAEMON}\n\
 rpcuser=${RPCUSERNAME}\n\
-rpcpassword=$RPCPASSWORD}\n\
+rpcpassword=${RPCPASSWORD}\n\
 txindex=1\n\
 addresstype=bech32\n\
 # Uncomment below if you need Dandelion disabled for any reason but it is left on by default intentionally\n\
@@ -46,7 +47,9 @@ testnet=${TESTNET}\n\
 regtest=1\n\
 \n\
 [regtest]\n\
-rpcbind=0.0.0.0\n"' > "/root/.digibyte/digibyte.conf"
+rpcallowip=0.0.0.0/0\n\
+rpcbind=0.0.0.0\n\
+daemon=${RUN_AS_DAEMON}\n"' > "/root/.digibyte/digibyte.conf"
 
 # Allow Mainnet RPC
 EXPOSE 14022

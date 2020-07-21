@@ -18,11 +18,11 @@ const (
 	DeploymentTestDummy = iota
 	DeploymentCSV
 	DeploymentSegwit
-	DeploymentVersionBits
-	DeploymentVersionReserveAlgos
-	DeploymentOdo
-	DeploymentEquihash
-	DeploymentEthash
+	// DeploymentVersionBits
+	// DeploymentVersionReserveAlgos
+	// DeploymentOdo
+	// DeploymentEquihash
+	// DeploymentEthash
 	DefinedDeployments
 )
 
@@ -104,7 +104,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 
 var DigiByteMainNetParams = &chaincfg.Params{
 	Name:        "mainnet",
-	Net:         wire.MainNet,
+	Net:         0xdab6c3fa,
 	DefaultPort: "12024",
 	DNSSeeds: []chaincfg.DNSSeed{
 		{"seed1.digibyte.io", false},
@@ -271,36 +271,6 @@ var DigiByteMainNetParams = &chaincfg.Params{
 			StartTime:  1490355345, // March 24th, 2017
 			ExpireTime: 1521891345, // March 24th, 2018
 		},
-
-		DeploymentVersionBits: {
-			BitNumber: 14,
-			StartTime: 1521891345,
-			ExpireTime: 1489997089,
-		},
-
-		DeploymentVersionReserveAlgos: {
-			BitNumber: 12,
-			StartTime: 1574208000,
-			ExpireTime: 1542672000,
-		},
-
-		DeploymentOdo: {
-			BitNumber: 6,
-			StartTime: 1588291200,
-			ExpireTime: 1556668800,
-		},
-
-		DeploymentEquihash: {
-			BitNumber: 3,
-			StartTime: 1521891345,
-			ExpireTime: 1489997089,
-		},
-
-		DeploymentEthash: {
-			BitNumber: 4,
-			StartTime: 1521891345,
-			ExpireTime: 1489997089,
-		},
 	},
 
 	// Mempool parameters
@@ -320,6 +290,120 @@ var DigiByteMainNetParams = &chaincfg.Params{
 	// BIP32 hierarchical deterministic extended key magics
 	HDPrivateKeyID: [4]byte{0x04, 0x88, 0xad, 0xe4}, // starts with xprv
 	HDPublicKeyID:  [4]byte{0x04, 0x88, 0xb2, 0x1e}, // starts with xpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 0x14,
+}
+
+var DigiByteRegtestParams = &chaincfg.Params{
+	Name:        "regtest",
+
+	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
+	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
+	// register the regtest network.
+	// DigiByte Core Developers will change this soon.
+	Net:         0xd191841e, 
+	DefaultPort: "18444",
+	DNSSeeds: []chaincfg.DNSSeed{
+		// None
+	},
+
+	// Chain parameters
+	GenesisBlock:             &genesisBlock,
+	GenesisHash:              &genesisHash,
+	PowLimit:                 new(big.Int).Sub(new(big.Int).Lsh(bigOne, 224), bigOne),
+	PowLimitBits:             0x1d00ffff,
+	BIP0034Height:            4394880, // add8ca420f557f62377ec2be6e6f47b96cf2e68160d58aeb7b73433de834cca0
+	BIP0065Height:            4394880, // add8ca420f557f62377ec2be6e6f47b96cf2e68160d58aeb7b73433de834cca0
+	BIP0066Height:            4394880, // add8ca420f557f62377ec2be6e6f47b96cf2e68160d58aeb7b73433de834cca0
+	CoinbaseMaturity:         100,
+	SubsidyReductionInterval: 210000,
+	TargetTimespan:           12 * time.Hour / 5,  // 2.4 hours
+	TargetTimePerBlock:       time.Second * 60,    // 60 seconds
+	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
+	ReduceMinDifficulty:      false,
+	MinDiffReductionTime:     0,
+	GenerateSupported:        false,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: []chaincfg.Checkpoint{
+	},
+
+	// Consensus rule change deployments.
+	//
+	// The miner confirmation window is defined as:
+	//   target proof of work timespan / target proof of work spacing
+	RuleChangeActivationThreshold: 1916, // 95% of MinerConfirmationWindow
+	MinerConfirmationWindow:       2016, //
+	Deployments: [DefinedDeployments]chaincfg.ConsensusDeployment{
+		DeploymentTestDummy: {
+			BitNumber:  27,
+			StartTime:  1199145601, // January 1, 2008 UTC
+			ExpireTime: 1230767999, // December 31, 2008 UTC
+		},
+		DeploymentCSV: {
+			BitNumber:  12,
+			StartTime:  1489997089, // March 24th, 2017
+			ExpireTime: 1521891345, // March 24th, 2018
+		},
+		DeploymentSegwit: {
+			BitNumber:  13,
+			StartTime:  1490355345, // March 24th, 2017
+			ExpireTime: 1521891345, // March 24th, 2018
+		},
+
+		// These Deployments can't not be used, because the struct only allows
+		// three Deployments.
+
+		// DeploymentVersionBits: {
+		// 	BitNumber: 14,
+		// 	StartTime: 1521891345,
+		// 	ExpireTime: 1489997089,
+		// },
+
+		// DeploymentVersionReserveAlgos: {
+		// 	BitNumber: 12,
+		// 	StartTime: 1574208000,
+		// 	ExpireTime: 1542672000,
+		// },
+
+		// DeploymentOdo: {
+		// 	BitNumber: 6,
+		// 	StartTime: 1588291200,
+		// 	ExpireTime: 1556668800,
+		// },
+
+		// DeploymentEquihash: {
+		// 	BitNumber: 3,
+		// 	StartTime: 1521891345,
+		// 	ExpireTime: 1489997089,
+		// },
+
+		// DeploymentEthash: {
+		// 	BitNumber: 4,
+		// 	StartTime: 1521891345,
+		// 	ExpireTime: 1489997089,
+		// },
+	},
+
+	// Mempool parameters
+	RelayNonStdTxs: false,
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "dgbrt", // always bc for main net
+
+	// Address encoding magics
+	PubKeyHashAddrID:        0x7e, // starts with 1
+	ScriptHashAddrID:        0x8c, // starts with 3
+	PrivateKeyID:            0xfe, // starts with 5 (uncompressed) or K (compressed)
+	WitnessPubKeyHashAddrID: 0x06, // starts with p2
+	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with xpub
 
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.

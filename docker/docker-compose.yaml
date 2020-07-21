@@ -1,16 +1,16 @@
 version: "2"
 services:
-  # ##
-  # ## Bitcoin
-  # ##
-  # bitcoin:
-  #   build:
-  #     context: ./bitcoin
-  #   ports:
-  #     - "0.0.0.0:18443:18443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${BITCOIN_ADDRESS}"
+  ##
+  ## Bitcoin
+  ##
+  bitcoin:
+    build:
+      context: ./bitcoin
+    ports:
+      - "0.0.0.0:18443:18443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOIN_ADDRESS}"
 
   ##
   ## Bitcoin Cash

@@ -3,24 +3,28 @@ package digibyte
 import (
 	"fmt"
 	
-	"github.com/btcsuite/btcd/chaincfg"
+	btcchaincfg "github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 )
 
 type addressDecoder struct {
-	defaultNet *chaincfg.Params
+	defaultNet *btcchaincfg.Params
 }
 
-func DigiByteConfig(params *chaincfg.Params) *chaincfg.Params {
+// btcd not allowing us to specify custom coinparams yet (work in progress).
+// This is a temporary solution.
+func DigiByteConfig(params *btcchaincfg.Params) *btcchaincfg.Params {
 	if params == nil {
 		panic(fmt.Errorf("non-exhaustive pattern: params %v", params))
 	}
 
 	switch params {
-	case &chaincfg.MainNetParams:
+	case &btcchaincfg.MainNetParams:
 		return DigiByteMainNetParams
+	case &btcchaincfg.RegressionNetParams:
+		return DigiByteRegtestParams
 	default:
 		panic(fmt.Errorf("non-exhaustive pattern: params %v", params.Name))
 	}
@@ -29,7 +33,7 @@ func DigiByteConfig(params *chaincfg.Params) *chaincfg.Params {
 // NewAddressDecoder returns an implementation of the address decoder interface
 // from the Bitcoin Compat API, and exposes the functionality to decode strings
 // into addresses.
-func NewAddressDecoder(defaultNet *chaincfg.Params) bitcoincompat.AddressDecoder {
+func NewAddressDecoder(defaultNet *btcchaincfg.Params) bitcoincompat.AddressDecoder {
 	var coinConfig = DigiByteConfig(defaultNet)
 	return addressDecoder{defaultNet: coinConfig}
 }

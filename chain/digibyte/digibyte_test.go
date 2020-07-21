@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/digibyte"
@@ -33,15 +32,15 @@ var _ = Describe("DigiByte", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
-				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
+				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), digibyte.DigiByteRegtestParams)
 				Expect(err).ToNot(HaveOccurred())
-				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
+				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), digibyte.DigiByteRegtestParams)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("PKH                %v", pkhAddr.EncodeAddress())
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
-				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:18132"))
+				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:18443"))
 				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkhAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
