@@ -55,7 +55,7 @@ EXPOSE 14022
 EXPOSE 14023
 
 # Allow Regtest RPC
-EXPOSE 18444
+EXPOSE 18443
 
 COPY run.sh "/root"
 RUN chmod +x "/root/run.sh"
