@@ -47,7 +47,7 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${DOGECOIN_ADDRESS}"
-  
+
   ##
   ## Zcash
   ##
