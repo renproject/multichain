@@ -3,8 +3,8 @@
 ## Generate a keypair (privatekey + address)
 ```bash
 $ go run keygen.go
-DIGIBYTE_PK=L5Hm2XTZ5PZjQyhRR7U8W6qkDGqM7znzvPpQ5STTNstaiUdaoTVy
-DIGIBYTE_ADDRESS=DJ2xUhLh1HsznAJL3UnBTGDtztJmSjeegL
+DIGIBYTE_PK=eagPs6RBxmTQyjni3K7vqPNBwjN4o5R8CEwP4eyHavMJMz29MCen
+DIGIBYTE_ADDRESS=smtdQvMJRLaWwNaFUjdBtFzUR4evxQJcB9
 ```
 
 ## Build your docker container
@@ -15,5 +15,5 @@ docker build .
 ## Run the container
 ```bash
 # Regtest
-docker run -p 18443:18443 digibyte:latest "DJ2xUhLh1HsznAJL3UnBTGDtztJmSjeegL"
+docker run -p 18443:18443 digibyte:latest "smtdQvMJRLaWwNaFUjdBtFzUR4evxQJcB9"
 ```
