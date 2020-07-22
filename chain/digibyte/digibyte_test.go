@@ -40,7 +40,7 @@ var _ = Describe("DigiByte", func() {
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
-				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:18443"))
+				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
 				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkhAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
