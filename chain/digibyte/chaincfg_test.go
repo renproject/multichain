@@ -1,8 +1,6 @@
 package digibyte_test
 
 import (
-	"fmt"
-
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/digibyte"
@@ -14,7 +12,6 @@ import (
 )
 
 var _ = Describe("DigiByte", func() {
-
 	Context("when creating an address", func() {
 		It("should work without errors", func() {
 			rt := runtime.NewRuntime(runtime.AddressDecoders{
@@ -22,10 +19,8 @@ var _ = Describe("DigiByte", func() {
 			}, nil, nil, nil, nil, nil)
 
 			// Encode PKH into DigiByte Address
-			val, err := rt.DecodeAddress(multichain.DigiByte, pack.NewString("DBLsEv4FdFPGrMWzcagDQvoKgUL2CikhMf"))
+			_, err := rt.DecodeAddress(multichain.DigiByte, pack.NewString("DBLsEv4FdFPGrMWzcagDQvoKgUL2CikhMf"))
 			Expect(err).NotTo(HaveOccurred())
-
-			fmt.Println(val)
 		})
 	})
 })
