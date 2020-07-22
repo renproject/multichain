@@ -82,8 +82,8 @@ Second, we add an entry to the `docker-compose.env` file. Our entry _must_ inclu
 # Address that will receive mining rewards. Generally, this is set to an address
 # for which the private key is known by a test suite. This allows the test suite
 # access to plenty of testing funds.
-export DOGECOIN_PK=cUJCHRMSUwkcofsHjFWBELT3yEAejokdKhyTNv3DScodYWzztBae
-export DOGECOIN_ADDRESS=mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4
+export DOGECOIN_PK=cRZnRgH2ztcJupCzkWbq2mjiT8PSFAmtYRYb1phg1vSRRcNBX4w4
+export DOGECOIN_ADDRESS=n3PSSpR4zqUKWH4tcRjP9aTwJ4GmixQXmt
 ```
 
 Last, we add a service to the `docker-compose.yaml` file. This allows the node to boot alongside the other nodes in the multichain. This entry must expose the node for use in tests, and must not overlap with other nodes that already exist (ports are reserved on a first-come-first-serve basis). We will define the service as:

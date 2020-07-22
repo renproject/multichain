@@ -32,6 +32,11 @@ var _ = Describe("DigiByte", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
+				wpkhAddr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
+				Expect(err).ToNot(HaveOccurred())
+				log.Printf("WPKH               %v", wpkhAddr.EncodeAddress())
+
+				// PKH
 				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
 				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &digibyte.RegressionNetParams)
@@ -41,7 +46,7 @@ var _ = Describe("DigiByte", func() {
 
 				// Setup the client and load the unspent transaction outputs.
 				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
-				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkhAddr)
+				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, wpkhAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
 				output := outputs[0]
@@ -57,12 +62,16 @@ var _ = Describe("DigiByte", func() {
 				// them to a set of recipients.
 				recipients := []bitcoincompat.Recipient{
 					{
+						Address: pack.String(wpkhAddr.EncodeAddress()),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
+					},
+					{
 						Address: pack.String(pkhAddr.EncodeAddress()),
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 					{
 						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 				}
 				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
