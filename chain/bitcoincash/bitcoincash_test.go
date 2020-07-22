@@ -58,15 +58,15 @@ var _ = Describe("Bitcoin Cash", func() {
 				// them to a set of recipients.
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
+						Address: pack.String(pkhAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 					{
-						Address: pkhAddrUncompressed,
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 				}
-				tx, err := bitcoincash.NewTxBuilder().BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := bitcoincash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

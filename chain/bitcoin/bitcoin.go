@@ -6,9 +6,11 @@ import (
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 )
@@ -16,13 +18,15 @@ import (
 // Version of Bitcoin transactions supported by the multichain.
 const Version int32 = 2
 
-type txBuilder struct{}
+type txBuilder struct {
+	params *chaincfg.Params
+}
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Bitcoin Compat API, and exposes the functionality to build simple
 // Bitcoin transactions.
-func NewTxBuilder() bitcoincompat.TxBuilder {
-	return txBuilder{}
+func NewTxBuilder(params *chaincfg.Params) bitcoincompat.TxBuilder {
+	return txBuilder{params: params}
 }
 
 // BuildTx returns a simple Bitcoin transaction that consumes the funds from the
@@ -39,7 +43,7 @@ func NewTxBuilder() bitcoincompat.TxBuilder {
 //
 // Outputs produced for recipients will use P2PKH, P2SH, P2WPKH, or P2WSH
 // scripts as the pubkey script, based on the format of the recipient address.
-func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
+func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
 	// Inputs
@@ -51,7 +55,11 @@ func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincomp
 
 	// Outputs
 	for _, recipient := range recipients {
-		script, err := txscript.PayToAddrScript(recipient.Address)
+		addr, err := btcutil.DecodeAddress(string(recipient.Address), txBuilder.params)
+		if err != nil {
+			return &Tx{}, err
+		}
+		script, err := txscript.PayToAddrScript(addr)
 		if err != nil {
 			return &Tx{}, err
 		}

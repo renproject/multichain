@@ -12,17 +12,25 @@ import (
 )
 
 type (
+	// An AddressDecoder decodes addresses in their UTF8 string representations
+	// into their bytes representations.
+	AddressDecoder interface {
+		DecodeAddress(pack.String) (pack.Bytes, error)
+	}
+
+	// AddressDecoders is a mapping from chains to their address decoders.
+	// Address decoders are responsible for converting from strings to the
+	// underlying bytes representation of the address. Chains that are not
+	// supported will no appear in this mapping.
+	AddressDecoders map[multichain.Chain]AddressDecoder
+)
+
+type (
 	// BitcoinCompatClients is a mapping from chains to their
 	// Bitcoin-compatible clients. Clients are responsible for interacting with
 	// the chain (using through an RPC interface). Chains that are not
 	// Bitcoin-compatible chains will no appear in this mapping.
 	BitcoinCompatClients map[multichain.Chain]bitcoincompat.Client
-
-	// BitcoinCompatAddressDecoders is a mapping from chains to their
-	// Bitcoin-compatible address decoders. Address decoders are responsible for
-	// converting from strings to well-typed addresses. Chains that are not
-	// Bitcoin-compatible chains will no appear in this mapping.
-	BitcoinCompatAddressDecoders map[multichain.Chain]bitcoincompat.AddressDecoder
 
 	// BitcoinCompatTxBuilders is a mapping from chains to their
 	// Bitcoin-compatible transaction builders. Transaction builders are
@@ -48,12 +56,6 @@ type (
 	// the chain (using through an RPC interface). Chains that are not
 	// Ethereum-compatible chains will no appear in this mapping.
 	EthereumCompatClients map[multichain.Chain]ethereumcompat.Client
-
-	// EthereumCompatAddressDecoders is a mapping from chains to their
-	// Ethereum-compatible address decoders. Address decoders are responsible
-	// for converting from strings to well-typed addresses. Chains that are not
-	// Ethereum-compatible chains will no appear in this mapping.
-	EthereumCompatAddressDecoders map[multichain.Chain]ethereumcompat.AddressDecoder
 )
 
 type (
@@ -62,12 +64,6 @@ type (
 	// with the chain (using through an RPC interface). Chains that are not
 	// Substrate-compatible chains will no appear in this mapping.
 	SubstrateCompatClients map[multichain.Chain]substratecompat.Client
-
-	// SubstrateCompatAddressDecoders is a mapping from chains to their
-	// Substrate-compatible address decoders. Address decoders are responsible
-	// for converting from strings to well-typed addresses. Chains that are not
-	// Substrate-compatible chains will no appear in this mapping.
-	SubstrateCompatAddressDecoders map[multichain.Chain]substratecompat.AddressDecoder
 )
 
 // The Runtime exposes all of the functionality of the underlying chains that
@@ -111,17 +107,16 @@ type (
 //  SubstrateBurnEvent
 //
 type Runtime struct {
+	addrDecoders AddressDecoders
+
 	// Bitcoin-compatibility
-	bitcoinCompatClients         BitcoinCompatClients
-	bitcoinCompatAddressDecoders BitcoinCompatAddressDecoders
-	bitcoinCompatTxBuilders      BitcoinCompatTxBuilders
-	bitcoinCompatGasEstimators   BitcoinCompatGasEstimators
+	bitcoinCompatClients       BitcoinCompatClients
+	bitcoinCompatTxBuilders    BitcoinCompatTxBuilders
+	bitcoinCompatGasEstimators BitcoinCompatGasEstimators
 	// Ethereum-compatibility
-	ethereumCompatClients         EthereumCompatClients
-	ethereumCompatAddressDecoders EthereumCompatAddressDecoders
+	ethereumCompatClients EthereumCompatClients
 	// Substrate-compatiblity
-	substrateCompatClients         SubstrateCompatClients
-	substrateCompatAddressDecoders SubstrateCompatAddressDecoders
+	substrateCompatClients SubstrateCompatClients
 }
 
 // NewRuntime returns a new instance of the multichain runtime. The mappings
@@ -134,38 +129,34 @@ type Runtime struct {
 // possible, and developers can have the flexibility to pick and choose which
 // ones will be enabled for their specific use-case.
 func NewRuntime(
+	addrDecoders AddressDecoders,
 	// Bitcoin-compatibility
 	bitcoinCompatClients BitcoinCompatClients,
-	bitcoinCompatAddressDecoders BitcoinCompatAddressDecoders,
 	bitcoinCompatTxBuilders BitcoinCompatTxBuilders,
 	bitcoinCompatGasEstimators BitcoinCompatGasEstimators,
 	// Ethereum-compatibility
 	ethereumCompatClients EthereumCompatClients,
-	ethereumCompatAddressDecoders EthereumCompatAddressDecoders,
 	// Substrate-compatiblity
 	substrateCompatClients SubstrateCompatClients,
-	substrateCompatAddressDecoders SubstrateCompatAddressDecoders,
 ) *Runtime {
 	return &Runtime{
+		addrDecoders: addrDecoders,
 		// Bitcoin-compatibility
-		bitcoinCompatClients:         bitcoinCompatClients,
-		bitcoinCompatAddressDecoders: bitcoinCompatAddressDecoders,
-		bitcoinCompatTxBuilders:      bitcoinCompatTxBuilders,
-		bitcoinCompatGasEstimators:   bitcoinCompatGasEstimators,
+		bitcoinCompatClients:       bitcoinCompatClients,
+		bitcoinCompatTxBuilders:    bitcoinCompatTxBuilders,
+		bitcoinCompatGasEstimators: bitcoinCompatGasEstimators,
 		// Ethereum-compatibility
-		ethereumCompatClients:         ethereumCompatClients,
-		ethereumCompatAddressDecoders: ethereumCompatAddressDecoders,
+		ethereumCompatClients: ethereumCompatClients,
 		// Substrate-compatiblity
-		substrateCompatClients:         substrateCompatClients,
-		substrateCompatAddressDecoders: substrateCompatAddressDecoders,
+		substrateCompatClients: substrateCompatClients,
 	}
 }
 
-// BitcoinDecodeAddress decodes a string into a Bitcoin-compatible address.
-// Address encodings are often specific to the chain. If the chain is not
-// Bitcoin-compatible, then an "unsupported chain" error is returned.
-func (rt *Runtime) BitcoinDecodeAddress(chain multichain.Chain, encoded pack.String) (bitcoincompat.Address, error) {
-	addressDecoder, ok := rt.bitcoinCompatAddressDecoders[chain]
+// DecodeAddress decodes a string into the underlying bytes representation of an
+// address. Address encodings are often specific to the chain. If the chain is
+// not supported, then an "unsupported chain" error is returned.
+func (rt *Runtime) DecodeAddress(chain multichain.Chain, encoded pack.String) (pack.Bytes, error) {
+	addressDecoder, ok := rt.addrDecoders[chain]
 	if !ok {
 		return nil, fmt.Errorf("unsupported chain %v", chain)
 	}
@@ -246,17 +237,6 @@ func (rt *Runtime) BitcoinSubmitTx(ctx context.Context, chain multichain.Chain, 
 	return client.SubmitTx(ctx, tx)
 }
 
-// EthereumDecodeAddress decodes a string into a Ethereum-compatible address.
-// Address encodings are often specific to the chain. If the chain is not
-// Ethereum-compatible, then an "unsupported chain" error is returned.
-func (rt *Runtime) EthereumDecodeAddress(chain multichain.Chain, encoded pack.String) (ethereumcompat.Address, error) {
-	addressDecoder, ok := rt.ethereumCompatAddressDecoders[chain]
-	if !ok {
-		return ethereumcompat.Address{}, fmt.Errorf("unsupported chain %v", chain)
-	}
-	return addressDecoder.DecodeAddress(encoded)
-}
-
 // EthereumBurnEvent returns the amount and recipient of a burn event, given the
 // nonce of the burn event. If the nonce cannot be found, or the event does not
 // have sufficient confirmations, this method will return an error. If the chain
@@ -274,17 +254,6 @@ func (rt *Runtime) EthereumBurnEvent(ctx context.Context, chain multichain.Chain
 		return pack.U256{}, pack.String(""), fmt.Errorf("insufficient confirmations: %v", confirmations)
 	}
 	return amount, to, nil
-}
-
-// SubstrateDecodeAddress decodes a string into a Substrate-compatible address.
-// Address encodings are often specific to the chain. If the chain is not
-// Substrate-compatible, then an "unsupported chain" error is returned.
-func (rt *Runtime) SubstrateDecodeAddress(chain multichain.Chain, encoded pack.String) (substratecompat.Address, error) {
-	addressDecoder, ok := rt.substrateCompatAddressDecoders[chain]
-	if !ok {
-		return substratecompat.Address{}, fmt.Errorf("unsupported chain %v", chain)
-	}
-	return addressDecoder.DecodeAddress(encoded)
 }
 
 // SubstrateBurnEvent returns the amount and recipient of a burn event, given

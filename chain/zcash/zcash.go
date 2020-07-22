@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -19,6 +20,7 @@ import (
 	"github.com/codahale/blake2"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
+	"golang.org/x/crypto/ripemd160"
 )
 
 // Version of Zcash transactions supported by the multichain.
@@ -61,16 +63,13 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []b
 
 	// Outputs
 	for _, recipient := range recipients {
-		var script []byte
-		var err error
-		switch addr := recipient.Address.(type) {
-		case AddressPubKeyHash:
-			script, err = txscript.PayToAddrScript(addr.AddressPubKeyHash)
-		default:
-			script, err = txscript.PayToAddrScript(recipient.Address)
-		}
+		addr, err := DecodeAddress(string(recipient.Address))
 		if err != nil {
-			return nil, err
+			return &Tx{}, err
+		}
+		script, err := txscript.PayToAddrScript(addr.BitcoinCompatAddress())
+		if err != nil {
+			return &Tx{}, err
 		}
 		value := int64(recipient.Value.Uint64())
 		if value < 0 {
@@ -263,6 +262,12 @@ func (tx *Tx) Serialize() (pack.Bytes, error) {
 	return pack.NewBytes(w.Bytes()), nil
 }
 
+// An Address represents a Zcash address.
+type Address interface {
+	btcutil.Address
+	BitcoinCompatAddress() btcutil.Address
+}
+
 // AddressPubKeyHash represents an address for P2PKH transactions for Zcash that
 // is compatible with the Bitcoin Compat API.
 type AddressPubKeyHash struct {
@@ -316,6 +321,118 @@ func (addr AddressPubKeyHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressPubKeyHash.IsForNet(params)
 }
 
+// BitcoinCompatAddress returns the address as if it was a Bitcoin address.
+func (addr AddressPubKeyHash) BitcoinCompatAddress() btcutil.Address {
+	return addr.AddressPubKeyHash
+}
+
+// AddressScriptHash represents an address for P2SH transactions for Zcash that
+// is compatible with the Bitcoin Compat API.
+type AddressScriptHash struct {
+	*btcutil.AddressScriptHash
+	params *chaincfg.Params
+}
+
+// NewAddressScriptHash returns a new AddressScriptHash that is compatible with
+// the Bitcoin Compat API.
+func NewAddressScriptHash(pkh []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHash(pkh, params)
+	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
+}
+
+// String returns the string encoding of the transaction output destination.
+//
+// Please note that String differs subtly from EncodeAddress: String will return
+// the value as a string without any conversion, while EncodeAddress may convert
+// destination types (for example, converting pubkeys to P2PKH addresses) before
+// encoding as a payment address string.
+func (addr AddressScriptHash) String() string {
+	return addr.EncodeAddress()
+}
+
+// BitcoinCompatAddress returns the address as if it was a Bitcoin address.
+func (addr AddressScriptHash) BitcoinCompatAddress() btcutil.Address {
+	return addr.AddressScriptHash
+}
+
+// EncodeAddress returns the string encoding of the payment address associated
+// with the Address value. See the comment on String for how this method differs
+// from String.
+func (addr AddressScriptHash) EncodeAddress() string {
+	hash := *addr.AddressScriptHash.Hash160()
+	var prefix []byte
+	switch addr.params {
+	case &chaincfg.RegressionNetParams:
+		prefix = regnet.p2pkhPrefix
+	case &chaincfg.TestNet3Params:
+		prefix = testnet.p2pkhPrefix
+	case &chaincfg.MainNetParams:
+		prefix = mainnet.p2pkhPrefix
+	}
+	return encodeAddress(hash[:], prefix)
+}
+
+// ScriptAddress returns the raw bytes of the address to be used when inserting
+// the address into a txout's script.
+func (addr AddressScriptHash) ScriptAddress() []byte {
+	return addr.AddressScriptHash.ScriptAddress()
+}
+
+// IsForNet returns whether or not the address is associated with the passed
+// bitcoin network.
+func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
+	return addr.AddressScriptHash.IsForNet(params)
+}
+
+func DecodeAddress(addr string) (Address, error) {
+	var decoded = base58.Decode(addr)
+	if len(decoded) != 26 && len(decoded) != 25 {
+		return nil, base58.ErrInvalidFormat
+	}
+
+	var cksum [4]byte
+	copy(cksum[:], decoded[len(decoded)-4:])
+	if checksum(decoded[:len(decoded)-4]) != cksum {
+		return nil, base58.ErrChecksum
+	}
+
+	if len(decoded)-6 != ripemd160.Size && len(decoded)-5 != ripemd160.Size {
+		return nil, errors.New("incorrect payload len")
+	}
+
+	var addrType uint8
+	var params *chaincfg.Params
+	var err error
+	var hash [20]byte
+	if len(decoded) == 26 {
+		addrType, params, err = parsePrefix(decoded[:2])
+		copy(hash[:], decoded[2:22])
+	} else {
+		addrType, params, err = parsePrefix(decoded[:1])
+		copy(hash[:], decoded[1:21])
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	switch addrType {
+	case 0: // P2PKH
+		addr, err := btcutil.NewAddressPubKeyHash(hash[:], params)
+		if err != nil {
+			return nil, err
+		}
+		return &AddressPubKeyHash{AddressPubKeyHash: addr, params: params}, nil
+	case 1: // P2SH
+		addr, err := btcutil.NewAddressScriptHash(hash[:], params)
+		if err != nil {
+			return nil, err
+		}
+		return &AddressScriptHash{AddressScriptHash: addr, params: params}, nil
+	}
+
+	return nil, errors.New("unknown address")
+}
+
 func encodeAddress(hash, prefix []byte) string {
 	var (
 		body  = append(prefix, hash...)
@@ -333,6 +450,28 @@ func checksum(input []byte) (cksum [4]byte) {
 	)
 	copy(cksum[:], h2[:4])
 	return
+}
+
+func parsePrefix(prefix []byte) (uint8, *chaincfg.Params, error) {
+	if bytes.Equal(prefix, mainnet.p2pkhPrefix) {
+		return 0, &chaincfg.MainNetParams, nil
+	}
+	if bytes.Equal(prefix, mainnet.p2shPrefix) {
+		return 1, &chaincfg.MainNetParams, nil
+	}
+	if bytes.Equal(prefix, testnet.p2pkhPrefix) {
+		return 0, &chaincfg.TestNet3Params, nil
+	}
+	if bytes.Equal(prefix, testnet.p2shPrefix) {
+		return 1, &chaincfg.TestNet3Params, nil
+	}
+	if bytes.Equal(prefix, regnet.p2pkhPrefix) {
+		return 0, &chaincfg.RegressionNetParams, nil
+	}
+	if bytes.Equal(prefix, regnet.p2shPrefix) {
+		return 1, &chaincfg.RegressionNetParams, nil
+	}
+	return 0, nil, btcutil.ErrUnknownAddressType
 }
 
 type netParams struct {

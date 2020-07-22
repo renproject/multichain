@@ -7,7 +7,6 @@ RUN apt-get install --yes curl
 # This can sometimes stall, which can be fixed by killing and restarting the
 # build.
 RUN curl https://bitcoincore.org/bin/bitcoin-core-0.19.1/bitcoin-0.19.1-x86_64-linux-gnu.tar.gz | tar -xz
-
 RUN mv ./bitcoin-0.19.1 /app
 RUN chmod +x /app/bin/bitcoind
 RUN chmod +x /app/bin/bitcoin-cli

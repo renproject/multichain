@@ -6,21 +6,17 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 
-	"github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/id"
+	"github.com/renproject/multichain/chain/digibyte"
 )
 
 func main() {
-	// Use this for main net
-	// var network = &digibyte.DigiByteMainNetParams
-	var network = digibyte.DigiByteRegtestParams
-
 	privKey := id.NewPrivKey()
-	wif, err := btcutil.NewWIF((*btcec.PrivateKey)(privKey), network, true)
+	wif, err := btcutil.NewWIF((*btcec.PrivateKey)(privKey), &digibyte.RegressionNetParams, true)
 	if err != nil {
 		panic(err)
 	}
-	addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), network)
+	addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &digibyte.RegressionNetParams)
 	if err != nil {
 		panic(err)
 	}

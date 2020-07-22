@@ -63,19 +63,19 @@ var _ = Describe("Bitcoin", func() {
 				// them to a set of recipients.
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
+						Address: pack.String(pkhAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 					{
-						Address: pkhAddrUncompressed,
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 					{
-						Address: wpkAddr,
+						Address: pack.String(wpkAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 				}
-				tx, err := bitcoin.NewTxBuilder().BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := bitcoin.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

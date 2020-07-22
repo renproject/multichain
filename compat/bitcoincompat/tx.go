@@ -54,7 +54,7 @@ type Outpoint struct {
 //
 // https://developer.bitcoin.org/reference/transactions.html#txin-a-transaction-input-non-coinbase
 type Input struct {
-	Outpoint  Outpoint  `json:"outpoint"`
+	Outpoint  Outpoint   `json:"outpoint"`
 	SigScript pack.Bytes `json:"sigScript"`
 }
 
@@ -63,7 +63,7 @@ type Input struct {
 //
 // https://developer.bitcoin.org/reference/transactions.html#txout-a-transaction-output
 type Output struct {
-	Outpoint     Outpoint  `json:"outpoint"`
+	Outpoint     Outpoint   `json:"outpoint"`
 	Value        pack.U64   `json:"value"`
 	PubKeyScript pack.Bytes `json:"pubKeyScript"`
 }
@@ -71,6 +71,6 @@ type Output struct {
 // A Recipient of funds from a Bitcoin transaction. This is useful for buidling
 // simple pay-to-address Bitcoin transactions.
 type Recipient struct {
-	Address Address `json:"address"`
-	Value   pack.U64 `json:"value"`
+	Address pack.String `json:"address"`
+	Value   pack.U64    `json:"value"`
 }

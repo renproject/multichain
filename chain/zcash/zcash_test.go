@@ -58,11 +58,11 @@ var _ = Describe("Zcash", func() {
 				// them to a set of recipients.
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
+						Address: pack.String(pkhAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 					{
-						Address: pkhAddrUncompressed,
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 				}
