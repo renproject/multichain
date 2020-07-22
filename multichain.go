@@ -11,7 +11,7 @@ type Asset string
 const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
 	BTC  = Asset("BTC")  // Bitcoin
-	DGB = Asset("DGB") // DigiByte
+	DGB =  Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
 	ZEC  = Asset("ZEC")  // Zcash
