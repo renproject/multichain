@@ -3,7 +3,6 @@ services:
   ##
   ## Bitcoin
   ##
-
   bitcoin:
     build:
       context: ./bitcoin
@@ -16,7 +15,6 @@ services:
   ##
   ## Bitcoin Cash
   ##
-
   bitcoincash:
     build:
       context: ./bitcoincash
@@ -27,9 +25,20 @@ services:
       - "${BITCOINCASH_ADDRESS}"
 
   ##
-  ## Dogecoin
+  ## DigiByte
   ##
+  digibyte:
+    build:
+      context: ./digibyte
+    ports:
+      - "0.0.0.0:20443:18443"
+    entrypoint:
+      - "/root/run.sh"
+      - "${DIGIBYTE_ADDRESS}"
 
+  #
+  # Dogecoin
+  #
   dogecoin:
     build:
       context: ./dogecoin
