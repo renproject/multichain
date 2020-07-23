@@ -347,6 +347,7 @@ func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
 	if address, err := btcutil.DecodeAddress(addr, params); err == nil {
 		switch address.(type) {
 		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
+			log.Printf("DECODING LEGACY ADDRESS")
 			return AddressLegacy{Address: address}, nil
 		case *btcutil.AddressWitnessPubKeyHash, *btcutil.AddressWitnessScriptHash:
 			return nil, fmt.Errorf("unsuported segwit bitcoin address type %T", address)
@@ -373,12 +374,14 @@ func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
 	case ripemd160.Size: // P2PKH or P2SH
 		switch addrBytes[0] {
 		case 0: // P2PKH
+			log.Printf("DECODING P2PKH")
 			addr, err := btcutil.NewAddressPubKeyHash(addrBytes[1:21], params)
 			if err != nil {
 				return nil, err
 			}
 			return &AddressPubKeyHash{AddressPubKeyHash: addr, params: params}, nil
 		case 8: // P2SH
+			log.Printf("DECODING P2SH")
 			addr, err := btcutil.NewAddressScriptHash(addrBytes[1:21], params)
 			if err != nil {
 				return nil, err
