@@ -55,7 +55,7 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bi
 	for _, input := range inputs {
 		hash := chainhash.Hash(input.Output.Outpoint.Hash)
 		index := input.Output.Outpoint.Index.Uint32()
-		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), input.SigScript, nil))
+		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), nil, nil))
 	}
 
 	// Outputs
@@ -96,13 +96,19 @@ func (tx *Tx) Hash() pack.Bytes32 {
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 	for i, txin := range tx.inputs {
+		pubKeyScript := txin.Output.PubKeyScript
 		sigScript := txin.SigScript
 		value := int64(txin.Output.Value.Uint64())
 		if value < 0 {
 			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value = %v", value)
 		}
 
-		hash := CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		var hash []byte
+		if sigScript != nil {
+			hash = CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		} else {
+			hash = CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		}
 
 		sighash := [32]byte{}
 		copy(sighash[:], hash)
@@ -147,6 +153,9 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll|SighashForkID)))
 		builder.AddData(pubKey)
+		if tx.inputs[i].SigScript != nil {
+			builder.AddData(tx.inputs[i].SigScript)
+		}
 		signatureScript, err := builder.Script()
 		if err != nil {
 			return err

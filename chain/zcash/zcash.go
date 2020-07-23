@@ -114,13 +114,20 @@ func (tx *Tx) Hash() pack.Bytes32 {
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 	for i, txin := range tx.inputs {
+		pubKeyScript := txin.Output.PubKeyScript
 		sigScript := txin.SigScript
 		value := int64(txin.Output.Value.Uint64())
 		if value < 0 {
 			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value = %v", value)
 		}
 
-		hash, err := calculateSighash(regnet, sigScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
+		var hash []byte
+		var err error
+		if sigScript != nil {
+			hash, err = calculateSighash(regnet, sigScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
+		} else {
+			hash, err = calculateSighash(regnet, pubKeyScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
+		}
 		if err != nil {
 			return []pack.Bytes32{}, err
 		}
@@ -168,6 +175,9 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll)))
 		builder.AddData(pubKey)
+		if tx.inputs[i].SigScript != nil {
+			builder.AddData(tx.inputs[i].SigScript)
+		}
 		signatureScript, err := builder.Script()
 		if err != nil {
 			return err
