@@ -390,11 +390,11 @@ func (addr AddressScriptHash) EncodeAddress() string {
 	var prefix []byte
 	switch addr.params {
 	case &chaincfg.RegressionNetParams:
-		prefix = regnet.p2pkhPrefix
+		prefix = regnet.p2shPrefix
 	case &chaincfg.TestNet3Params:
-		prefix = testnet.p2pkhPrefix
+		prefix = testnet.p2shPrefix
 	case &chaincfg.MainNetParams:
-		prefix = mainnet.p2pkhPrefix
+		prefix = mainnet.p2shPrefix
 	}
 	return encodeAddress(hash[:], prefix)
 }

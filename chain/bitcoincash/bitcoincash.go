@@ -283,7 +283,7 @@ func (addr AddressScriptHash) String() string {
 // for how this method differs from String.
 func (addr AddressScriptHash) EncodeAddress() string {
 	hash := *addr.AddressScriptHash.Hash160()
-	encoded, err := EncodeAddress(0x00, hash[:], addr.params)
+	encoded, err := EncodeAddress(0x08, hash[:], addr.params)
 	if err != nil {
 		panic(fmt.Errorf("invalid address: %v", err))
 	}
