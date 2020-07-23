@@ -362,8 +362,15 @@ type AddressScriptHash struct {
 
 // NewAddressScriptHash returns a new AddressScriptHash that is compatible with
 // the Bitcoin Compat API.
-func NewAddressScriptHash(pkh []byte, params *chaincfg.Params) (AddressScriptHash, error) {
-	addr, err := btcutil.NewAddressScriptHash(pkh, params)
+func NewAddressScriptHash(script []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHash(script, params)
+	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
+}
+
+// NewAddressScriptHashFromHash returns a new AddressScriptHash that is compatible with
+// the Bitcoin Compat API.
+func NewAddressScriptHashFromHash(scriptHash []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHashFromHash(scriptHash, params)
 	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
 }
 
@@ -444,17 +451,9 @@ func DecodeAddress(addr string) (Address, error) {
 
 	switch addrType {
 	case 0: // P2PKH
-		addr, err := btcutil.NewAddressPubKeyHash(hash[:], params)
-		if err != nil {
-			return nil, err
-		}
-		return &AddressPubKeyHash{AddressPubKeyHash: addr, params: params}, nil
+		return NewAddressPubKeyHash(hash[:], params)
 	case 1: // P2SH
-		addr, err := btcutil.NewAddressScriptHash(hash[:], params)
-		if err != nil {
-			return nil, err
-		}
-		return &AddressScriptHash{AddressScriptHash: addr, params: params}, nil
+		return NewAddressScriptHashFromHash(hash[:], params)
 	}
 
 	return nil, errors.New("unknown address")

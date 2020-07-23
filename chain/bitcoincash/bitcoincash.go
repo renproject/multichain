@@ -65,7 +65,6 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bi
 		if err != nil {
 			return &Tx{}, err
 		}
-		log.Printf("===== GADDR DECODED: %v", pack.Bytes(addr.ScriptAddress()))
 		script, err := txscript.PayToAddrScript(addr.BitcoinCompatAddress())
 		if err != nil {
 			return &Tx{}, err
@@ -264,8 +263,15 @@ type AddressScriptHash struct {
 
 // NewAddressScriptHash returns a new AddressScriptHash
 // that is compatible with the Bitcoin-compat API.
-func NewAddressScriptHash(pkh []byte, params *chaincfg.Params) (AddressScriptHash, error) {
-	addr, err := btcutil.NewAddressScriptHash(pkh, params)
+func NewAddressScriptHash(script []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHash(script, params)
+	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
+}
+
+// NewAddressScriptHashFromHash returns a new AddressScriptHash
+// that is compatible with the Bitcoin-compat API.
+func NewAddressScriptHashFromHash(scriptHash []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHashFromHash(scriptHash, params)
 	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
 }
 
@@ -347,7 +353,6 @@ func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
 	if address, err := btcutil.DecodeAddress(addr, params); err == nil {
 		switch address.(type) {
 		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
-			log.Printf("DECODING LEGACY ADDRESS")
 			return AddressLegacy{Address: address}, nil
 		case *btcutil.AddressWitnessPubKeyHash, *btcutil.AddressWitnessScriptHash:
 			return nil, fmt.Errorf("unsuported segwit bitcoin address type %T", address)
@@ -374,19 +379,9 @@ func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
 	case ripemd160.Size: // P2PKH or P2SH
 		switch addrBytes[0] {
 		case 0: // P2PKH
-			log.Printf("DECODING P2PKH")
-			addr, err := btcutil.NewAddressPubKeyHash(addrBytes[1:21], params)
-			if err != nil {
-				return nil, err
-			}
-			return &AddressPubKeyHash{AddressPubKeyHash: addr, params: params}, nil
+			return NewAddressPubKeyHash(addrBytes[1:21], params)
 		case 8: // P2SH
-			log.Printf("DECODING P2SH")
-			addr, err := btcutil.NewAddressScriptHash(addrBytes[1:21], params)
-			if err != nil {
-				return nil, err
-			}
-			return &AddressScriptHash{AddressScriptHash: addr, params: params}, nil
+			return NewAddressScriptHashFromHash(addrBytes[1:21], params)
 		default:
 			return nil, btcutil.ErrUnknownAddressType
 		}
