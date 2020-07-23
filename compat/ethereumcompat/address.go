@@ -101,3 +101,8 @@ func (addr *Address) UnmarshalJSON(data []byte) error {
 func (addr Address) String() string {
 	return hex.EncodeToString(addr[:])
 }
+
+// Bytes returns the address as a slice of 20 bytes.
+func (addr Address) Bytes() pack.Bytes {
+	return pack.Bytes(addr[:])
+}
