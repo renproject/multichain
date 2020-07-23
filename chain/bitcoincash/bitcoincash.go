@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
@@ -64,6 +65,7 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bi
 		if err != nil {
 			return &Tx{}, err
 		}
+		log.Printf("===== GADDR DECODED: %v", pack.Bytes(addr.ScriptAddress()))
 		script, err := txscript.PayToAddrScript(addr.BitcoinCompatAddress())
 		if err != nil {
 			return &Tx{}, err
@@ -95,6 +97,7 @@ func (tx *Tx) Hash() pack.Bytes32 {
 
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
+
 	for i, txin := range tx.inputs {
 		pubKeyScript := txin.Output.PubKeyScript
 		sigScript := txin.SigScript
@@ -283,7 +286,7 @@ func (addr AddressScriptHash) String() string {
 // for how this method differs from String.
 func (addr AddressScriptHash) EncodeAddress() string {
 	hash := *addr.AddressScriptHash.Hash160()
-	encoded, err := EncodeAddress(0x08, hash[:], addr.params)
+	encoded, err := EncodeAddress(8, hash[:], addr.params)
 	if err != nil {
 		panic(fmt.Errorf("invalid address: %v", err))
 	}
