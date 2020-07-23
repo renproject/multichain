@@ -117,6 +117,23 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	return sighashes, nil
 }
 
+func (tx *Tx) Outputs() ([]bitcoincompat.Output, error) {
+	hash := tx.Hash()
+	outputs := make([]bitcoincompat.Output, len(tx.msgTx.TxOut))
+	for i := range outputs {
+		outputs[i].Outpoint = bitcoincompat.Outpoint{
+			Hash:  hash,
+			Index: pack.NewU32(uint32(i)),
+		}
+		outputs[i].PubKeyScript = pack.Bytes(tx.msgTx.TxOut[i].PkScript)
+		if tx.msgTx.TxOut[i].Value < 0 {
+			return nil, fmt.Errorf("bad output %v: value is less than zero", i)
+		}
+		outputs[i].Value = pack.NewU64(uint64(tx.msgTx.TxOut[i].Value))
+	}
+	return outputs, nil
+}
+
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("signed")

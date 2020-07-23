@@ -30,6 +30,10 @@ type Tx interface {
 	// the signer.
 	Sign([]pack.Bytes65, pack.Bytes) error
 
+	// Outputs returns the transaction outputs that are produced by this
+	// transaction.
+	Outputs() ([]Output, error)
+
 	// Serialize the transaction.
 	Serialize() (pack.Bytes, error)
 }
