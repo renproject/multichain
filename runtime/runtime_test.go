@@ -55,7 +55,7 @@ var _ = Describe("Bitcoin-compat", func() {
 		Context("when the chain is not supported", func() {
 			It("should return an error", func() {
 				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
-				_, err := rt.BitcoinBuildTx(context.Background(), multichain.Bitcoin, multichain.BTC, []bitcoincompat.Output{}, []bitcoincompat.Recipient{})
+				_, err := rt.BitcoinBuildTx(context.Background(), multichain.Bitcoin, multichain.BTC, []bitcoincompat.Input{}, []bitcoincompat.Recipient{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
