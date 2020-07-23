@@ -50,7 +50,7 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bi
 	for _, input := range inputs {
 		hash := chainhash.Hash(input.Output.Outpoint.Hash)
 		index := input.Output.Outpoint.Index.Uint32()
-		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), input.SigScript, nil))
+		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), nil, nil))
 	}
 
 	// Outputs
@@ -108,13 +108,12 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 				hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i)
 			}
 		} else {
-			if txscript.IsPayToWitnessScriptHash(sigScript) {
+			if txscript.IsPayToWitnessScriptHash(pubKeyScript) {
 				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
 			} else {
 				hash, err = txscript.CalcSignatureHash(sigScript, txscript.SigHashAll, tx.msgTx, i)
 			}
 		}
-
 		if err != nil {
 			return []pack.Bytes32{}, err
 		}
@@ -153,6 +152,8 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	}
 
 	for i, rsv := range signatures {
+		var err error
+
 		// Decode the signature and the pubkey script.
 		r := new(big.Int).SetBytes(rsv[:32])
 		s := new(big.Int).SetBytes(rsv[32:64])
@@ -163,7 +164,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		pubKeyScript := tx.inputs[i].Output.PubKeyScript
 		sigScript := tx.inputs[i].SigScript
 
-		// Support the consumption of SegWit outputs.
+		// Support segwit.
 		if sigScript == nil {
 			if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) || txscript.IsPayToWitnessScriptHash(pubKeyScript) {
 				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey})
@@ -171,20 +172,22 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 			}
 		} else {
 			if txscript.IsPayToWitnessScriptHash(sigScript) || txscript.IsPayToWitnessScriptHash(sigScript) {
-				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey})
+				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey, sigScript})
 				continue
 			}
 		}
 
-		// Support the consumption of non-SegWite outputs.
+		// Support non-segwit
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll)))
 		builder.AddData(pubKey)
-		signatureScript, err := builder.Script()
+		if sigScript != nil {
+			builder.AddData(sigScript)
+		}
+		tx.msgTx.TxIn[i].SignatureScript, err = builder.Script()
 		if err != nil {
 			return err
 		}
-		tx.msgTx.TxIn[i].SignatureScript = signatureScript
 	}
 
 	tx.signed = true
