@@ -13,7 +13,7 @@ import (
 )
 
 type AddressDecoder interface {
-	DecodeAddress(pack.String) (Address, error)
+	DecodeAddress(pack.String) (pack.Bytes, error)
 }
 
 type addressDecoder struct{}
@@ -22,8 +22,12 @@ func NewAddressDecoder() AddressDecoder {
 	return addressDecoder{}
 }
 
-func (addressDecoder) DecodeAddress(encoded pack.String) (Address, error) {
-	return NewAddressFromHex(encoded.String())
+func (addressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
+	ethaddr, err := NewAddressFromHex(encoded.String())
+	if err != nil {
+		return nil, err
+	}
+	return pack.Bytes(ethaddr[:]), nil
 }
 
 // An Address represents a public address on the Ethereum blockchain. It can be
