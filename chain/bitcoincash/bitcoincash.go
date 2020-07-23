@@ -104,7 +104,7 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 		}
 
 		var hash []byte
-		if sigScript != nil {
+		if sigScript == nil {
 			hash = CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
 		} else {
 			hash = CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)

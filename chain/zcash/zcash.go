@@ -123,10 +123,10 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 
 		var hash []byte
 		var err error
-		if sigScript != nil {
-			hash, err = calculateSighash(regnet, sigScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
-		} else {
+		if sigScript == nil {
 			hash, err = calculateSighash(regnet, pubKeyScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
+		} else {
+			hash, err = calculateSighash(regnet, sigScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
 		}
 		if err != nil {
 			return []pack.Bytes32{}, err

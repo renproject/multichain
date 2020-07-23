@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/bitcoincash"
@@ -57,13 +56,8 @@ var _ = Describe("Bitcoin Cash", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
-				inputSigScript, err := txscript.PayToAddrScript(pkhAddr.BitcoinCompatAddress())
-				Expect(err).ToNot(HaveOccurred())
 				inputs := []bitcoincompat.Input{
-					{
-						Output:    output,
-						SigScript: inputSigScript,
-					},
+					{Output: output},
 				}
 				recipients := []bitcoincompat.Recipient{
 					{

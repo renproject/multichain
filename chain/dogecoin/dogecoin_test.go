@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/dogecoin"
@@ -56,13 +55,8 @@ var _ = Describe("Dogecoin", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
-				inputSigScript, err := txscript.PayToAddrScript(pkhAddr)
-				Expect(err).ToNot(HaveOccurred())
 				inputs := []bitcoincompat.Input{
-					{
-						Output:    output,
-						SigScript: inputSigScript,
-					},
+					{Output: output},
 				}
 				recipients := []bitcoincompat.Recipient{
 					{
