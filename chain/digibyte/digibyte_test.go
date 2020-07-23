@@ -60,6 +60,19 @@ var _ = Describe("DigiByte", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputSigScript := []byte(nil)
+				// For witness transactions, the signature script is expected to
+				// be empty.
+				//
+				//	inputSigScript, err := txscript.PayToAddrScript(wpkhAddr)
+				//	Expect(err).ToNot(HaveOccurred())
+				//
+				inputs := []bitcoincompat.Input{
+					{
+						Output:    output,
+						SigScript: inputSigScript,
+					},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
 						Address: pack.String(wpkhAddr.EncodeAddress()),
@@ -74,7 +87,7 @@ var _ = Describe("DigiByte", func() {
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 				}
-				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

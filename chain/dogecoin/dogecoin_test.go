@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/dogecoin"
@@ -55,6 +56,14 @@ var _ = Describe("Dogecoin", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputSigScript, err := txscript.PayToAddrScript(pkhAddr)
+				Expect(err).ToNot(HaveOccurred())
+				inputs := []bitcoincompat.Input{
+					{
+						Output:    output,
+						SigScript: inputSigScript,
+					},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
 						Address: pack.String(pkhAddr.EncodeAddress()),
@@ -65,7 +74,7 @@ var _ = Describe("Dogecoin", func() {
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 				}
-				tx, err := dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

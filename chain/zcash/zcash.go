@@ -51,13 +51,13 @@ func NewTxBuilder(params *chaincfg.Params) bitcoincompat.TxBuilder {
 //
 // Outputs produced for recipients will use P2PKH, or P2SH scripts as the pubkey
 // script, based on the format of the recipient address.
-func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
+func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
 	// Inputs
 	for _, input := range inputs {
-		hash := chainhash.Hash(input.Outpoint.Hash)
-		index := input.Outpoint.Index.Uint32()
+		hash := chainhash.Hash(input.Output.Outpoint.Hash)
+		index := input.Output.Outpoint.Index.Uint32()
 		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), nil, nil))
 	}
 
@@ -94,7 +94,7 @@ func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []b
 // Tx represents a simple Zcash transaction that implements the Bitcoin Compat
 // API.
 type Tx struct {
-	inputs     []bitcoincompat.Output
+	inputs     []bitcoincompat.Input
 	recipients []bitcoincompat.Recipient
 
 	msgTx        *wire.MsgTx
@@ -114,13 +114,13 @@ func (tx *Tx) Hash() pack.Bytes32 {
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 	for i, txin := range tx.inputs {
-		pubKeyScript := txin.PubKeyScript
-		value := int64(txin.Value.Uint64())
+		sigScript := txin.SigScript
+		value := int64(txin.Output.Value.Uint64())
 		if value < 0 {
 			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value = %v", value)
 		}
 
-		hash, err := calculateSighash(regnet, pubKeyScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
+		hash, err := calculateSighash(regnet, sigScript, txscript.SigHashAll, tx.msgTx, i, value, tx.expiryHeight)
 		if err != nil {
 			return []pack.Bytes32{}, err
 		}

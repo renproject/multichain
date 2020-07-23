@@ -13,7 +13,7 @@ type TxBuilder interface {
 	// recipients. The sum value of the inputs must be greater than the sum
 	// value of the outputs, and the difference is paid as a fee to the Bitcoin
 	// network.
-	BuildTx(inputs []Output, recipients []Recipient) (Tx, error)
+	BuildTx(inputs []Input, recipients []Recipient) (Tx, error)
 }
 
 // Tx defines an interface that must be implemented by all types of Bitcoin
@@ -58,7 +58,7 @@ type Outpoint struct {
 //
 // https://developer.bitcoin.org/reference/transactions.html#txin-a-transaction-input-non-coinbase
 type Input struct {
-	Outpoint  Outpoint   `json:"outpoint"`
+	Output    Output     `json:"output"`
 	SigScript pack.Bytes `json:"sigScript"`
 }
 

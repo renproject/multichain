@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/bitcoin"
@@ -61,6 +62,14 @@ var _ = Describe("Bitcoin", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputSigScript, err := txscript.PayToAddrScript(pkhAddr)
+				Expect(err).ToNot(HaveOccurred())
+				inputs := []bitcoincompat.Input{
+					{
+						Output:    output,
+						SigScript: inputSigScript,
+					},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
 						Address: pack.String(pkhAddr.EncodeAddress()),
@@ -75,7 +84,7 @@ var _ = Describe("Bitcoin", func() {
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 				}
-				tx, err := bitcoin.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := bitcoin.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

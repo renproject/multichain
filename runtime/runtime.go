@@ -201,7 +201,7 @@ func (rt *Runtime) BitcoinGasPerByte(ctx context.Context, chain multichain.Chain
 // consumes the given transaction outputs as inputs, and produces a new set of
 // transaction outputs that send funds to the given recipients. If the chain is
 // not Bitcoin-compatible, then an "unsupported chain" error is returned.
-func (rt *Runtime) BitcoinBuildTx(ctx context.Context, chain multichain.Chain, asset multichain.Asset, inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
+func (rt *Runtime) BitcoinBuildTx(ctx context.Context, chain multichain.Chain, asset multichain.Asset, inputs []bitcoincompat.Input, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
 	txBuilder, ok := rt.bitcoinCompatTxBuilders[chain]
 	if !ok {
 		return nil, fmt.Errorf("unsupported chain %v", chain)
