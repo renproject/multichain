@@ -71,4 +71,4 @@ services:
         - "0.0.0.0:16216:16216"
       entrypoint:
         - "./root/run.sh"
-        - "${DOGECOIN_ADDRESS}"
+        - "${NIX_ADDRESS}"
