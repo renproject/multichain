@@ -15,6 +15,7 @@ const (
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
 	ZEC  = Asset("ZEC")  // Zcash
+	NIX  = Asset("NIX")  // NIX
 )
 
 // SizeHint returns the number of bytes required to represent the asset in
@@ -46,6 +47,7 @@ const (
 	DigiByte    = Chain("DigiByte")
 	Ethereum    = Chain("Ethereum")
 	Zcash       = Chain("Zcash")
+	NIX       	= Chain("NIX")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
