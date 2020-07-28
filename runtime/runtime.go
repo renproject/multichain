@@ -237,6 +237,17 @@ func (rt *Runtime) BitcoinSubmitTx(ctx context.Context, chain multichain.Chain, 
 	return client.SubmitTx(ctx, tx)
 }
 
+// SmartContractCall will call a read-only function on a smart contract (or
+// equivalent). The input value is passed as a pack encoded value, but the chain
+// implementation should decode/re-encode this value into the appropriate
+// format. Pack is used because it self-describes its type, and this allows for
+// flexible re-encoding. Similarly, the output type is passed as a pack type,
+// and the chain implementation should convert the smart contract return values
+// into a pack encoded value of this type.
+func (rt *Runtime) SmartContractCall(ctx context.Context, chain multichain.Chain, contract pack.String, input pack.Value, output pack.Type) (pack.Bytes, error) {
+	panic("unimplemented")
+}
+
 // EthereumBurnEvent returns the amount and recipient of a burn event, given the
 // nonce of the burn event. If the nonce cannot be found, or the event does not
 // have sufficient confirmations, this method will return an error. If the chain
