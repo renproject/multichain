@@ -1,61 +1,86 @@
 version: "2"
 services:
-  ##
-  ## Bitcoin
-  ##
-  bitcoin:
-    build:
-      context: ./bitcoin
-    ports:
-      - "0.0.0.0:18443:18443"
-    entrypoint:
-      - "./root/run.sh"
-      - "${BITCOIN_ADDRESS}"
+  # #
+  # # Bitcoin
+  # #
+  # bitcoin:
+  #   build:
+  #     context: ./bitcoin
+  #   ports:
+  #     - "0.0.0.0:18443:18443"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${BITCOIN_ADDRESS}"
 
-  ##
-  ## Bitcoin Cash
-  ##
-  bitcoincash:
-    build:
-      context: ./bitcoincash
-    ports:
-      - "0.0.0.0:19443:19443"
-    entrypoint:
-      - "./root/run.sh"
-      - "${BITCOINCASH_ADDRESS}"
+  # #
+  # # Bitcoin Cash
+  # #
+  # bitcoincash:
+  #   build:
+  #     context: ./bitcoincash
+  #   ports:
+  #     - "0.0.0.0:19443:19443"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${BITCOINCASH_ADDRESS}"
 
-  ##
-  ## DigiByte
-  ##
-  digibyte:
-    build:
-      context: ./digibyte
-    ports:
-      - "0.0.0.0:20443:18443"
-    entrypoint:
-      - "/root/run.sh"
-      - "${DIGIBYTE_ADDRESS}"
+  # #
+  # # DigiByte
+  # #
+  # digibyte:
+  #   build:
+  #     context: ./digibyte
+  #   ports:
+  #     - "0.0.0.0:20443:18443"
+  #   entrypoint:
+  #     - "/root/run.sh"
+  #     - "${DIGIBYTE_ADDRESS}"
+
+  # #
+  # # Dogecoin
+  # #
+  # dogecoin:
+  #   build:
+  #     context: ./dogecoin
+  #   ports:
+  #     - "0.0.0.0:18332:18332"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${DOGECOIN_ADDRESS}"
+
+  # #
+  # # Ethereum
+  # #
+  # ethereum:
+  #   build:
+  #     context: ./ethereum
+  #   ports:
+  #     - "0.0.0.0:8545:8545"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${ETHEREUM_MNEMONIC}"
+  #     - "${ETHEREUM_ADDRESS}"
 
   #
-  # Dogecoin
+  # Solana
   #
-  dogecoin:
+  solana:
     build:
-      context: ./dogecoin
+      context: ./solana
     ports:
-      - "0.0.0.0:18332:18332"
+      - "0.0.0.0:8899:8899"
+      - "0.0.0.0:8900:8900"
+      - "0.0.0.0:9900:9900"
     entrypoint:
       - "./root/run.sh"
-      - "${DOGECOIN_ADDRESS}"
-
-  ##
-  ## Zcash
-  ##
-  zcash:
-    build:
-      context: ./zcash
-    ports:
-      - "0.0.0.0:18232:18232"
-    entrypoint:
-      - "./root/run.sh"
-      - "${ZCASH_ADDRESS}"
+  # #
+  # # Zcash
+  # #
+  # zcash:
+  #   build:
+  #     context: ./zcash
+  #   ports:
+  #     - "0.0.0.0:18232:18232"
+  #   entrypoint:
+  #     - "./root/run.sh"
+  #     - "${ZCASH_ADDRESS}"
