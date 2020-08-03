@@ -19,5 +19,5 @@ func NewTxBuilder(opts cosmoscompat.TxOptions) cosmoscompat.TxBuilder {
 	return cosmos.NewTxBuilder(opts).WithCodec(app.MakeCodec())
 }
 
-// The Tx type is copied from Cosmos.
+// The Tx type is copied from Bitcoin.
 type Tx = cosmos.Tx
