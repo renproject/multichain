@@ -108,3 +108,15 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+
+  #
+  # Ontology
+  #
+  ontology:
+    build:
+      context: ./ontology
+    ports:
+      - "0.0.0.0:20336:20336"
+    entrypoint:
+      - "./var/ontology/run.sh"
+      - "${ONTOLOGY_PK}"

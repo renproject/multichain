@@ -17,6 +17,7 @@ const (
 	FIL  = Asset("FIL")  // Filecoin
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
+	ONT  = Asset("ONT")  // ONT
 	ZEC  = Asset("ZEC")  // Zcash
 )
 
@@ -36,6 +37,8 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case SOL:
 		return Solana
+	case ONT:
+		return Ontology
 	case ZEC:
 		return Zcash
 	default:
@@ -75,6 +78,7 @@ const (
 	Filecoin    = Asset("Filecoin")
 	Solana      = Chain("Solana")
 	Terra       = Chain("Terra")
+	Ontology    = Chain("Ontology")
 	Zcash       = Chain("Zcash")
 )
 
