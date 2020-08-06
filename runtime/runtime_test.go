@@ -17,7 +17,7 @@ var _ = Describe("Bitcoin-compat", func() {
 	Context("when querying outputs", func() {
 		Context("when the chain is not supported", func() {
 			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
+				rt := runtime.NewRuntime(nil, nil, nil, nil, nil)
 				_, err := rt.BitcoinOutput(context.Background(), multichain.Bitcoin, multichain.BTC, bitcoincompat.Outpoint{})
 				Expect(err).To(HaveOccurred())
 			})
@@ -33,7 +33,7 @@ var _ = Describe("Bitcoin-compat", func() {
 	Context("when querying gas-per-byte", func() {
 		Context("when the chain is not supported", func() {
 			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
+				rt := runtime.NewRuntime(nil, nil, nil, nil, nil)
 				_, err := rt.BitcoinGasPerByte(context.Background(), multichain.Bitcoin)
 				Expect(err).To(HaveOccurred())
 			})
@@ -43,7 +43,7 @@ var _ = Describe("Bitcoin-compat", func() {
 			It("should return the output", func() {
 				rt := runtime.NewRuntime(nil, nil, nil, runtime.BitcoinCompatGasEstimators{
 					multichain.Bitcoin: bitcoincompat.NewGasEstimator(pack.NewU64(10000)),
-				}, nil, nil)
+				}, nil)
 				gasPerByte, err := rt.BitcoinGasPerByte(context.Background(), multichain.Bitcoin)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(gasPerByte).To(Equal(pack.NewU64(10000)))
@@ -54,7 +54,7 @@ var _ = Describe("Bitcoin-compat", func() {
 	Context("when building transactions", func() {
 		Context("when the chain is not supported", func() {
 			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
+				rt := runtime.NewRuntime(nil, nil, nil, nil, nil)
 				_, err := rt.BitcoinBuildTx(context.Background(), multichain.Bitcoin, multichain.BTC, []bitcoincompat.Input{}, []bitcoincompat.Recipient{})
 				Expect(err).To(HaveOccurred())
 			})
@@ -70,7 +70,7 @@ var _ = Describe("Bitcoin-compat", func() {
 	Context("when submitting transcations", func() {
 		Context("when the chain is not supported", func() {
 			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
+				rt := runtime.NewRuntime(nil, nil, nil, nil, nil)
 				_, err := rt.BitcoinSubmitTx(context.Background(), multichain.Bitcoin, &bitcoin.Tx{})
 				Expect(err).To(HaveOccurred())
 			})

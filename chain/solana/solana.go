@@ -10,9 +10,22 @@ import (
 	"go.uber.org/zap"
 )
 
+const DefaultClientRPCURL = "http://localhost:8899"
+
 type ClientOptions struct {
 	Logger *zap.Logger
-	URL    string
+	RPCURL string
+}
+
+func DefaultClientOptions() ClientOptions {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	return ClientOptions{
+		Logger: logger,
+		RPCURL: DefaultClientRPCURL,
+	}
 }
 
 type Client struct {
@@ -23,12 +36,9 @@ func NewClient(opts ClientOptions) *Client {
 	return &Client{opts: opts}
 }
 
-func (client *Client) CallContract(ctx context.Context, contract pack.String, input pack.Value, outputType pack.Type) (output pack.Value, err error) {
-	if input.Type().Kind() != pack.KindBytes {
-		return pack.Bytes(nil), fmt.Errorf("unsupported input kind %v", input.Type().Kind())
-	}
-	if outputType.Kind() != pack.KindBytes {
-		return pack.Bytes(nil), fmt.Errorf("unsupported output kind %v", outputType.Kind())
+func (client *Client) ContractCall(ctx context.Context, contract pack.String, input pack.Bytes) (output pack.Bytes, err error) {
+	if input != nil && len(input) != 0 {
+		return nil, fmt.Errorf("expected nil input, got %v input", input)
 	}
 
 	// Make an RPC call to "getAccountInfo" to get the data associated with the
@@ -37,7 +47,7 @@ func (client *Client) CallContract(ctx context.Context, contract pack.String, in
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("encoding params: %v", err)
 	}
-	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.URL)
+	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/multichain/compat/ethereumcompat"
-	"github.com/renproject/multichain/compat/substratecompat"
 	"github.com/renproject/pack"
 )
 
@@ -56,14 +55,6 @@ type (
 	// the chain (using through an RPC interface). Chains that are not
 	// Ethereum-compatible chains will no appear in this mapping.
 	EthereumCompatClients map[multichain.Chain]ethereumcompat.Client
-)
-
-type (
-	// SubstrateCompatClients is a mapping from chains to their
-	// Substrate-compatible clients. Clients are responsible for interacting
-	// with the chain (using through an RPC interface). Chains that are not
-	// Substrate-compatible chains will no appear in this mapping.
-	SubstrateCompatClients map[multichain.Chain]substratecompat.Client
 )
 
 // The Runtime exposes all of the functionality of the underlying chains that
@@ -115,8 +106,6 @@ type Runtime struct {
 	bitcoinCompatGasEstimators BitcoinCompatGasEstimators
 	// Ethereum-compatibility
 	ethereumCompatClients EthereumCompatClients
-	// Substrate-compatiblity
-	substrateCompatClients SubstrateCompatClients
 }
 
 // NewRuntime returns a new instance of the multichain runtime. The mappings
@@ -136,8 +125,6 @@ func NewRuntime(
 	bitcoinCompatGasEstimators BitcoinCompatGasEstimators,
 	// Ethereum-compatibility
 	ethereumCompatClients EthereumCompatClients,
-	// Substrate-compatiblity
-	substrateCompatClients SubstrateCompatClients,
 ) *Runtime {
 	return &Runtime{
 		addrDecoders: addrDecoders,
@@ -147,8 +134,6 @@ func NewRuntime(
 		bitcoinCompatGasEstimators: bitcoinCompatGasEstimators,
 		// Ethereum-compatibility
 		ethereumCompatClients: ethereumCompatClients,
-		// Substrate-compatiblity
-		substrateCompatClients: substrateCompatClients,
 	}
 }
 

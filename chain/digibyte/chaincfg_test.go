@@ -16,7 +16,7 @@ var _ = Describe("DigiByte", func() {
 		It("should work without errors", func() {
 			rt := runtime.NewRuntime(runtime.AddressDecoders{
 				multichain.DigiByte: bitcoin.NewAddressDecoder(&digibyte.MainNetParams),
-			}, nil, nil, nil, nil, nil)
+			}, nil, nil, nil, nil)
 
 			// Encode PKH into DigiByte Address
 			_, err := rt.DecodeAddress(multichain.DigiByte, pack.NewString("DBLsEv4FdFPGrMWzcagDQvoKgUL2CikhMf"))

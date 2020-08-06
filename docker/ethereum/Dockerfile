@@ -3,7 +3,7 @@ FROM ubuntu:xenial
 RUN apt-get update --fix-missing
 RUN apt-get install --yes curl
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install --yes nodejs
 RUN npm install -g ganache-cli
 
