@@ -83,39 +83,3 @@ var _ = Describe("Bitcoin-compat", func() {
 		})
 	})
 })
-
-var _ = Describe("Ethereum-compat", func() {
-	Context("when querying burn events", func() {
-		Context("when the chain is not supported", func() {
-			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
-				_, _, err := rt.EthereumBurnEvent(context.Background(), multichain.Ethereum, multichain.BTC, pack.Bytes32([32]byte{}))
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when the chain is supported", func() {
-			It("should return the burn event", func() {
-				// TODO: Implement.
-			})
-		})
-	})
-})
-
-var _ = Describe("Substrate-compat", func() {
-	Context("when querying burn events", func() {
-		Context("when the chain is not supported", func() {
-			It("should return an error", func() {
-				rt := runtime.NewRuntime(nil, nil, nil, nil, nil, nil)
-				_, _, err := rt.SubstrateBurnEvent(context.Background(), multichain.Acala, multichain.BTC, pack.Bytes32([32]byte{}))
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when the chain is supported", func() {
-			It("should return the burn event", func() {
-				// TODO: Implement.
-			})
-		})
-	})
-})

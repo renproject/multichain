@@ -42,31 +42,31 @@ func EncodeUnit(input pack.Value) (abi.Arguments, []interface{}, error) {
 
 	switch input := input.(type) {
 	case pack.U8:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Uint8()
 	case pack.U16:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Uint16()
 	case pack.U32:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Uint32()
 	case pack.U64:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Uint64()
 	case pack.U128:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Int()
 	case pack.U256:
-		ethtype, err = abi.NewType("uint256", nil)
+		ethtype, err = abi.NewType("uint256", "uint256", nil)
 		ethval = input.Int()
 	case pack.String:
-		ethtype, err = abi.NewType("string", nil)
+		ethtype, err = abi.NewType("string", "string", nil)
 		ethval = string(input)
 	case pack.Bytes:
-		ethtype, err = abi.NewType("bytes", nil)
+		ethtype, err = abi.NewType("bytes", "bytes", nil)
 		ethval = []byte(input)
 	case pack.Bytes32:
-		ethtype, err = abi.NewType("bytes32", nil)
+		ethtype, err = abi.NewType("bytes32", "bytes32", nil)
 		ethval = [32]byte(input)
 	default:
 		return nil, nil, fmt.Errorf("bad type: %v", err)
