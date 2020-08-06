@@ -8,7 +8,7 @@ import (
 )
 
 type Client interface {
-	ContractCall(ctx context.Context, contract pack.String, input pack.Value, outputType pack.Type) (out pack.Value, err error)
+	ContractCall(ctx context.Context, contract pack.String, input pack.Bytes) (pack.Bytes, error)
 }
 
 type client struct {

@@ -244,10 +244,10 @@ func (rt *Runtime) BitcoinSubmitTx(ctx context.Context, chain multichain.Chain, 
 // flexible re-encoding. Similarly, the output type is passed as a pack type,
 // and the chain implementation should convert the contract return values into a
 // pack encoded value of this type.
-func (rt *Runtime) ContractCall(ctx context.Context, chain multichain.Chain, contract pack.String, input pack.Value, output pack.Type) (pack.Bytes, error) {
+func (rt *Runtime) ContractCall(ctx context.Context, chain multichain.Chain, contract pack.String, input pack.Bytes) (pack.Bytes, error) {
 	client, ok := rt.ethereumCompatClients[chain]
 	if !ok {
 		return pack.Bytes(nil), fmt.Errorf("unsupported chain %v", chain)
 	}
-	return client.ContractCall(ctx, contract, input, output)
+	return client.ContractCall(ctx, contract, input)
 }
