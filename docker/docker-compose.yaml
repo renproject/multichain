@@ -65,7 +65,7 @@ services:
   ##
   peercoin:
     build:
-      context: ./zcash
+      context: ./peercoin
     ports:
       - "0.0.0.0:6969:18232"
     entrypoint:
