@@ -61,7 +61,7 @@ services:
       - "${ZCASH_ADDRESS}"
 
   ##
-  ## Zcash
+  ## Peercoin
   ##
   peercoin:
     build:
