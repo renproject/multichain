@@ -96,3 +96,15 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${ZCASH_ADDRESS}"
+
+  ##
+  ## Terra
+  ##
+  terra:
+    build:
+      context: ./terra
+    ports:
+      - "0.0.0.0:26657:26657"
+    entrypoint:
+      - "./root/run.sh"
+      - "${TERRA_ADDRESS}"

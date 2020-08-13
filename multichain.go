@@ -15,6 +15,7 @@ const (
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
 	SOL  = Asset("SOL")  // Solana
+	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
 )
 
@@ -71,6 +72,7 @@ const (
 	Dogecoin    = Chain("Dogecoin")
 	Ethereum    = Chain("Ethereum")
 	Solana      = Chain("Solana")
+	Terra       = Chain("Terra")
 	Zcash       = Chain("Zcash")
 )
 
