@@ -3,6 +3,7 @@ package bitcoincash
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -16,18 +17,21 @@ import (
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
+	"golang.org/x/crypto/ripemd160"
 )
 
 // Version of Bitcoin Cash transactions supported by the multichain.
 const Version int32 = 1
 
-type txBuilder struct{}
+type txBuilder struct {
+	params *chaincfg.Params
+}
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Bitcoin Compat API, and exposes the functionality to build simple
 // Bitcoin Cash transactions.
-func NewTxBuilder() bitcoincompat.TxBuilder {
-	return txBuilder{}
+func NewTxBuilder(params *chaincfg.Params) bitcoincompat.TxBuilder {
+	return txBuilder{params: params}
 }
 
 // BuildTx returns a simple Bitcoin Cash transaction that consumes the funds
@@ -44,35 +48,25 @@ func NewTxBuilder() bitcoincompat.TxBuilder {
 //
 // Outputs produced for recipients will use P2PKH, or P2SH scripts as the pubkey
 // script, based on the format of the recipient address.
-func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
+func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
 	// Inputs
 	for _, input := range inputs {
-		hash := chainhash.Hash(input.Outpoint.Hash)
-		index := input.Outpoint.Index.Uint32()
+		hash := chainhash.Hash(input.Output.Outpoint.Hash)
+		index := input.Output.Outpoint.Index.Uint32()
 		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), nil, nil))
 	}
 
 	// Outputs
 	for _, recipient := range recipients {
-		var script []byte
-		var err error
-		switch addr := recipient.Address.(type) {
-		case AddressPubKeyHash:
-			script, err = txscript.PayToAddrScript(addr.AddressPubKeyHash)
-
-		// TODO: Support P2SH
-		//
-		//	case AddressScriptHash:
-		//		script, err = txscript.PayToAddrScript(addr.AddressScriptHash)
-		//
-
-		default:
-			script, err = txscript.PayToAddrScript(recipient.Address)
-		}
+		addr, err := DecodeAddress(string(recipient.Address), txBuilder.params)
 		if err != nil {
-			return nil, err
+			return &Tx{}, err
+		}
+		script, err := txscript.PayToAddrScript(addr.BitcoinCompatAddress())
+		if err != nil {
+			return &Tx{}, err
 		}
 		value := int64(recipient.Value.Uint64())
 		if value < 0 {
@@ -87,7 +81,7 @@ func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincomp
 // Tx represents a simple Bitcoin Cash transaction that implements the Bitcoin
 // Compat API.
 type Tx struct {
-	inputs     []bitcoincompat.Output
+	inputs     []bitcoincompat.Input
 	recipients []bitcoincompat.Recipient
 
 	msgTx *wire.MsgTx
@@ -101,20 +95,44 @@ func (tx *Tx) Hash() pack.Bytes32 {
 
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
+
 	for i, txin := range tx.inputs {
-		pubKeyScript := txin.PubKeyScript
-		value := int64(txin.Value.Uint64())
+		pubKeyScript := txin.Output.PubKeyScript
+		sigScript := txin.SigScript
+		value := int64(txin.Output.Value.Uint64())
 		if value < 0 {
 			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value = %v", value)
 		}
 
-		hash := CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		var hash []byte
+		if sigScript == nil {
+			hash = CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		} else {
+			hash = CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		}
 
 		sighash := [32]byte{}
 		copy(sighash[:], hash)
 		sighashes[i] = pack.NewBytes32(sighash)
 	}
 	return sighashes, nil
+}
+
+func (tx *Tx) Outputs() ([]bitcoincompat.Output, error) {
+	hash := tx.Hash()
+	outputs := make([]bitcoincompat.Output, len(tx.msgTx.TxOut))
+	for i := range outputs {
+		outputs[i].Outpoint = bitcoincompat.Outpoint{
+			Hash:  hash,
+			Index: pack.NewU32(uint32(i)),
+		}
+		outputs[i].PubKeyScript = pack.Bytes(tx.msgTx.TxOut[i].PkScript)
+		if tx.msgTx.TxOut[i].Value < 0 {
+			return nil, fmt.Errorf("bad output %v: value is less than zero", i)
+		}
+		outputs[i].Value = pack.NewU64(uint64(tx.msgTx.TxOut[i].Value))
+	}
+	return outputs, nil
 }
 
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
@@ -136,6 +154,9 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll|SighashForkID)))
 		builder.AddData(pubKey)
+		if tx.inputs[i].SigScript != nil {
+			builder.AddData(tx.inputs[i].SigScript)
+		}
 		signatureScript, err := builder.Script()
 		if err != nil {
 			return err
@@ -153,6 +174,22 @@ func (tx *Tx) Serialize() (pack.Bytes, error) {
 		return pack.Bytes{}, err
 	}
 	return pack.NewBytes(buf.Bytes()), nil
+}
+
+// An Address represents a Bitcoin Cash address.
+type Address interface {
+	btcutil.Address
+	BitcoinCompatAddress() btcutil.Address
+}
+
+// AddressLegacy represents a legacy Bitcoin address.
+type AddressLegacy struct {
+	btcutil.Address
+}
+
+// BitcoinCompatAddress returns the address as if it was a Bitcoin address.
+func (addr AddressLegacy) BitcoinCompatAddress() btcutil.Address {
+	return addr.Address
 }
 
 // AddressPubKeyHash represents an address for P2PKH transactions for
@@ -211,6 +248,73 @@ func (addr AddressPubKeyHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressPubKeyHash.IsForNet(params)
 }
 
+// BitcoinCompatAddress returns the address as if it was a Bitcoin address.
+func (addr AddressPubKeyHash) BitcoinCompatAddress() btcutil.Address {
+	return addr.AddressPubKeyHash
+}
+
+// AddressScriptHash represents an address for P2SH transactions for
+// Bitcoin Cash that is compatible with the Bitcoin-compat API.
+type AddressScriptHash struct {
+	*btcutil.AddressScriptHash
+	params *chaincfg.Params
+}
+
+// NewAddressScriptHash returns a new AddressScriptHash
+// that is compatible with the Bitcoin-compat API.
+func NewAddressScriptHash(script []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHash(script, params)
+	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
+}
+
+// NewAddressScriptHashFromHash returns a new AddressScriptHash
+// that is compatible with the Bitcoin-compat API.
+func NewAddressScriptHashFromHash(scriptHash []byte, params *chaincfg.Params) (AddressScriptHash, error) {
+	addr, err := btcutil.NewAddressScriptHashFromHash(scriptHash, params)
+	return AddressScriptHash{AddressScriptHash: addr, params: params}, err
+}
+
+// String returns the string encoding of the transaction output
+// destination.
+//
+// Please note that String differs subtly from EncodeAddress: String
+// will return the value as a string without any conversion, while
+// EncodeAddress may convert destination types (for example,
+// converting pubkeys to P2PKH addresses) before encoding as a
+// payment address string.
+func (addr AddressScriptHash) String() string {
+	return addr.EncodeAddress()
+}
+
+// EncodeAddress returns the string encoding of the payment address
+// associated with the Address value.  See the comment on String
+// for how this method differs from String.
+func (addr AddressScriptHash) EncodeAddress() string {
+	hash := *addr.AddressScriptHash.Hash160()
+	encoded, err := EncodeAddress(8, hash[:], addr.params)
+	if err != nil {
+		panic(fmt.Errorf("invalid address: %v", err))
+	}
+	return encoded
+}
+
+// ScriptAddress returns the raw bytes of the address to be used
+// when inserting the address into a txout's script.
+func (addr AddressScriptHash) ScriptAddress() []byte {
+	return addr.AddressScriptHash.ScriptAddress()
+}
+
+// IsForNet returns whether or not the address is associated with the passed
+// bitcoin network.
+func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
+	return addr.AddressScriptHash.IsForNet(params)
+}
+
+// BitcoinCompatAddress returns the address as if it was a Bitcoin address.
+func (addr AddressScriptHash) BitcoinCompatAddress() btcutil.Address {
+	return addr.AddressScriptHash
+}
+
 // Alphabet used by Bitcoin Cash to encode addresses.
 var Alphabet = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
@@ -241,6 +345,48 @@ func EncodeAddress(version byte, hash []byte, params *chaincfg.Params) (string, 
 		return "", fmt.Errorf("invalid bech32 encoding: %v", err)
 	}
 	return EncodeToString(AppendChecksum(AddressPrefix(params), data)), nil
+}
+
+func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
+	// Legacy address decoding
+	if address, err := btcutil.DecodeAddress(addr, params); err == nil {
+		switch address.(type) {
+		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
+			return AddressLegacy{Address: address}, nil
+		case *btcutil.AddressWitnessPubKeyHash, *btcutil.AddressWitnessScriptHash:
+			return nil, fmt.Errorf("unsuported segwit bitcoin address type %T", address)
+		default:
+			return nil, fmt.Errorf("unsuported legacy bitcoin address type %T", address)
+		}
+	}
+
+	if addrParts := strings.Split(addr, ":"); len(addrParts) != 1 {
+		addr = addrParts[1]
+	}
+
+	decoded := DecodeString(addr)
+	if !VerifyChecksum(AddressPrefix(params), decoded) {
+		return nil, btcutil.ErrChecksumMismatch
+	}
+
+	addrBytes, err := bech32.ConvertBits(decoded[:len(decoded)-8], 5, 8, false)
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(addrBytes) - 1 {
+	case ripemd160.Size: // P2PKH or P2SH
+		switch addrBytes[0] {
+		case 0: // P2PKH
+			return NewAddressPubKeyHash(addrBytes[1:21], params)
+		case 8: // P2SH
+			return NewAddressScriptHashFromHash(addrBytes[1:21], params)
+		default:
+			return nil, btcutil.ErrUnknownAddressType
+		}
+	default:
+		return nil, errors.New("decoded address is of unknown size")
+	}
 }
 
 // EncodeToString using Bitcoin Cash address encoding, assuming that the data
@@ -280,6 +426,13 @@ func AppendChecksum(prefix string, payload []byte) []byte {
 		checksum[i] = byte((mod >> uint(5*(7-i))) & 0x1f)
 	}
 	return append(payload, checksum...)
+}
+
+// VerifyChecksum verifies whether the given payload is well-formed.
+//
+// https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/cashaddr.md#checksum
+func VerifyChecksum(prefix string, payload []byte) bool {
+	return PolyMod(append(EncodePrefix(prefix), payload...)) == 0
 }
 
 // EncodePrefix string into bytes.

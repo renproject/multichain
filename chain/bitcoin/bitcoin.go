@@ -6,9 +6,11 @@ import (
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 )
@@ -16,13 +18,15 @@ import (
 // Version of Bitcoin transactions supported by the multichain.
 const Version int32 = 2
 
-type txBuilder struct{}
+type txBuilder struct {
+	params *chaincfg.Params
+}
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Bitcoin Compat API, and exposes the functionality to build simple
 // Bitcoin transactions.
-func NewTxBuilder() bitcoincompat.TxBuilder {
-	return txBuilder{}
+func NewTxBuilder(params *chaincfg.Params) bitcoincompat.TxBuilder {
+	return txBuilder{params: params}
 }
 
 // BuildTx returns a simple Bitcoin transaction that consumes the funds from the
@@ -39,19 +43,23 @@ func NewTxBuilder() bitcoincompat.TxBuilder {
 //
 // Outputs produced for recipients will use P2PKH, P2SH, P2WPKH, or P2WSH
 // scripts as the pubkey script, based on the format of the recipient address.
-func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
+func (txBuilder txBuilder) BuildTx(inputs []bitcoincompat.Input, recipients []bitcoincompat.Recipient) (bitcoincompat.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
 	// Inputs
 	for _, input := range inputs {
-		hash := chainhash.Hash(input.Outpoint.Hash)
-		index := input.Outpoint.Index.Uint32()
+		hash := chainhash.Hash(input.Output.Outpoint.Hash)
+		index := input.Output.Outpoint.Index.Uint32()
 		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, index), nil, nil))
 	}
 
 	// Outputs
 	for _, recipient := range recipients {
-		script, err := txscript.PayToAddrScript(recipient.Address)
+		addr, err := btcutil.DecodeAddress(string(recipient.Address), txBuilder.params)
+		if err != nil {
+			return &Tx{}, err
+		}
+		script, err := txscript.PayToAddrScript(addr)
 		if err != nil {
 			return &Tx{}, err
 		}
@@ -68,7 +76,7 @@ func (txBuilder) BuildTx(inputs []bitcoincompat.Output, recipients []bitcoincomp
 // Tx represents a simple Bitcoin transaction that implements the Bitcoin Compat
 // API.
 type Tx struct {
-	inputs     []bitcoincompat.Output
+	inputs     []bitcoincompat.Input
 	recipients []bitcoincompat.Recipient
 
 	msgTx *wire.MsgTx
@@ -83,19 +91,28 @@ func (tx *Tx) Hash() pack.Bytes32 {
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 
-	for i := range tx.inputs {
-		pubKeyScript := tx.inputs[i].PubKeyScript
-		value := int64(tx.inputs[i].Value.Uint64())
+	for i, txin := range tx.inputs {
+		pubKeyScript := txin.Output.PubKeyScript
+		sigScript := txin.SigScript
+		value := int64(txin.Output.Value.Uint64())
 		if value < 0 {
 			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value = %v", value)
 		}
 
 		var hash []byte
 		var err error
-		if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) {
-			hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+		if sigScript == nil {
+			if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) {
+				hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+			} else {
+				hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i)
+			}
 		} else {
-			hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i)
+			if txscript.IsPayToWitnessScriptHash(pubKeyScript) {
+				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+			} else {
+				hash, err = txscript.CalcSignatureHash(sigScript, txscript.SigHashAll, tx.msgTx, i)
+			}
 		}
 		if err != nil {
 			return []pack.Bytes32{}, err
@@ -109,15 +126,34 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	return sighashes, nil
 }
 
+func (tx *Tx) Outputs() ([]bitcoincompat.Output, error) {
+	hash := tx.Hash()
+	outputs := make([]bitcoincompat.Output, len(tx.msgTx.TxOut))
+	for i := range outputs {
+		outputs[i].Outpoint = bitcoincompat.Outpoint{
+			Hash:  hash,
+			Index: pack.NewU32(uint32(i)),
+		}
+		outputs[i].PubKeyScript = pack.Bytes(tx.msgTx.TxOut[i].PkScript)
+		if tx.msgTx.TxOut[i].Value < 0 {
+			return nil, fmt.Errorf("bad output %v: value is less than zero", i)
+		}
+		outputs[i].Value = pack.NewU64(uint64(tx.msgTx.TxOut[i].Value))
+	}
+	return outputs, nil
+}
+
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
-		return fmt.Errorf("signed")
+		return fmt.Errorf("already signed")
 	}
 	if len(signatures) != len(tx.msgTx.TxIn) {
 		return fmt.Errorf("expected %v signatures, got %v signatures", len(tx.msgTx.TxIn), len(signatures))
 	}
 
 	for i, rsv := range signatures {
+		var err error
+
 		// Decode the signature and the pubkey script.
 		r := new(big.Int).SetBytes(rsv[:32])
 		s := new(big.Int).SetBytes(rsv[32:64])
@@ -125,23 +161,33 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 			R: r,
 			S: s,
 		}
-		pubKeyScript := tx.inputs[i].PubKeyScript
+		pubKeyScript := tx.inputs[i].Output.PubKeyScript
+		sigScript := tx.inputs[i].SigScript
 
-		// Support the consumption of SegWit outputs.
-		if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) || txscript.IsPayToWitnessScriptHash(pubKeyScript) {
-			tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey})
-			continue
+		// Support segwit.
+		if sigScript == nil {
+			if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) || txscript.IsPayToWitnessScriptHash(pubKeyScript) {
+				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey})
+				continue
+			}
+		} else {
+			if txscript.IsPayToWitnessScriptHash(sigScript) || txscript.IsPayToWitnessScriptHash(sigScript) {
+				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey, sigScript})
+				continue
+			}
 		}
 
-		// Support the consumption of non-SegWite outputs.
+		// Support non-segwit
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll)))
 		builder.AddData(pubKey)
-		signatureScript, err := builder.Script()
+		if sigScript != nil {
+			builder.AddData(sigScript)
+		}
+		tx.msgTx.TxIn[i].SignatureScript, err = builder.Script()
 		if err != nil {
 			return err
 		}
-		tx.msgTx.TxIn[i].SignatureScript = signatureScript
 	}
 
 	tx.signed = true

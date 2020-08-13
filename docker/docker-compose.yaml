@@ -1,8 +1,8 @@
 version: "2"
 services:
-  ##
-  ## Bitcoin
-  ##
+  #
+  # Bitcoin
+  #
   bitcoin:
     build:
       context: ./bitcoin
@@ -12,9 +12,9 @@ services:
       - "./root/run.sh"
       - "${BITCOIN_ADDRESS}"
 
-  ##
-  ## Bitcoin Cash
-  ##
+  #
+  # Bitcoin Cash
+  #
   bitcoincash:
     build:
       context: ./bitcoincash
@@ -24,9 +24,9 @@ services:
       - "./root/run.sh"
       - "${BITCOINCASH_ADDRESS}"
 
-  ##
-  ## DigiByte
-  ##
+  #
+  # DigiByte
+  #
   digibyte:
     build:
       context: ./digibyte
@@ -48,9 +48,22 @@ services:
       - "./root/run.sh"
       - "${DOGECOIN_ADDRESS}"
 
-  ##
-  ## Filecoin
-  ##
+  #
+  # Ethereum
+  #
+  ethereum:
+    build:
+      context: ./ethereum
+    ports:
+      - "0.0.0.0:8545:8545"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ETHEREUM_MNEMONIC}"
+      - "${ETHEREUM_ADDRESS}"
+
+  #
+  # Filecoin
+  #
   filecoin:
     build:
       context: ./filecoin
@@ -59,9 +72,22 @@ services:
     entrypoint:
       - "/root/run.sh"
 
-  ##
-  ## Zcash
-  ##
+  #
+  # Solana
+  #
+  solana:
+    build:
+      context: ./solana
+    ports:
+      - "0.0.0.0:8899:8899"
+      - "0.0.0.0:8900:8900"
+      - "0.0.0.0:9900:9900"
+    entrypoint:
+      - "./root/run.sh"
+
+  #
+  # Zcash
+  #
   zcash:
     build:
       context: ./zcash
