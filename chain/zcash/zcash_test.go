@@ -56,17 +56,20 @@ var _ = Describe("Zcash", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputs := []bitcoincompat.Input{
+					{Output: output},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
+						Address: pack.String(pkhAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 					{
-						Address: pkhAddrUncompressed,
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 				}
-				tx, err := zcash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := zcash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and
@@ -117,6 +120,128 @@ var _ = Describe("Zcash", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
 			})
+		})
+	})
+
+	Context("when sending ZEC to a script", func() {
+		It("should work", func() {
+			// Private key
+			pkEnv := os.Getenv("ZCASH_PK")
+			if pkEnv == "" {
+				panic("ZCASH_PK is undefined")
+			}
+			wif, err := btcutil.DecodeWIF(pkEnv)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Client
+			client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:18232"))
+
+			// Script
+			gpubkey := wif.PrivKey.PubKey().SerializeCompressed()
+			ghash := [32]byte{}
+			gscript, err := bitcoincompat.GatewayScript(gpubkey, ghash)
+			Expect(err).ToNot(HaveOccurred())
+			gaddr, err := zcash.NewAddressScriptHash(gscript, &chaincfg.RegressionNetParams)
+			Expect(err).ToNot(HaveOccurred())
+
+			// PKH
+			pkh, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
+			Expect(err).ToNot(HaveOccurred())
+			log.Printf("PKH %v", pkh.EncodeAddress())
+
+			scriptOutput := bitcoincompat.Output{}
+			{
+				// Outputs
+				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkh)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(outputs)).To(BeNumerically(">", 0))
+				output := outputs[0]
+
+				// Input, recipients, and transaction
+				inputs := []bitcoincompat.Input{
+					{Output: output},
+				}
+				recipients := []bitcoincompat.Recipient{
+					{Address: pack.String(gaddr.EncodeAddress()), Value: pack.NewU64(output.Value.Uint64() - 1000)},
+				}
+				tx, err := zcash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Sign
+				sighashes, err := tx.Sighashes()
+				signatures := make([]pack.Bytes65, len(sighashes))
+				Expect(err).ToNot(HaveOccurred())
+				for i := range sighashes {
+					hash := id.Hash(sighashes[i])
+					privKey := (*id.PrivKey)(wif.PrivKey)
+					signature, err := privKey.Sign(&hash)
+					Expect(err).ToNot(HaveOccurred())
+					signatures[i] = pack.NewBytes65(signature)
+				}
+				Expect(tx.Sign(signatures, pack.NewBytes(wif.SerializePubKey()))).To(Succeed())
+
+				// Submit
+				txHash, err := client.SubmitTx(context.Background(), tx)
+				Expect(err).ToNot(HaveOccurred())
+
+				for {
+					// Confirm
+					confs, err := client.Confirmations(context.Background(), txHash)
+					Expect(err).ToNot(HaveOccurred())
+					log.Printf("%v has %v/3 confirmations", txHash, confs)
+					if confs >= 1 {
+						break
+					}
+					time.Sleep(time.Second)
+				}
+
+				outputs, err = tx.Outputs()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(outputs).To(HaveLen(1))
+				scriptOutput = outputs[0]
+			}
+
+			{
+				// Input, recipients, and transaction
+				inputSigScript, err := bitcoincompat.GatewayScript(gpubkey, ghash)
+				Expect(err).ToNot(HaveOccurred())
+				inputs := []bitcoincompat.Input{
+					{Output: scriptOutput, SigScript: inputSigScript},
+				}
+				recipients := []bitcoincompat.Recipient{
+					{Address: pack.String(pkh.EncodeAddress()), Value: pack.NewU64(scriptOutput.Value.Uint64() - 1000)},
+				}
+				tx, err := zcash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Sign
+				sighashes, err := tx.Sighashes()
+				signatures := make([]pack.Bytes65, len(sighashes))
+				Expect(err).ToNot(HaveOccurred())
+				for i := range sighashes {
+					hash := id.Hash(sighashes[i])
+					privKey := (*id.PrivKey)(wif.PrivKey)
+					signature, err := privKey.Sign(&hash)
+					Expect(err).ToNot(HaveOccurred())
+					signatures[i] = pack.NewBytes65(signature)
+				}
+				Expect(tx.Sign(signatures, pack.NewBytes(wif.SerializePubKey()))).To(Succeed())
+
+				// Submit
+				txHash, err := client.SubmitTx(context.Background(), tx)
+				Expect(err).ToNot(HaveOccurred())
+
+				for {
+					// Confirm
+					confs, err := client.Confirmations(context.Background(), txHash)
+					Expect(err).ToNot(HaveOccurred())
+					log.Printf("%v has %v/3 confirmations", txHash, confs)
+					if confs >= 3 {
+						break
+					}
+					time.Sleep(time.Second)
+				}
+			}
 		})
 	})
 })

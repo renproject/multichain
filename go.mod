@@ -15,4 +15,6 @@ require (
 	github.com/renproject/pack v0.2.0
 	github.com/renproject/surge v1.2.5
 	github.com/terra-project/core v0.4.0-rc.2
+	go.uber.org/zap v1.15.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 )

@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/dogecoin"
@@ -33,9 +32,9 @@ var _ = Describe("Dogecoin", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
-				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
+				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &dogecoin.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
-				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
+				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &dogecoin.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("PKH                %v", pkhAddr.EncodeAddress())
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
@@ -56,17 +55,20 @@ var _ = Describe("Dogecoin", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputs := []bitcoincompat.Input{
+					{Output: output},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
+						Address: pack.String(pkhAddr.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 					{
-						Address: pkhAddrUncompressed,
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
 						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
 					},
 				}
-				tx, err := dogecoin.NewTxBuilder().BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

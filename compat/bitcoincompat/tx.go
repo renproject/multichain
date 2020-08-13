@@ -13,7 +13,7 @@ type TxBuilder interface {
 	// recipients. The sum value of the inputs must be greater than the sum
 	// value of the outputs, and the difference is paid as a fee to the Bitcoin
 	// network.
-	BuildTx(inputs []Output, recipients []Recipient) (Tx, error)
+	BuildTx(inputs []Input, recipients []Recipient) (Tx, error)
 }
 
 // Tx defines an interface that must be implemented by all types of Bitcoin
@@ -29,6 +29,10 @@ type Tx interface {
 	// Sign the transaction by injecting signatures and the serialized pubkey of
 	// the signer.
 	Sign([]pack.Bytes65, pack.Bytes) error
+
+	// Outputs returns the transaction outputs that are produced by this
+	// transaction.
+	Outputs() ([]Output, error)
 
 	// Serialize the transaction.
 	Serialize() (pack.Bytes, error)
@@ -54,7 +58,7 @@ type Outpoint struct {
 //
 // https://developer.bitcoin.org/reference/transactions.html#txin-a-transaction-input-non-coinbase
 type Input struct {
-	Outpoint  Outpoint  `json:"outpoint"`
+	Output    Output     `json:"output"`
 	SigScript pack.Bytes `json:"sigScript"`
 }
 
@@ -63,7 +67,7 @@ type Input struct {
 //
 // https://developer.bitcoin.org/reference/transactions.html#txout-a-transaction-output
 type Output struct {
-	Outpoint     Outpoint  `json:"outpoint"`
+	Outpoint     Outpoint   `json:"outpoint"`
 	Value        pack.U64   `json:"value"`
 	PubKeyScript pack.Bytes `json:"pubKeyScript"`
 }
@@ -71,6 +75,6 @@ type Output struct {
 // A Recipient of funds from a Bitcoin transaction. This is useful for buidling
 // simple pay-to-address Bitcoin transactions.
 type Recipient struct {
-	Address Address `json:"address"`
-	Value   pack.U64 `json:"value"`
+	Address pack.String `json:"address"`
+	Value   pack.U64    `json:"value"`
 }

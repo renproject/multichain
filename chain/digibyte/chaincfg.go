@@ -9,6 +9,15 @@ import (
 	"github.com/btcsuite/btcd/wire"
 )
 
+func init() {
+	if err := chaincfg.Register(&MainNetParams); err != nil {
+		panic(err)
+	}
+	if err := chaincfg.Register(&RegressionNetParams); err != nil {
+		panic(err)
+	}
+}
+
 var (
 	bigOne       = big.NewInt(1)
 	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 224), bigOne)
@@ -102,7 +111,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 	return hash
 }
 
-var DigiByteMainNetParams = &chaincfg.Params{
+var MainNetParams = chaincfg.Params{
 	Name:        "mainnet",
 	Net:         0xdab6c3fa,
 	DefaultPort: "12024",
@@ -296,7 +305,7 @@ var DigiByteMainNetParams = &chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
-var DigiByteRegtestParams = &chaincfg.Params{
+var RegressionNetParams = chaincfg.Params{
 	Name: "regtest",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).

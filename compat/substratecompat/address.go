@@ -14,7 +14,7 @@ type Address pack.Bytes
 // The AddressDecoder defines an interface for decoding string representations
 // of Substrate address into the concrete Address type.
 type AddressDecoder interface {
-	DecodeAddress(pack.String) (Address, error)
+	DecodeAddress(pack.String) (pack.Bytes, error)
 }
 
 type addressDecoder struct{}
@@ -29,10 +29,10 @@ func NewAddressDecoder() AddressDecoder {
 // DecodeAddress the string using the Bitcoin base58 alphabet. If the string
 // does not a 2-byte address type, 32-byte array, and 1-byte checksum, then an
 // error is returned.
-func (addressDecoder) DecodeAddress(encoded pack.String) (Address, error) {
+func (addressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
 	data := base58.Decode(encoded.String())
 	if len(data) != 35 {
-		return Address{}, fmt.Errorf("expected 35 bytes, got %v bytes", len(data))
+		return nil, fmt.Errorf("expected 35 bytes, got %v bytes", len(data))
 	}
-	return Address(data), nil
+	return pack.Bytes(data), nil
 }

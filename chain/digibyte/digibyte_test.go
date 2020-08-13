@@ -32,16 +32,21 @@ var _ = Describe("DigiByte", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
-				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), digibyte.DigiByteRegtestParams)
+				wpkhAddr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
-				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), digibyte.DigiByteRegtestParams)
+				log.Printf("WPKH               %v", wpkhAddr.EncodeAddress())
+
+				// PKH
+				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
+				Expect(err).ToNot(HaveOccurred())
+				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &digibyte.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("PKH                %v", pkhAddr.EncodeAddress())
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
 				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
-				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkhAddr)
+				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, wpkhAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
 				output := outputs[0]
@@ -55,17 +60,24 @@ var _ = Describe("DigiByte", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
+				inputs := []bitcoincompat.Input{
+					{Output: output},
+				}
 				recipients := []bitcoincompat.Recipient{
 					{
-						Address: pkhAddr,
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						Address: pack.String(wpkhAddr.EncodeAddress()),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 					{
-						Address: pkhAddrUncompressed,
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						Address: pack.String(pkhAddr.EncodeAddress()),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
+					},
+					{
+						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
+						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
 					},
 				}
-				tx, err := digibyte.NewTxBuilder().BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and

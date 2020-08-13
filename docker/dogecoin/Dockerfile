@@ -6,8 +6,6 @@ RUN wget -c https://github.com/dogecoin/dogecoin/releases/download/v1.14.2/dogec
 RUN mv ./dogecoin-1.14.2 /app
 RUN chmod +x /app/bin/dogecoind
 RUN chmod +x /app/bin/dogecoin-cli
-RUN ln -s /app/bin/dogecoind /usr/bin/dogecoind
-RUN ln -s /app/bin/dogecoin-cli /usr/bin/dogecoin-cli
 
 COPY dogecoin.conf /root/.dogecoin/dogecoin.conf
 COPY run.sh /root/run.sh
