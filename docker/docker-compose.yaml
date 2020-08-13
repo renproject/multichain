@@ -1,34 +1,34 @@
 version: "2"
 services:
-  # ##
-  # ## Bitcoin
-  # ##
+  ##
+  ## Bitcoin
+  ##
 
-  # bitcoin:
-  #   build:
-  #     context: ./bitcoin
-  #   ports:
-  #     - "0.0.0.0:18443:18443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${BITCOIN_ADDRESS}"
-
-  # ##
-  # ## Bitcoin Cash
-  # ##
-
-  # bitcoincash:
-  #   build:
-  #     context: ./bitcoincash
-  #   ports:
-  #     - "0.0.0.0:19443:19443"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${BITCOINCASH_ADDRESS}"
+  bitcoin:
+    build:
+      context: ./bitcoin
+    ports:
+      - "0.0.0.0:18443:18443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOIN_ADDRESS}"
 
   ##
-  ## Dogecoin
+  ## Bitcoin Cash
   ##
+
+  bitcoincash:
+    build:
+      context: ./bitcoincash
+    ports:
+      - "0.0.0.0:19443:19443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOINCASH_ADDRESS}"
+
+  #
+  # Dogecoin
+  #
 
   dogecoin:
     build:
@@ -38,14 +38,30 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${DOGECOIN_ADDRESS}"
-  # ##
-  # ## Zcash
-  # ##
-  # zcash:
-  #   build:
-  #     context: ./zcash
-  #   ports:
-  #     - "0.0.0.0:18232:18232"
-  #   entrypoint:
-  #     - "./root/run.sh"
-  #     - "${ZCASH_ADDRESS}"
+        
+   ##
+   ## Zcash
+   ##
+   
+   zcash:
+     build:
+       context: ./zcash
+     ports:
+       - "0.0.0.0:18232:18232"
+     entrypoint:
+       - "./root/run.sh"
+       - "${ZCASH_ADDRESS}"
+
+   ##
+   ## Zcoin
+   ##
+
+   zcoin:
+     build:
+       context: ./zcoin
+     ports:
+       - "0.0.0.0:19232:19232"
+     entrypoint:
+       - "./root/run.sh"
+       - "${ZCOIN_ADDRESS}"
+ 
