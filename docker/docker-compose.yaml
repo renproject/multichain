@@ -62,6 +62,17 @@ services:
       - "${ETHEREUM_ADDRESS}"
 
   #
+  # Filecoin
+  #
+  filecoin:
+    build:
+      context: ./filecoin
+    ports:
+      - "0.0.0.0:1234:1234"
+    entrypoint:
+      - "/root/run.sh"
+
+  #
   # Solana
   #
   solana:
