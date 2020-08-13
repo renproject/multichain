@@ -5,11 +5,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/renproject/pack"
-	"github.com/renproject/multichain"
 )
 
 type Client interface {
-	BurnEvent(ctx context.Context, asset multichain.Asset, nonce pack.Bytes32) (amount pack.U256, to pack.String, confs int64, err error)
+	ContractCall(ctx context.Context, contract pack.String, input pack.Bytes) (pack.Bytes, error)
 }
 
 type client struct {

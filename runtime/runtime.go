@@ -7,7 +7,6 @@ import (
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/multichain/compat/ethereumcompat"
-	"github.com/renproject/multichain/compat/substratecompat"
 	"github.com/renproject/pack"
 )
 
@@ -56,14 +55,6 @@ type (
 	// the chain (using through an RPC interface). Chains that are not
 	// Ethereum-compatible chains will no appear in this mapping.
 	EthereumCompatClients map[multichain.Chain]ethereumcompat.Client
-)
-
-type (
-	// SubstrateCompatClients is a mapping from chains to their
-	// Substrate-compatible clients. Clients are responsible for interacting
-	// with the chain (using through an RPC interface). Chains that are not
-	// Substrate-compatible chains will no appear in this mapping.
-	SubstrateCompatClients map[multichain.Chain]substratecompat.Client
 )
 
 // The Runtime exposes all of the functionality of the underlying chains that
@@ -115,8 +106,6 @@ type Runtime struct {
 	bitcoinCompatGasEstimators BitcoinCompatGasEstimators
 	// Ethereum-compatibility
 	ethereumCompatClients EthereumCompatClients
-	// Substrate-compatiblity
-	substrateCompatClients SubstrateCompatClients
 }
 
 // NewRuntime returns a new instance of the multichain runtime. The mappings
@@ -136,8 +125,6 @@ func NewRuntime(
 	bitcoinCompatGasEstimators BitcoinCompatGasEstimators,
 	// Ethereum-compatibility
 	ethereumCompatClients EthereumCompatClients,
-	// Substrate-compatiblity
-	substrateCompatClients SubstrateCompatClients,
 ) *Runtime {
 	return &Runtime{
 		addrDecoders: addrDecoders,
@@ -147,8 +134,6 @@ func NewRuntime(
 		bitcoinCompatGasEstimators: bitcoinCompatGasEstimators,
 		// Ethereum-compatibility
 		ethereumCompatClients: ethereumCompatClients,
-		// Substrate-compatiblity
-		substrateCompatClients: substrateCompatClients,
 	}
 }
 
@@ -237,52 +222,17 @@ func (rt *Runtime) BitcoinSubmitTx(ctx context.Context, chain multichain.Chain, 
 	return client.SubmitTx(ctx, tx)
 }
 
-// SmartContractCall will call a read-only function on a smart contract (or
-// equivalent). The input value is passed as a pack encoded value, but the chain
+// ContractCall will call a read-only function on a contract (or equivalent).
+// The input value is passed as a pack encoded value, but the chain
 // implementation should decode/re-encode this value into the appropriate
 // format. Pack is used because it self-describes its type, and this allows for
 // flexible re-encoding. Similarly, the output type is passed as a pack type,
-// and the chain implementation should convert the smart contract return values
-// into a pack encoded value of this type.
-func (rt *Runtime) SmartContractCall(ctx context.Context, chain multichain.Chain, contract pack.String, input pack.Value, output pack.Type) (pack.Bytes, error) {
-	panic("unimplemented")
-}
-
-// EthereumBurnEvent returns the amount and recipient of a burn event, given the
-// nonce of the burn event. If the nonce cannot be found, or the event does not
-// have sufficient confirmations, this method will return an error. If the chain
-// is not Ethereum-compatible, then an "unsupported chain" error is returned.
-func (rt *Runtime) EthereumBurnEvent(ctx context.Context, chain multichain.Chain, asset multichain.Asset, nonce pack.Bytes32) (pack.U256, pack.String, error) {
+// and the chain implementation should convert the contract return values into a
+// pack encoded value of this type.
+func (rt *Runtime) ContractCall(ctx context.Context, chain multichain.Chain, contract pack.String, input pack.Bytes) (pack.Bytes, error) {
 	client, ok := rt.ethereumCompatClients[chain]
 	if !ok {
-		return pack.U256{}, pack.String(""), fmt.Errorf("unsupported chain %v", chain)
+		return pack.Bytes(nil), fmt.Errorf("unsupported chain %v", chain)
 	}
-	amount, to, confirmations, err := client.BurnEvent(ctx, asset, nonce)
-	if err != nil {
-		return pack.U256{}, pack.String(""), fmt.Errorf("bad burn event: %v", err)
-	}
-	if confirmations < 1 { // TODO: This must be configurable.
-		return pack.U256{}, pack.String(""), fmt.Errorf("insufficient confirmations: %v", confirmations)
-	}
-	return amount, to, nil
-}
-
-// SubstrateBurnEvent returns the amount and recipient of a burn event, given
-// the nonce of the burn event. If the nonce cannot be found, or the event does
-// not have sufficient confirmations, this method will return an error. If the
-// chain is not Substrate-compatible, then an "unsupported chain" error is
-// returned.
-func (rt *Runtime) SubstrateBurnEvent(ctx context.Context, chain multichain.Chain, asset multichain.Asset, nonce pack.Bytes32) (pack.U256, pack.String, error) {
-	client, ok := rt.substrateCompatClients[chain]
-	if !ok {
-		return pack.U256{}, pack.String(""), fmt.Errorf("unsupported chain %v", chain)
-	}
-	amount, to, confirmations, err := client.BurnEvent(ctx, asset, nonce)
-	if err != nil {
-		return pack.U256{}, pack.String(""), fmt.Errorf("bad burn event: %v", err)
-	}
-	if confirmations < 1 { // TODO: This must be configurable.
-		return pack.U256{}, pack.String(""), fmt.Errorf("insufficient confirmations: %v", confirmations)
-	}
-	return amount, to, nil
+	return client.ContractCall(ctx, contract, input)
 }
