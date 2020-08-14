@@ -1,10 +1,8 @@
 package digibyte_test
 
 import (
-	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/digibyte"
-	"github.com/renproject/multichain/runtime"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -12,14 +10,9 @@ import (
 )
 
 var _ = Describe("DigiByte", func() {
-	Context("when creating an address", func() {
+	Context("when decoding an address", func() {
 		It("should work without errors", func() {
-			rt := runtime.NewRuntime(runtime.AddressDecoders{
-				multichain.DigiByte: bitcoin.NewAddressDecoder(&digibyte.MainNetParams),
-			}, nil, nil, nil, nil)
-
-			// Encode PKH into DigiByte Address
-			_, err := rt.DecodeAddress(multichain.DigiByte, pack.NewString("DBLsEv4FdFPGrMWzcagDQvoKgUL2CikhMf"))
+			_, err := bitcoin.NewAddressDecoder(&digibyte.MainNetParams).DecodeAddress(pack.NewString("DBLsEv4FdFPGrMWzcagDQvoKgUL2CikhMf"))
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
