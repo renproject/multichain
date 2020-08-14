@@ -14,6 +14,7 @@ const (
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
+	FIL  = Asset("FIL")  // Filecoin
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
@@ -71,6 +72,7 @@ const (
 	DigiByte    = Chain("DigiByte")
 	Dogecoin    = Chain("Dogecoin")
 	Ethereum    = Chain("Ethereum")
+	Filecoin    = Asset("Filecoin")
 	Solana      = Chain("Solana")
 	Terra       = Chain("Terra")
 	Zcash       = Chain("Zcash")
