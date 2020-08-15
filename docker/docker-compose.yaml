@@ -49,6 +49,18 @@ services:
       - "${DOGECOIN_ADDRESS}"
 
   #
+  # Electra
+  #
+  electra:
+    build:
+      context: ./electra
+    ports:
+      - "0.0.0.0:15788:15788"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ELECTRA_ADDRESS}"
+
+  #
   # Ethereum
   #
   ethereum:

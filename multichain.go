@@ -13,6 +13,7 @@ const (
 	BTC  = Asset("BTC")  // Bitcoin
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
+	ECA  = Asset("ECA")  // Electra
 	ETH  = Asset("ETH")  // Ether
 	FIL  = Asset("FIL")  // Filecoin
 	SOL  = Asset("SOL")  // Solana
@@ -32,6 +33,8 @@ func (asset Asset) OriginChain() Chain {
 		return DigiByte
 	case DOGE:
 		return Dogecoin
+	case ECA:
+		return Electra
 	case ETH:
 		return Ethereum
 	case SOL:
@@ -71,6 +74,7 @@ const (
 	BitcoinCash = Chain("BitcoinCash")
 	DigiByte    = Chain("DigiByte")
 	Dogecoin    = Chain("Dogecoin")
+	Electra     = Chain("Electra")
 	Ethereum    = Chain("Ethereum")
 	Filecoin    = Asset("Filecoin")
 	Solana      = Chain("Solana")
