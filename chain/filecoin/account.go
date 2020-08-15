@@ -3,16 +3,26 @@ package filecoin
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	filaddress "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-jsonrpc"
+	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/types"
+	"github.com/filecoin-project/lotus/cli"
 	"github.com/filecoin-project/specs-actors/actors/abi"
 	"github.com/filecoin-project/specs-actors/actors/abi/big"
 	"github.com/minio/blake2b-simd"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
+)
+
+const (
+	DefaultClientMultiAddress = ""
+	DefaultClientAuthToken    = ""
 )
 
 type Tx struct {
@@ -129,16 +139,77 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U
 	}, nil
 }
 
+// ClientOptions are used to parameterise the behaviour of the Client.
+type ClientOptions struct {
+	MultiAddress string
+	AuthToken    string
+}
+
+// DefaultClientOptions returns ClientOptions with the default settings. These
+// settings are valid for use with the default local deployment of the
+// multichain. In production, the multi-address and authentication token should
+// be changed.
+func DefaultClientOptions() ClientOptions {
+	return ClientOptions{
+		MultiAddress: DefaultClientMultiAddress,
+		AuthToken:    DefaultClientAuthToken,
+	}
+}
+
+// WithAddress returns a modified version of the options with the given API
+// multi-address.
+func (opts ClientOptions) WithAddress(multiAddr string) ClientOptions {
+	opts.MultiAddress = multiAddr
+	return opts
+}
+
+// WithAuthToken returns a modified version of the options with the given
+// authentication token.
+func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
+	opts.AuthToken = authToken
+	return opts
+}
+
 type Client struct {
+	opts   ClientOptions
+	node   api.FullNode
+	closer jsonrpc.ClientCloser
+}
+
+func NewClient(opts ClientOptions) (*Client, error) {
+	authToken, err := hex.Decode(opts.AuthToken)
+	if err != nil {
+		return nil, err
+	}
+	apiInfo := cli.APIInfo{
+		Address: multiaddr.NewMultiaddr(opts.Address),
+		Token:   authToken,
+	}
+	apiAddr, err := apiInfo.DialArgs()
+	if err != nil {
+		return nil, err
+	}
+	header := apiInfo.AuthHeader()
+
+	node, closer, err := filecoinClient.NewFullNodeRPC(apiAddr, header)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		opts:   opts,
+		node:   node,
+		closer: closer,
+	}, nil
 }
 
 // Tx returns the transaction uniquely identified by the given transaction
 // hash. It also returns the number of confirmations for the transaction.
-func (client Client) Tx(context.Context, pack.Bytes) (account.Tx, pack.U64, error) {
+func (client *Client) Tx(context.Context, pack.Bytes) (account.Tx, pack.U64, error) {
 	panic("unimplemented")
 }
 
 // SubmitTx to the underlying blockchain network.
-func (client Client) SubmitTx(context.Context, account.Tx) error {
+func (client *Client) SubmitTx(context.Context, account.Tx) error {
 	panic("unimplemented")
 }
