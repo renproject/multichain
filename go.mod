@@ -8,6 +8,10 @@ require (
 	github.com/codahale/blake2 v0.0.0-20150924215134-8d10d0420cbf
 	github.com/cosmos/cosmos-sdk v0.39.0
 	github.com/ethereum/go-ethereum v1.9.19
+	github.com/filecoin-project/go-address v0.0.2-0.20200504173055-8b6f2fb2b3ef
+	github.com/filecoin-project/go-fil-markets v0.5.1
+	github.com/filecoin-project/lotus v0.4.2
+	github.com/filecoin-project/specs-actors v0.8.1-0.20200723200253-a3c01bc62f99
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/renproject/id v0.4.2
