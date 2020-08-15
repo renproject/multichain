@@ -1,4 +1,4 @@
-package ethereumcompat
+package ethereum
 
 import (
 	"encoding/hex"
