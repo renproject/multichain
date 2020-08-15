@@ -198,6 +198,36 @@ var _ = Describe("Encoding", func() {
 		})
 	})
 
+	Context("when encoding complex calldata", func() {
+		It("should return the expected bytes", func() {
+			phashHex := "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+			phashBytes, err := hex.DecodeString(phashHex)
+			Expect(err).ToNot(HaveOccurred())
+			var phash pack.Bytes32
+			copy(phash[:], phashBytes)
+			tokenHex := "0x675000eed287586fcb53d676f4ab1c15e8be314d"
+			tokenAddr, err := ethereumcompat.NewAddressFromHex(tokenHex)
+			Expect(err).ToNot(HaveOccurred())
+			toHex := "0xc7ddb84d0d8f70dbd8453f88a5967681cd3c9830"
+			toAddr, err := ethereumcompat.NewAddressFromHex(toHex)
+			Expect(err).ToNot(HaveOccurred())
+			nhashHex := "5f2515e44d1bf07d591b78f5c896c87b7dd7441fbf3395f3f0c88578ef7bdc04"
+			nhashBytes, err := hex.DecodeString(nhashHex)
+			Expect(err).ToNot(HaveOccurred())
+			var nhash pack.Bytes32
+			copy(nhash[:], nhashBytes)
+			args := []interface{}{
+				phash,
+				pack.NewU256FromU64(pack.NewU64(9711004)),
+				ethereumcompat.Address(tokenAddr),
+				ethereumcompat.Address(toAddr),
+				nhash,
+			}
+			result := ethereumcompat.Encode(args...)
+			Expect(hex.EncodeToString(result)).To(Equal("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a4700000000000000000000000000000000000000000000000000000000000942d9c000000000000000000000000675000eed287586fcb53d676f4ab1c15e8be314d000000000000000000000000c7ddb84d0d8f70dbd8453f88a5967681cd3c98305f2515e44d1bf07d591b78f5c896c87b7dd7441fbf3395f3f0c88578ef7bdc04"))
+		})
+	})
+
 	type testCase struct {
 		addr   string
 		amount uint64

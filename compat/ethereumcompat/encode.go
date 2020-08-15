@@ -29,12 +29,12 @@ func Encode(vals ...interface{}) []byte {
 
 		switch val := val.(type) {
 		case pack.Bytes:
-			ethval = val
+			println("BYTES")
+			ethval = []byte(val)
 			ty, err = abi.NewType("bytes", "", nil)
 		case pack.Bytes32:
-			ethval = val
+			ethval = [32]byte(val)
 			ty, err = abi.NewType("bytes32", "", nil)
-
 		case pack.U8:
 			ethval = big.NewInt(0).SetUint64(uint64(val.Uint8()))
 			ty, err = abi.NewType("uint256", "", nil)
@@ -53,11 +53,9 @@ func Encode(vals ...interface{}) []byte {
 		case pack.U256:
 			ethval = val.Int()
 			ty, err = abi.NewType("uint256", "", nil)
-
 		case Address:
 			ethval = val
-			ty, err = abi.NewType("bytes20", "", nil)
-
+			ty, err = abi.NewType("address", "", nil)
 		default:
 			panic(fmt.Errorf("non-exhaustive pattern: %T", val))
 		}
