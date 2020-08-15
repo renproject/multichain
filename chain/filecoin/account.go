@@ -3,18 +3,17 @@ package filecoin
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
 
+	// filclient "github.com/filecoin-project/lotus/api/client"
 	filaddress "github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-jsonrpc"
-	"github.com/filecoin-project/lotus/api"
+	// "github.com/filecoin-project/go-jsonrpc"
+	// "github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/lotus/cli"
+	// "github.com/filecoin-project/lotus/cli"
 	"github.com/filecoin-project/specs-actors/actors/abi"
 	"github.com/filecoin-project/specs-actors/actors/abi/big"
 	"github.com/minio/blake2b-simd"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
@@ -171,36 +170,40 @@ func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
 }
 
 type Client struct {
-	opts   ClientOptions
-	node   api.FullNode
-	closer jsonrpc.ClientCloser
+	opts ClientOptions
+	// node   api.FullNode
+	// closer jsonrpc.ClientCloser
 }
 
 func NewClient(opts ClientOptions) (*Client, error) {
-	authToken, err := hex.Decode(opts.AuthToken)
-	if err != nil {
-		return nil, err
-	}
-	apiInfo := cli.APIInfo{
-		Address: multiaddr.NewMultiaddr(opts.Address),
-		Token:   authToken,
-	}
-	apiAddr, err := apiInfo.DialArgs()
-	if err != nil {
-		return nil, err
-	}
-	header := apiInfo.AuthHeader()
+	// authToken, err := hex.DecodeString(opts.AuthToken)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("bad auth token '%v': %v", err)
+	// }
+	// multiAddr, err := multiaddr.NewMultiaddr(opts.MultiAddress)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("bad multi-address '%v': %v", err)
+	// }
+	// info := cli.APIInfo{
+	// 	Addr:  multiAddr,
+	// 	Token: authToken,
+	// }
+	// dialArgs, err := info.DialArgs()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// authHeader := info.AuthHeader()
+	// node, closer, err := filclient.NewFullNodeRPC(dialArgs, authHeader)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	node, closer, err := filecoinClient.NewFullNodeRPC(apiAddr, header)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		opts:   opts,
-		node:   node,
-		closer: closer,
-	}, nil
+	// return &Client{
+	// 	opts:   opts,
+	// 	node:   node,
+	// 	closer: closer,
+	// }, nil
+	return nil, nil
 }
 
 // Tx returns the transaction uniquely identified by the given transaction

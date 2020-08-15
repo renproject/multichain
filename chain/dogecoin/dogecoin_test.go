@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/dogecoin"
-	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"

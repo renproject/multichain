@@ -1,4 +1,4 @@
-package substratecompat
+package substrate
 
 import (
 	"fmt"
