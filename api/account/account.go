@@ -1,3 +1,5 @@
+// Package account defines the Account API. All chains that use an account-based
+// model should implement this API.
 package account
 
 import (
@@ -7,56 +9,65 @@ import (
 	"github.com/renproject/pack"
 )
 
+// The Tx interfaces defines the functionality that must be exposed by
+// account-based transactions.
 type Tx interface {
-	// Hash returns the hash that uniquely identifies the transaction.
-	// Generally, hashes are irreversible hash functions that consume the
-	// content of the transaction.
+	// Hash that uniquely identifies the transaction. Hashes are usually the
+	// result of an irreversible hashing function applied to some serialized
+	// representation of the transaction.
 	Hash() pack.Bytes
 
-	// From returns the address that is sending the transaction. Generally,
-	// this is also the address that must sign the transaction.
+	// From returns the address from which value is being sent.
 	From() address.Address
 
-	// To returns the address that is receiving the transaction. This can be the
-	// address of an external account, controlled by a private key, or it can be
-	// the address of a contract.
+	// To returns the address to which value is being sent.
 	To() address.Address
 
-	// Value being sent from the sender to the receiver.
+	// Value being sent from one address to another.
 	Value() pack.U256
 
-	// Nonce returns the nonce used to order the transaction with respect to all
-	// other transactions signed and submitted by the sender.
+	// Nonce used to order the transaction with respect to all other
+	// transactions signed and submitted by the sender of this transaction.
 	Nonce() pack.U256
 
 	// Payload returns arbitrary data that is associated with the transaction.
-	// Generally, this payload is used to send notes between external accounts,
-	// or invoke business logic on a contract.
+	// This payload is often used to send notes between external accounts, or
+	// call functions on a contract.
 	Payload() pack.Bytes
 
-	// Sighashes returns the digests that must be signed before the transaction
-	// can be submitted by the client.
+	// Sighashes that must be signed before the transaction can be submitted by
+	// the client.
 	Sighashes() ([]pack.Bytes32, error)
 
 	// Sign the transaction by injecting signatures for the required sighashes.
-	// The serialized public key used to sign the sighashes must also be
-	// specified.
+	// The serialized public key used to sign the sighashes should also be
+	// specified whenever it is available.
 	Sign([]pack.Bytes65, pack.Bytes) error
 
-	// Serialize the transaction into bytes. Generally, this is the format in
-	// which the transaction will be submitted by the client.
+	// Serialize the transaction into bytes. This is the format in which the
+	// transaction will be submitted by the client.
 	Serialize() (pack.Bytes, error)
 }
 
+// The TxBuilder interface defines the functionality required to build
+// account-based transactions. Most chain implementations require additional
+// information, and this should be accepted during the construction of the
+// chain-specific transaction builder.
 type TxBuilder interface {
 	BuildTx(from, to address.Address, value, nonce pack.U256, payload pack.Bytes) (Tx, error)
 }
 
+// The Client interface defines the functionality required to interact with a
+// chain over RPC.
 type Client interface {
 	// Tx returns the transaction uniquely identified by the given transaction
-	// hash. It also returns the number of confirmations for the transaction.
+	// hash. It also returns the number of confirmations for the transaction. If
+	// the transaction cannot be found before the context is done, or the
+	// transaction is invalid, then an error should be returned.
 	Tx(context.Context, pack.Bytes) (Tx, pack.U64, error)
 
-	// SubmitTx to the underlying blockchain network.
+	// SubmitTx to the underlying chain. If the transaction cannot be found
+	// before the context is done, or the transaction is invalid, then an error
+	// should be returned.
 	SubmitTx(context.Context, Tx) error
 }
