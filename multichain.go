@@ -1,6 +1,45 @@
+// Package multichain defines all supported assets and chains. It also
+// re-exports the individual multichain APIs.
 package multichain
 
-import "github.com/renproject/surge"
+import (
+	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
+	"github.com/renproject/multichain/api/gas"
+	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/surge"
+)
+
+type (
+	Address    = address.Address
+	RawAddress = address.RawAddress
+)
+
+type (
+	AccountTx        = account.Tx
+	AccountTxBuilder = account.TxBuilder
+	AccountClient    = account.Client
+)
+
+type (
+	UTXOutpoint   = utxo.Outpoint
+	UTXO          = utxo.Output
+	UTXOInput     = utxo.Input
+	UTXORecipient = utxo.Recipient
+	UTXOTx        = utxo.Tx
+	UTXOTxBuilder = utxo.TxBuilder
+	UTXOClient    = utxo.Client
+)
+
+type (
+	ContractCallData = contract.CallData
+	ContractCaller   = contract.Caller
+)
+
+type (
+	GasEstimator = gas.Estimator
+)
 
 // An Asset uniquely identifies assets using human-readable strings.
 type Asset string
@@ -10,6 +49,7 @@ type Asset string
 // enumerated values. Assets must be listed in alphabetical order.
 const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
+	BNB  = Asset("BNB")  // Binance Coin
 	BTC  = Asset("BTC")  // Bitcoin
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
@@ -26,6 +66,8 @@ func (asset Asset) OriginChain() Chain {
 	switch asset {
 	case BCH:
 		return BitcoinCash
+	case BNB:
+		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
 	case DGB:
@@ -66,16 +108,17 @@ type Chain string
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	Acala       = Chain("Acala")
-	Bitcoin     = Chain("Bitcoin")
-	BitcoinCash = Chain("BitcoinCash")
-	DigiByte    = Chain("DigiByte")
-	Dogecoin    = Chain("Dogecoin")
-	Ethereum    = Chain("Ethereum")
-	Filecoin    = Asset("Filecoin")
-	Solana      = Chain("Solana")
-	Terra       = Chain("Terra")
-	Zcash       = Chain("Zcash")
+	Acala             = Chain("Acala")
+	BinanceSmartChain = Asset("BinanceSmartChain")
+	Bitcoin           = Chain("Bitcoin")
+	BitcoinCash       = Chain("BitcoinCash")
+	DigiByte          = Chain("DigiByte")
+	Dogecoin          = Chain("Dogecoin")
+	Ethereum          = Chain("Ethereum")
+	Filecoin          = Asset("Filecoin")
+	Solana            = Chain("Solana")
+	Terra             = Chain("Terra")
+	Zcash             = Chain("Zcash")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
@@ -84,12 +127,14 @@ func (chain Chain) SizeHint() int {
 	return surge.SizeHintString(string(chain))
 }
 
-// Marshal the chain to binary.
+// Marshal the chain to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
 func (chain Chain) Marshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.MarshalString(string(chain), buf, rem)
 }
 
-// Unmarshal the chain from binary.
+// Unmarshal the chain from binary. You should not call this function directly,
+// unless you are implementing unmarshalling for a container type.
 func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
