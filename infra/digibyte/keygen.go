@@ -5,7 +5,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
-
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/digibyte"
 )
