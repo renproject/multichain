@@ -1,4 +1,4 @@
-package cosmoscompat
+package cosmos
 
 import (
 	"fmt"

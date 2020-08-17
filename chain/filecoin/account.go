@@ -16,6 +16,7 @@ import (
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
 )
 
@@ -63,17 +64,17 @@ func (tx Tx) Nonce() pack.U256 {
 // Payload returns arbitrary data that is associated with the transaction.
 // Generally, this payload is used to send notes between external accounts,
 // or invoke business logic on a contract.
-func (tx Tx) Payload() pack.Bytes {
+func (tx Tx) Payload() contract.CallData {
 	if tx.msg.Method == 0 {
 		if len(tx.msg.Params) == 0 {
-			return pack.NewBytes([]byte{})
+			return contract.CallData([]byte{})
 		}
-		return pack.NewBytes(append([]byte{0}, tx.msg.Params...))
+		return contract.CallData(append([]byte{0}, tx.msg.Params...))
 	}
 	if len(tx.msg.Params) == 0 {
-		return pack.NewBytes([]byte{byte(tx.msg.Method)})
+		return contract.CallData([]byte{byte(tx.msg.Method)})
 	}
-	return pack.NewBytes(append([]byte{byte(tx.msg.Method)}, tx.msg.Params...))
+	return contract.CallData(append([]byte{byte(tx.msg.Method)}, tx.msg.Params...))
 }
 
 // Sighashes returns the digests that must be signed before the transaction

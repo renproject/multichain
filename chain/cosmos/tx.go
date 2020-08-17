@@ -1,4 +1,4 @@
-package cosmoscompat
+package cosmos
 
 import (
 	"fmt"
@@ -51,8 +51,8 @@ func (addr Address) AccAddress() sdk.AccAddress {
 	return sdk.AccAddress(addr)
 }
 
-// TxOptions only contains necessary options to build tx from tx builder
-type TxOptions struct {
+// TxBuilderOptions only contains necessary options to build tx from tx builder
+type TxBuilderOptions struct {
 	AccountNumber  pack.U64    `json:"account_number"`
 	SequenceNumber pack.U64    `json:"sequence_number"`
 	Gas            pack.U64    `json:"gas"`

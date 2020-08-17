@@ -76,6 +76,10 @@ func (asset Asset) OriginChain() Chain {
 		return Dogecoin
 	case ETH:
 		return Ethereum
+	case FIL:
+		return Filecoin
+	case LUNA:
+		return Terra
 	case SOL:
 		return Solana
 	case ZEC:
@@ -109,13 +113,13 @@ type Chain string
 // in alphabetical order.
 const (
 	Acala             = Chain("Acala")
-	BinanceSmartChain = Asset("BinanceSmartChain")
+	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
-	Filecoin          = Asset("Filecoin")
+	Filecoin          = Chain("Filecoin")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
