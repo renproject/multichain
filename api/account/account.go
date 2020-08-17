@@ -1,11 +1,13 @@
 // Package account defines the Account API. All chains that use an account-based
-// model should implement this API.
+// model should implement this API. The Account API is used to send and confirm
+// transactions between addresses.
 package account
 
 import (
 	"context"
 
 	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
 )
 
@@ -33,7 +35,7 @@ type Tx interface {
 	// Payload returns arbitrary data that is associated with the transaction.
 	// This payload is often used to send notes between external accounts, or
 	// call functions on a contract.
-	Payload() pack.Bytes
+	Payload() contract.CallData
 
 	// Sighashes that must be signed before the transaction can be submitted by
 	// the client.
