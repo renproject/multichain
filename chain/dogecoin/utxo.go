@@ -2,8 +2,15 @@ package dogecoin
 
 import "github.com/renproject/multichain/chain/bitcoin"
 
-type Tx = bitcoin.Tx
+type (
+	Tx            = bitcoin.Tx
+	TxBuilder     = bitcoin.TxBuilder
+	Client        = bitcoin.Client
+	ClientOptions = bitcoin.ClientOptions
+)
 
-type TxBuilder = bitcoin.TxBuilder
-
-type Client = bitcoin.Client
+var (
+	NewTxBuilder         = bitcoin.NewTxBuilder
+	NewClient            = bitcoin.NewClient
+	DefaultClientOptions = bitcoin.DefaultClientOptions
+)

@@ -1,4 +1,4 @@
-package dogecoin
+package zcash
 
 import "github.com/renproject/multichain/chain/bitcoin"
 

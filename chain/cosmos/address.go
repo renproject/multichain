@@ -1,28 +1,23 @@
 package cosmos
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/renproject/multichain/compat/cosmoscompat"
-	"github.com/renproject/pack"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/renproject/multichain/api/address"
 )
 
-type addressDecoder struct {
-	HRP string
+type AddressDecoder struct {
+	hrp string
 }
 
-// NewAddressDecoder returns an implementation of the address decoder interface
-// from the Cosmos Compat API, and exposes the functionality to decode strings
-// into addresses.
-func NewAddressDecoder(HRP string) cosmoscompat.AddressDecoder {
-	return addressDecoder{HRP: HRP}
+func NewAddressDecoder(hrp string) AddressDecoder {
+	return AddressDecoder{hrp: hrp}
 }
 
-func (decoder addressDecoder) DecodeAddress(encoded pack.String) (cosmoscompat.Address, error) {
-	sdk.GetConfig().SetBech32PrefixForAccount(decoder.HRP, decoder.HRP+"pub")
-	addr, err := sdk.AccAddressFromBech32(encoded.String())
+func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
+	types.GetConfig().SetBech32PrefixForAccount(decoder.hrp, decoder.hrp+"pub")
+	rawAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return nil, err
 	}
-
-	return cosmoscompat.Address(addr), nil
+	return address.RawAddress(rawAddr), nil
 }
