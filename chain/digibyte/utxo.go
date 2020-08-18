@@ -6,4 +6,6 @@ type Tx = bitcoin.Tx
 
 type TxBuilder = bitcoin.TxBuilder
 
+var NewTxBuilder = bitcoin.NewTxBuilder
+
 type Client = bitcoin.Client
