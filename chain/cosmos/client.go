@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/pack"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -59,12 +60,13 @@ type Client interface {
 }
 
 type client struct {
-	opts   ClientOptions
-	cliCtx context.CLIContext
+	opts          ClientOptions
+	cliCtx        context.CLIContext
+	broadcastMode pack.String
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec, broadcastMode pack.String) Client {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host, "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -73,8 +75,9 @@ func NewClient(opts ClientOptions, cdc *codec.Codec) Client {
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithClient(httpClient).WithTrustNode(true)
 
 	return &client{
-		opts:   opts,
-		cliCtx: cliCtx,
+		opts:          opts,
+		cliCtx:        cliCtx,
+		broadcastMode: broadcastMode,
 	}
 }
 
@@ -103,28 +106,28 @@ func (client *client) Account(addr Address) (Account, error) {
 }
 
 // Tx query transaction with txHash
-func (client *client) Tx(txHash pack.String) (StdTx, error) {
+func (client *client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
 	res, err := utils.QueryTx(client.cliCtx, txHash.String())
 	if err != nil {
-		return StdTx{}, err
+		return StdTx{}, 0, err
 	}
 
 	stdTx := res.Tx.(auth.StdTx)
 	if res.Code != 0 {
-		return StdTx{}, fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
+		return StdTx{}, 0, fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
 	}
 
-	return parseStdTx(stdTx)
+	return parseStdTx(stdTx), 1
 }
 
 // SubmitTx to the Cosmos based network.
-func (client *client) SubmitTx(tx Tx, broadcastMode pack.String) (pack.String, error) {
+func (client *client) SubmitTx(ctx context.Context, tx account.Tx) (pack.String, error) {
 	txBytes, err := tx.Serialize()
 	if err != nil {
 		return pack.String(""), fmt.Errorf("bad \"submittx\": %v", err)
 	}
 
-	res, err := client.cliCtx.WithBroadcastMode(broadcastMode.String()).BroadcastTx(txBytes)
+	res, err := client.cliCtx.WithBroadcastMode(client.broadcastMode.String()).BroadcastTx(txBytes)
 	if err != nil {
 		return pack.String(""), err
 	}
