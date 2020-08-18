@@ -83,7 +83,16 @@ type Tx struct {
 
 func (tx *Tx) Hash() (pack.Bytes, error) {
 	hash := tx.msgTx.TxHash()
-	return pack.NewBytes(hash[:]), nil
+
+	// bitcoin's msgTx is a byte-reversed hash
+	// https://github.com/btcsuite/btcd/blob/master/chaincfg/chainhash/hash.go#L27-L28
+	hashSize := len(hash)
+	for i := 0; i < hashSize/2; i++ {
+		hash[i], hash[hashSize-1-i] = hash[hashSize-1-i], hash[i]
+	}
+
+	packed := pack.NewBytes(hash[:])
+	return packed, nil
 }
 
 func (tx *Tx) Inputs() ([]utxo.Input, error) {
