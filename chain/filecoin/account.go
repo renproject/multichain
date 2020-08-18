@@ -109,6 +109,10 @@ type TxBuilder struct {
 	gasLimit pack.U256
 }
 
+func NewTxBuilder(gasPrice, gasLimit pack.U256) TxBuilder {
+	return TxBuilder{gasPrice: gasPrice, gasLimit: gasLimit}
+}
+
 func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U256, payload pack.Bytes) (account.Tx, error) {
 	filfrom, err := filaddress.NewFromString(string(from))
 	if err != nil {
