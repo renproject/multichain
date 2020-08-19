@@ -51,6 +51,7 @@ const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
 	BNB  = Asset("BNB")  // Binance Coin
 	BTC  = Asset("BTC")  // Bitcoin
+	CELO = Asset("CELO") // Celo
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
@@ -70,6 +71,8 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
+	case CELO:
+		return Celo
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -116,6 +119,7 @@ const (
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
+	Celo              = Chain("Celo")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
