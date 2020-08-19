@@ -1,4 +1,4 @@
-package bitcoin_test
+package digibyte_test
 
 import (
 	"github.com/renproject/multichain/api/address"
