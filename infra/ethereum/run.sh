@@ -4,7 +4,7 @@ ADDRESS=$2
 
 ganache-cli                     \
   -h 0.0.0.0                    \
-  -f https://cloudflare-eth.com \
+  -k muirGlacier                \
   -i 420                        \
   -m $MNEMONIC                  \
   -u $ADDRESS
