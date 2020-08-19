@@ -23,6 +23,7 @@ require (
 	github.com/ipfs/go-hamt-ipld v0.1.1 // indirect
 	github.com/lib/pq v1.7.0 // indirect
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
+	github.com/multiformats/go-varint v0.0.5
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/raulk/clock v1.1.0 // indirect
