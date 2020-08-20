@@ -15,6 +15,7 @@ import (
 	"github.com/codahale/blake2"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/multichain/chain/bitcoin"
+	"github.com/renproject/multichain/chain/chainutil"
 	"github.com/renproject/pack"
 )
 
@@ -105,7 +106,8 @@ func (tx *Tx) Hash() (pack.Bytes, error) {
 	if err != nil {
 		return pack.Bytes{}, err
 	}
-	hash := chainhash.DoubleHashH(serial)
+	txhash := chainhash.DoubleHashH(serial)
+	hash := chainutil.ReverseBytes(txhash[:])
 	return pack.NewBytes(hash[:]), nil
 }
 

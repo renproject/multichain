@@ -12,6 +12,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/multichain/chain/chainutil"
 	"github.com/renproject/pack"
 )
 
@@ -82,15 +83,8 @@ type Tx struct {
 }
 
 func (tx *Tx) Hash() (pack.Bytes, error) {
-	hash := tx.msgTx.TxHash()
-
-	// bitcoin's msgTx is a byte-reversed hash
-	// https://github.com/btcsuite/btcd/blob/master/chaincfg/chainhash/hash.go#L27-L28
-	hashSize := len(hash)
-	for i := 0; i < hashSize/2; i++ {
-		hash[i], hash[hashSize-1-i] = hash[hashSize-1-i], hash[i]
-	}
-
+	txhash := tx.msgTx.TxHash()
+	hash := chainutil.ReverseBytes(txhash[:])
 	packed := pack.NewBytes(hash[:])
 	return packed, nil
 }
