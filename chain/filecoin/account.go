@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 
-	// filclient "github.com/filecoin-project/lotus/api/client"
 	filaddress "github.com/filecoin-project/go-address"
-	// "github.com/filecoin-project/go-jsonrpc"
-	// "github.com/filecoin-project/lotus/api"
+	filclient "github.com/filecoin-project/lotus/api/client"
 	"github.com/filecoin-project/lotus/chain/types"
-	// "github.com/filecoin-project/lotus/cli"
 	"github.com/filecoin-project/specs-actors/actors/abi"
 	"github.com/filecoin-project/specs-actors/actors/abi/big"
+	"github.com/ipfs/go-cid"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
@@ -21,6 +20,7 @@ import (
 )
 
 const (
+	AuthorizationKey          = "Authorization"
 	DefaultClientMultiAddress = ""
 	DefaultClientAuthToken    = ""
 )
@@ -175,49 +175,65 @@ func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
 }
 
 type Client struct {
-	opts ClientOptions
-	// node   api.FullNode
-	// closer jsonrpc.ClientCloser
+	opts   ClientOptions
+	node   api.FullNode
+	closer jsonrpc.ClientCloser
 }
 
+// NewClient creates and returns a new JSON-RPC client to the Filecoin node
 func NewClient(opts ClientOptions) (*Client, error) {
-	// authToken, err := hex.DecodeString(opts.AuthToken)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("bad auth token '%v': %v", err)
-	// }
-	// multiAddr, err := multiaddr.NewMultiaddr(opts.MultiAddress)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("bad multi-address '%v': %v", err)
-	// }
-	// info := cli.APIInfo{
-	// 	Addr:  multiAddr,
-	// 	Token: authToken,
-	// }
-	// dialArgs, err := info.DialArgs()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// authHeader := info.AuthHeader()
-	// node, closer, err := filclient.NewFullNodeRPC(dialArgs, authHeader)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	requestHeaders := make(http.Header)
+	if opts.AuthToken != DefaultClientAuthToken {
+		requestHeaders.Add(AuthorizationKey, opts.AuthToken)
+	}
 
-	// return &Client{
-	// 	opts:   opts,
-	// 	node:   node,
-	// 	closer: closer,
-	// }, nil
-	return nil, nil
+	node, closer, err := filclient.NewFullNodeRPC(opts.MultiAddress, requestHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{opts, node, closer}, nil
 }
 
 // Tx returns the transaction uniquely identified by the given transaction
 // hash. It also returns the number of confirmations for the transaction.
-func (client *Client) Tx(context.Context, pack.Bytes) (account.Tx, pack.U64, error) {
-	panic("unimplemented")
+func (client *Client) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack.U64, error) {
+	// parse the transaction ID to a message ID
+	// msgId, err := cid.Parse(txId.String())
+	// if err != nil {
+	// 	return nil, nil, fmt.Errorf("parsing txId: %v", err)
+	// }
+
+	// get message
+	// message, err := client.node.ChainGetMessage(ctx, msgId)
+	// if err != nil {
+	// 	return nil, nil, fmt.Errorf("fetching tx: %v", err)
+	// }
+
+	// TODO?: See if we can get a signed message
+
+	// TODO?: API call to get the block number for the above message
+
+	// get most recent block number
+	// 1. get chain tipset
+	// 2. choose the most recent block from tipset.blks
+	//		https://github.com/filecoin-project/lotus/blob/80e6e56a824599e7b8a71241197a7dfa04d14cfc/chain/types/tipset.go#L22
+	// https://github.com/filecoin-project/lotus/blob/master/api/api_full.go#L41
 }
 
 // SubmitTx to the underlying blockchain network.
-func (client *Client) SubmitTx(context.Context, account.Tx) error {
-	panic("unimplemented")
+// TODO: should also return a transaction hash (pack.Bytes) ?
+func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
+	// construct crypto.Signature
+	// https://github.com/filecoin-project/specs-actors/blob/master/actors/crypto/signature.go
+
+	// construct types.SignedMessage
+	// https://github.com/filecoin-project/lotus/blob/80e6e56a824599e7b8a71241197a7dfa04d14cfc/chain/types/signedmessage.go
+
+	// submit transaction to mempool
+	// https://github.com/filecoin-project/lotus/blob/master/api/api_full.go#L169
+	// msgId, err := client.node.MpoolPush(ctx, &signedMessage)
+	// if err != nil {
+	// 	return fmt.Errorf("pushing message to message pool: %v", err)
+	// }
 }
