@@ -59,9 +59,9 @@ type Decoder interface {
 	DecodeAddress(Address) (RawAddress, error)
 }
 
-// The EncodeDecoder interfaces combines encoding and decoding functionality
+// The EncoderDecoder interfaces combines encoding and decoding functionality
 // into one interface.
-type EncodeDecoder interface {
+type EncoderDecoder interface {
 	Encoder
 	Decoder
 }

@@ -7,12 +7,31 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
 )
 
+type AddressEncoderDecoder struct {
+	AddressEncoder
+	AddressDecoder
+}
+
+type AddressEncoder interface {
+	EncodeAddress(address.RawAddress) (address.Address, error)
+}
+
+type addressEncoder struct{}
+
+func NewAddressEncoderDecoder() address.EncoderDecoder {
+	return AddressEncoderDecoder{
+		AddressEncoder: NewAddressEncoder(),
+		AddressDecoder: NewAddressDecoder(),
+	}
+}
+
 type AddressDecoder interface {
-	DecodeAddress(pack.String) (pack.Bytes, error)
+	DecodeAddress(address.Address) (address.RawAddress, error)
 }
 
 type addressDecoder struct{}
@@ -21,12 +40,21 @@ func NewAddressDecoder() AddressDecoder {
 	return addressDecoder{}
 }
 
-func (addressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
-	ethaddr, err := NewAddressFromHex(encoded.String())
+func NewAddressEncoder() AddressEncoder {
+	return addressEncoder{}
+}
+
+func (addressDecoder) DecodeAddress(encoded address.Address) (address.RawAddress, error) {
+	ethaddr, err := NewAddressFromHex(string(pack.String(encoded)))
 	if err != nil {
 		return nil, err
 	}
-	return pack.Bytes(ethaddr[:]), nil
+	return address.RawAddress(pack.Bytes(ethaddr[:])), nil
+}
+
+func (addressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	encodedAddr := common.Bytes2Hex([]byte(rawAddr))
+	return address.Address(pack.NewString(encodedAddr)), nil
 }
 
 // An Address represents a public address on the Ethereum blockchain. It can be

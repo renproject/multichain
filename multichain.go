@@ -8,12 +8,15 @@ import (
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/surge"
 )
 
 type (
-	Address    = address.Address
-	RawAddress = address.RawAddress
+	Address               = address.Address
+	AddressEncoderDecoder = address.EncoderDecoder
+	EthereumCompatAddress = ethereum.Address
+	RawAddress            = address.RawAddress
 )
 
 type (
@@ -23,8 +26,8 @@ type (
 )
 
 type (
-	UTXOutpoint   = utxo.Outpoint
-	UTXO          = utxo.Output
+	UTXOOutpoint  = utxo.Outpoint
+	UTXOOutput    = utxo.Output
 	UTXOInput     = utxo.Input
 	UTXORecipient = utxo.Recipient
 	UTXOTx        = utxo.Tx
