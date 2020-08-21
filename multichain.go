@@ -26,8 +26,8 @@ type (
 )
 
 type (
-	UTXOOutpoint  = utxo.Outpoint
-	UTXOOutput    = utxo.Output
+	UTXOutpoint   = utxo.Outpoint
+	UTXOutput     = utxo.Output
 	UTXOInput     = utxo.Input
 	UTXORecipient = utxo.Recipient
 	UTXOTx        = utxo.Tx
