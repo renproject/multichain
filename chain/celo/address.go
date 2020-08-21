@@ -14,10 +14,10 @@ type AddressEncoder = ethereum.AddressEncoder
 // the Ethereum chain.
 type AddressDecoder = ethereum.AddressDecoder
 
-// An AddressEncoderDecoder on the Celo chain is functionally identical to a
+// An AddressEncodeDecoder on the Celo chain is functionally identical to a
 // encoder/decoder on the Ethereum chain.
-type AddressEncoderDecoder = ethereum.AddressEncoderDecoder
+type AddressEncodeDecoder = ethereum.AddressEncodeDecoder
 
 var (
-	NewAddressEncoderDecoder = ethereum.NewAddressEncoderDecoder
+	NewAddressEncodeDecoder = ethereum.NewAddressEncodeDecoder
 )

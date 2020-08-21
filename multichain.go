@@ -14,7 +14,7 @@ import (
 
 type (
 	Address               = address.Address
-	AddressEncoderDecoder = address.EncoderDecoder
+	AddressEncodeDecoder  = address.EncodeDecoder
 	EthereumCompatAddress = ethereum.Address
 	RawAddress            = address.RawAddress
 )

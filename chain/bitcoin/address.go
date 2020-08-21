@@ -8,13 +8,13 @@ import (
 	"github.com/renproject/pack"
 )
 
-type AddressEncoderDecoder struct {
+type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
 
-func NewAddressEncoderDecoder(params *chaincfg.Params) AddressEncoderDecoder {
-	return AddressEncoderDecoder{
+func NewAddressEncodeDecoder(params *chaincfg.Params) AddressEncodeDecoder {
+	return AddressEncodeDecoder{
 		AddressEncoder: NewAddressEncoder(params),
 		AddressDecoder: NewAddressDecoder(params),
 	}
