@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 	"go.uber.org/zap"
 )
@@ -36,14 +37,14 @@ func NewClient(opts ClientOptions) *Client {
 	return &Client{opts: opts}
 }
 
-func (client *Client) ContractCall(ctx context.Context, contract pack.String, input pack.Bytes) (output pack.Bytes, err error) {
+func (client *Client) CallContract(ctx context.Context, contract address.Address, input pack.Bytes) (output pack.Bytes, err error) {
 	if input != nil && len(input) != 0 {
 		return nil, fmt.Errorf("expected nil input, got %v input", input)
 	}
 
 	// Make an RPC call to "getAccountInfo" to get the data associated with the
 	// account (we interpret the contract address as the account identifier).
-	params, err := json.Marshal([]string{contract.String()})
+	params, err := json.Marshal(string(pack.String(contract)))
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("encoding params: %v", err)
 	}

@@ -4,8 +4,38 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 )
+
+type AddressEncoderDecoder struct {
+	AddressEncoder
+	AddressDecoder
+}
+
+func NewAddressEncoderDecoder(params *chaincfg.Params) AddressEncoderDecoder {
+	return AddressEncoderDecoder{
+		AddressEncoder: NewAddressEncoder(params),
+		AddressDecoder: NewAddressDecoder(params),
+	}
+}
+
+type AddressEncoder struct {
+	params *chaincfg.Params
+}
+
+func NewAddressEncoder(params *chaincfg.Params) AddressEncoder {
+	return AddressEncoder{params: params}
+}
+
+func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	encodedAddr := base58.Encode([]byte(rawAddr))
+	if _, err := btcutil.DecodeAddress(encodedAddr, encoder.params); err != nil {
+		// Check that the address is valid.
+		return address.Address(""), err
+	}
+	return address.Address(encodedAddr), nil
+}
 
 type AddressDecoder struct {
 	params *chaincfg.Params
@@ -15,11 +45,10 @@ func NewAddressDecoder(params *chaincfg.Params) AddressDecoder {
 	return AddressDecoder{params: params}
 }
 
-func (addrDecoder AddressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
-	addr, err := btcutil.DecodeAddress(string(encoded), addrDecoder.params)
-	if err != nil {
+func (decoder AddressDecoder) DecodeAddress(addr address.Address) (pack.Bytes, error) {
+	if _, err := btcutil.DecodeAddress(string(addr), decoder.params); err != nil {
+		// Check that the address is valid.
 		return nil, err
 	}
-	decoded := base58.Decode(addr.EncodeAddress())
-	return pack.Bytes(decoded), nil
+	return pack.NewBytes(base58.Decode(string(addr))), nil
 }

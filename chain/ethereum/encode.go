@@ -2,78 +2,78 @@ package ethereum
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/renproject/pack"
 )
 
-// Encode a pack-encoded value into an RLP-encoded value.
-func Encode(input pack.Value) (abi.Arguments, []interface{}, error) {
-	switch input := input.(type) {
-	case pack.Struct:
-		return EncodeTuple(input)
-	case pack.Typed:
-		return EncodeTuple(pack.Struct(input))
-	default:
-		return EncodeUnit(input)
-	}
+// A Payload is an Ethereum encoded function call. It includes an ABI, the
+// function being called from the ABI, and the data being passed to the
+// function.
+type Payload struct {
+	ABI  pack.Bytes `json:"abi"`
+	Fn   pack.Bytes `json:"fn"`
+	Data pack.Bytes `json:"data"`
 }
 
-func EncodeTuple(input pack.Struct) (abi.Arguments, []interface{}, error) {
-	ethargs := make(abi.Arguments, 0, len(input))
-	ethvals := make([]interface{}, 0, len(input))
+// Encode values into an Ethereum ABI compatible byte slice.
+func Encode(vals ...interface{}) []byte {
+	ethargs := make(abi.Arguments, 0, len(vals))
+	ethvals := make([]interface{}, 0, len(vals))
 
-	for _, field := range input {
-		fieldargs, fieldvals, err := Encode(field.Value)
-		if err != nil {
-			return nil, nil, err
+	for _, val := range vals {
+		var ethval interface{}
+		var ty abi.Type
+		var err error
+
+		switch val := val.(type) {
+		case pack.Bytes:
+			ethval = val
+			ty, err = abi.NewType("bytes", "", nil)
+		case pack.Bytes32:
+			ethval = val
+			ty, err = abi.NewType("bytes32", "", nil)
+
+		case pack.U8:
+			ethval = big.NewInt(0).SetUint64(uint64(val.Uint8()))
+			ty, err = abi.NewType("uint256", "", nil)
+		case pack.U16:
+			ethval = big.NewInt(0).SetUint64(uint64(val.Uint16()))
+			ty, err = abi.NewType("uint256", "", nil)
+		case pack.U32:
+			ethval = big.NewInt(0).SetUint64(uint64(val.Uint32()))
+			ty, err = abi.NewType("uint256", "", nil)
+		case pack.U64:
+			ethval = big.NewInt(0).SetUint64(uint64(val.Uint64()))
+			ty, err = abi.NewType("uint256", "", nil)
+		case pack.U128:
+			ethval = val.Int()
+			ty, err = abi.NewType("uint256", "", nil)
+		case pack.U256:
+			ethval = val.Int()
+			ty, err = abi.NewType("uint256", "", nil)
+
+		case Address:
+			ethval = val
+			ty, err = abi.NewType("bytes20", "", nil)
+
+		default:
+			panic(fmt.Errorf("non-exhaustive pattern: %T", val))
 		}
-		ethargs = append(ethargs, fieldargs...)
-		ethvals = append(ethvals, fieldvals...)
+
+		if err != nil {
+			panic(fmt.Errorf("error encoding: %v", err))
+		}
+		ethargs = append(ethargs, abi.Argument{
+			Type: ty,
+		})
+		ethvals = append(ethvals, ethval)
 	}
 
-	return ethargs, ethvals, nil
-}
-
-func EncodeUnit(input pack.Value) (abi.Arguments, []interface{}, error) {
-	var ethtype abi.Type
-	var ethval interface{}
-	var err error
-
-	switch input := input.(type) {
-	case pack.U8:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Uint8()
-	case pack.U16:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Uint16()
-	case pack.U32:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Uint32()
-	case pack.U64:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Uint64()
-	case pack.U128:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Int()
-	case pack.U256:
-		ethtype, err = abi.NewType("uint256", "uint256", nil)
-		ethval = input.Int()
-	case pack.String:
-		ethtype, err = abi.NewType("string", "string", nil)
-		ethval = string(input)
-	case pack.Bytes:
-		ethtype, err = abi.NewType("bytes", "bytes", nil)
-		ethval = []byte(input)
-	case pack.Bytes32:
-		ethtype, err = abi.NewType("bytes32", "bytes32", nil)
-		ethval = [32]byte(input)
-	default:
-		return nil, nil, fmt.Errorf("bad type: %v", err)
-	}
-
+	packed, err := ethargs.Pack(ethvals...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("bad type: %v", err)
+		panic(fmt.Errorf("error packing: %v", err))
 	}
-	return []abi.Argument{{Type: ethtype}}, []interface{}{ethval}, nil
+	return packed
 }
