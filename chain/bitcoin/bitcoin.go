@@ -187,7 +187,15 @@ func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64
 // Confirmations of a transaction in the Bitcoin network.
 func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error) {
 	resp := btcjson.GetTransactionResult{}
-	if err := client.send(ctx, &resp, "gettransaction", hex.EncodeToString(txHash)); err != nil {
+
+	size := len(txHash)
+	txHashReversed := make([]byte, size)
+	copy(txHashReversed[:], txHash[:])
+	for i := 0; i < size/2; i++ {
+		txHashReversed[i], txHashReversed[size-1-i] = txHashReversed[size-1-i], txHashReversed[i]
+	}
+
+	if err := client.send(ctx, &resp, "gettransaction", hex.EncodeToString(txHashReversed)); err != nil {
 		return 0, fmt.Errorf("bad \"gettransaction\": %v", err)
 	}
 	confirmations := resp.Confirmations

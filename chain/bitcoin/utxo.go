@@ -12,7 +12,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/chainutil"
 	"github.com/renproject/pack"
 )
 
@@ -84,9 +83,7 @@ type Tx struct {
 
 func (tx *Tx) Hash() (pack.Bytes, error) {
 	txhash := tx.msgTx.TxHash()
-	hash := chainutil.ReverseBytes(txhash[:])
-	packed := pack.NewBytes(hash[:])
-	return packed, nil
+	return pack.NewBytes(txhash[:]), nil
 }
 
 func (tx *Tx) Inputs() ([]utxo.Input, error) {
