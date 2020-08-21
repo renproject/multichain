@@ -12,7 +12,7 @@ import (
 	"github.com/renproject/surge"
 )
 
-type AddressEncoderDecoder struct {
+type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
@@ -23,8 +23,8 @@ type AddressEncoder interface {
 
 type addressEncoder struct{}
 
-func NewAddressEncoderDecoder() address.EncoderDecoder {
-	return AddressEncoderDecoder{
+func NewAddressEncodeDecoder() address.EncodeDecoder {
+	return AddressEncodeDecoder{
 		AddressEncoder: NewAddressEncoder(),
 		AddressDecoder: NewAddressDecoder(),
 	}
