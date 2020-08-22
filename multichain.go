@@ -58,7 +58,8 @@ const (
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
-	FIL  = Asset("FIL")  // Filecoin
+	FIL  = Asset("FIL")  // Filecoin	
+	FTM  = Asset("FTM")  // Fantom
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
@@ -84,6 +85,8 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case FIL:
 		return Filecoin
+	case FTM:
+		return Fantom
 	case LUNA:
 		return Terra
 	case SOL:
@@ -126,6 +129,7 @@ const (
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
+	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
