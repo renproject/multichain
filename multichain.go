@@ -1,6 +1,46 @@
 package multichain
 
-import "github.com/renproject/surge"
+import (
+	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
+	"github.com/renproject/multichain/api/gas"
+	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/surge"
+)
+
+type (
+	Address               = address.Address
+	AddressEncodeDecoder  = address.EncodeDecoder
+	EthereumCompatAddress = ethereum.Address
+	RawAddress            = address.RawAddress
+)
+
+type (
+	AccountTx        = account.Tx
+	AccountTxBuilder = account.TxBuilder
+	AccountClient    = account.Client
+)
+
+type (
+	UTXOutpoint   = utxo.Outpoint
+	UTXOutput     = utxo.Output
+	UTXOInput     = utxo.Input
+	UTXORecipient = utxo.Recipient
+	UTXOTx        = utxo.Tx
+	UTXOTxBuilder = utxo.TxBuilder
+	UTXOClient    = utxo.Client
+)
+
+type (
+	ContractCallData = contract.CallData
+	ContractCaller   = contract.Caller
+)
+
+type (
+	GasEstimator = gas.Estimator
+)
 
 // An Asset uniquely identifies assets using human-readable strings.
 type Asset string
@@ -10,13 +50,49 @@ type Asset string
 // enumerated values. Assets must be listed in alphabetical order.
 const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
+	BNB  = Asset("BNB")  // Binance Coin
 	BTC  = Asset("BTC")  // Bitcoin
-	DGB =  Asset("DGB")  // DigiByte
+	CELO = Asset("CELO") // Celo
+	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
+	FIL  = Asset("FIL")  // Filecoin
+	SOL  = Asset("SOL")  // Solana
+	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
 	PPC = Asset("PPC")   // Peercoin
 )
+
+// OriginChain returns the chain upon which the asset originates. For example,
+// the origin chain of BTC is Bitcoin.
+func (asset Asset) OriginChain() Chain {
+	switch asset {
+	case BCH:
+		return BitcoinCash
+	case BNB:
+		return BinanceSmartChain
+	case BTC:
+		return Bitcoin
+	case CELO:
+		return Celo
+	case DGB:
+		return DigiByte
+	case DOGE:
+		return Dogecoin
+	case ETH:
+		return Ethereum
+	case FIL:
+		return Filecoin
+	case LUNA:
+		return Terra
+	case SOL:
+		return Solana
+	case ZEC:
+		return Zcash
+	default:
+		return Chain("")
+	}
+}
 
 // SizeHint returns the number of bytes required to represent the asset in
 // binary.
@@ -41,13 +117,19 @@ type Chain string
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	Acala       = Chain("Acala")
-	Bitcoin     = Chain("Bitcoin")
-	BitcoinCash = Chain("BitcoinCash")
-	DigiByte    = Chain("DigiByte")
-	Ethereum    = Chain("Ethereum")
-	Zcash       = Chain("Zcash")
-	Peercoin    = Chain("Peercoin")   
+	Peercoin    	  = Chain("Peercoin")
+	Acala             = Chain("Acala")
+	BinanceSmartChain = Chain("BinanceSmartChain")
+	Bitcoin           = Chain("Bitcoin")
+	BitcoinCash       = Chain("BitcoinCash")
+	Celo              = Chain("Celo")
+	DigiByte          = Chain("DigiByte")
+	Dogecoin          = Chain("Dogecoin")
+	Ethereum          = Chain("Ethereum")
+	Filecoin          = Chain("Filecoin")
+	Solana            = Chain("Solana")
+	Terra             = Chain("Terra")
+	Zcash             = Chain("Zcash")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
@@ -56,12 +138,14 @@ func (chain Chain) SizeHint() int {
 	return surge.SizeHintString(string(chain))
 }
 
-// Marshal the chain to binary.
+// Marshal the chain to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
 func (chain Chain) Marshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.MarshalString(string(chain), buf, rem)
 }
 
-// Unmarshal the chain from binary.
+// Unmarshal the chain from binary. You should not call this function directly,
+// unless you are implementing unmarshalling for a container type.
 func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
