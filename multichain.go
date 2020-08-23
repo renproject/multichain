@@ -85,6 +85,8 @@ func (asset Asset) OriginChain() Chain {
 		return Filecoin
 	case LUNA:
 		return Terra
+	case PPC:
+		return Peercoin
 	case SOL:
 		return Solana
 	case ZEC:
@@ -117,7 +119,6 @@ type Chain string
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	Peercoin    	  = Chain("Peercoin")
 	Acala             = Chain("Acala")
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
@@ -127,6 +128,7 @@ const (
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
 	Filecoin          = Chain("Filecoin")
+	Peercoin    	  = Chain("Peercoin")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")

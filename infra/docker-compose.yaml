@@ -1,3 +1,5 @@
+# As in other parts of multichain, chains should be in alphabetical order.
+
 version: "2"
 services:
   #
@@ -73,6 +75,18 @@ services:
       - "/root/run.sh"
 
   #
+  # Bitcoin
+  #
+  peercoin:
+    build:
+      context: ./peercoin
+    ports:
+      - "0.0.0.0:9902:9902"
+    entrypoint:
+      - "./root/run.sh"
+      - "${PEERCOIN_ADDRESS}"
+
+  #
   # Solana
   #
   solana:
@@ -85,31 +99,6 @@ services:
     entrypoint:
       - "./root/run.sh"
 
-  #
-  # Zcash
-  #
-  zcash:
-    build:
-      context: ./zcash
-    ports:
-      - "0.0.0.0:18232:18232"
-    entrypoint:
-      - "./root/run.sh"
-      - "${ZCASH_ADDRESS}"
-
-  ##
-  ## Peercoin
-  ##
-  peercoin:
-    build:
-      context: ./peercoin
-    ports:
-      - "0.0.0.0:6969:18232"
-    entrypoint:
-      - "./root/run.sh"
-      - "${PEERCOIN_ADDRESS}"
-
-
   ##
   ## Terra
   ##
@@ -121,3 +110,15 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+
+  #
+  # Zcash
+  #
+  zcash:
+    build:
+      context: ./zcash
+    ports:
+      - "0.0.0.0:18232:18232"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ZCASH_ADDRESS}"
