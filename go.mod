@@ -25,6 +25,8 @@ require (
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1 // indirect
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
+	github.com/ppcsuite/btcutil v0.0.0-20190610081709-8b47fe3bbbff
+	github.com/ppcsuite/ppcd v0.0.0-20190610081647-e4b42de6f07b
 	github.com/raulk/clock v1.1.0 // indirect
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.3

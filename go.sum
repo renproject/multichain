@@ -1072,6 +1072,10 @@ github.com/polydawn/refmt v0.0.0-20190408063855-01bf1e26dd14/go.mod h1:uIp+gprXx
 github.com/polydawn/refmt v0.0.0-20190807091052-3d65705ee9f1/go.mod h1:uIp+gprXxxrWSjjklXD+mN4wed/tMfjMMmN/9+JsA9o=
 github.com/polydawn/refmt v0.0.0-20190809202753-05966cbd336a/go.mod h1:uIp+gprXxxrWSjjklXD+mN4wed/tMfjMMmN/9+JsA9o=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
+github.com/ppcsuite/btcutil v0.0.0-20190610081709-8b47fe3bbbff h1:T4NTgqtQTBV2EarPGWWamqzRPZJHN2BEkjQbfX6Ovi4=
+github.com/ppcsuite/btcutil v0.0.0-20190610081709-8b47fe3bbbff/go.mod h1:JGdyKoOvrtQNw3D9HTVr6tbgBqHtSGred/tI/6K/B5k=
+github.com/ppcsuite/ppcd v0.0.0-20190610081647-e4b42de6f07b h1:GG93OuO35ulaSJ4n7TJEMcv/vWFJ14Orne9M8nThBak=
+github.com/ppcsuite/ppcd v0.0.0-20190610081647-e4b42de6f07b/go.mod h1:HMuaHlBY91GvRvDCyAuZyohCsojm3M/h0Ksz1hluSCI=
 github.com/prometheus/client_golang v0.8.0/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.2/go.mod h1:OsXs2jCmiKlQ1lTBmv21f2mNfw4xf/QclQDMrYNZzcM=
