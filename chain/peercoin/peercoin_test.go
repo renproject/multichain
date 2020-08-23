@@ -2,33 +2,34 @@ package peercoin_test
 
 import (
 	"context"
+	"github.com/renproject/multichain/chain/bitcoin"
 	"log"
 	"os"
 	"reflect"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
+	"github.com/ppcsuite/ppcd/chaincfg"
+	"github.com/ppcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/bitcoin"
+	"github.com/renproject/multichain/chain/peercoin"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Bitcoin", func() {
+var _ = Describe("Peercoin", func() {
 	Context("when submitting transactions", func() {
-		Context("when sending BTC to multiple addresses", func() {
+		Context("when sending PPC to multiple addresses", func() {
 			It("should work", func() {
 				// Load private key, and assume that the associated address has
 				// funds to spend. You can do this by setting BITCOIN_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
-				pkEnv := os.Getenv("BITCOIN_PK")
+				pkEnv := os.Getenv("PEERCOIN_PK")
 				if pkEnv == "" {
-					panic("BITCOIN_PK is undefined")
+					panic("PEERCOIN_PK is undefined")
 				}
 				wif, err := btcutil.DecodeWIF(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
@@ -47,7 +48,7 @@ var _ = Describe("Bitcoin", func() {
 				log.Printf("WPKH               %v", wpkAddr.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
-				client := bitcoin.NewClient(bitcoin.DefaultClientOptions())
+				client := peercoin.NewClient(peercoin.DefaultClientOptions())
 				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, address.Address(pkhAddr.EncodeAddress()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))

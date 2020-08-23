@@ -1,9 +1,9 @@
 package peercoin
 
 import (
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/ppcsuite/ppcd/chaincfg"
+	"github.com/ppcsuite/btcutil"
+	"github.com/ppcsuite/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 )
