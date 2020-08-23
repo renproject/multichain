@@ -15,27 +15,27 @@ import (
 	"github.com/renproject/pack"
 )
 
-// Version of Bitcoin transactions supported by the multichain.
+// Version of Peercoin transactions supported by the multichain.
 const Version int32 = 2
 
 // The TxBuilder is an implementation of a UTXO-compatible transaction builder
-// for Bitcoin.
+// for Peercoin.
 type TxBuilder struct {
 	params *chaincfg.Params
 }
 
 // NewTxBuilder returns a transaction builder that builds UTXO-compatible
-// Bitcoin transactions for the given chain configuration (this means that it
+// Peercoin transactions for the given chain configuration (this means that it
 // can be used for regnet, testnet, and mainnet, but also for networks that are
-// minimally modified forks of the Bitcoin network).
+// minimally modified forks of the Peercoin network).
 func NewTxBuilder(params *chaincfg.Params) TxBuilder {
 	return TxBuilder{params: params}
 }
 
-// BuildTx returns a Bitcoin transaction that consumes funds from the given
+// BuildTx returns a Peercoin transaction that consumes funds from the given
 // inputs, and sends them to the given recipients. The difference in the sum
 // value of the inputs and the sum value of the recipients is paid as a fee to
-// the Bitcoin network. This fee must be calculated independently of this
+// the Peercoin network. This fee must be calculated independently of this
 // function. Outputs produced for recipients will use P2PKH, P2SH, P2WPKH, or
 // P2WSH scripts as the pubkey script, based on the format of the recipient
 // address.
@@ -70,7 +70,7 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 	return &Tx{inputs: inputs, recipients: recipients, msgTx: msgTx, signed: false}, nil
 }
 
-// Tx represents a simple Bitcoin transaction that implements the Bitcoin Compat
+// Tx represents a simple Peercoin transaction that implements the Peercoin Compat
 // API.
 type Tx struct {
 	inputs     []utxo.Input

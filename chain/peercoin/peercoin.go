@@ -60,13 +60,13 @@ func DefaultClientOptions() ClientOptions {
 	}
 }
 
-// WithHost sets the URL of the Bitcoin node.
+// WithHost sets the URL of the Peercoin node.
 func (opts ClientOptions) WithHost(host string) ClientOptions {
 	opts.Host = host
 	return opts
 }
 
-// WithUser sets the username that will be used to authenticate with the Bitcoin
+// WithUser sets the username that will be used to authenticate with the Peercoin
 // node.
 func (opts ClientOptions) WithUser(user string) ClientOptions {
 	opts.User = user
@@ -74,19 +74,19 @@ func (opts ClientOptions) WithUser(user string) ClientOptions {
 }
 
 // WithPassword sets the password that will be used to authenticate with the
-// Bitcoin node.
+// Peercoin node.
 func (opts ClientOptions) WithPassword(password string) ClientOptions {
 	opts.Password = password
 	return opts
 }
 
-// A Client interacts with an instance of the Bitcoin network using the RPC
-// interface exposed by a Bitcoin node.
+// A Client interacts with an instance of the Peercoin network using the RPC
+// interface exposed by a Peercoin node.
 type Client interface {
 	utxo.Client
 	// UnspentOutputs spendable by the given address.
 	UnspentOutputs(ctx context.Context, minConf, maxConf int64, address address.Address) ([]utxo.Output, error)
-	// Confirmations of a transaction in the Bitcoin network.
+	// Confirmations of a transaction in the Peercoin network.
 	Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error)
 }
 
@@ -136,7 +136,7 @@ func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.
 	return output, pack.NewU64(resp.Confirmations), nil
 }
 
-// SubmitTx to the Bitcoin network.
+// SubmitTx to the Peercoin network.
 func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	serial, err := tx.Serialize()
 	if err != nil {
@@ -184,7 +184,7 @@ func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64
 	return outputs, nil
 }
 
-// Confirmations of a transaction in the Bitcoin network.
+// Confirmations of a transaction in the Peercoin network.
 func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error) {
 	resp := btcjson.GetTransactionResult{}
 

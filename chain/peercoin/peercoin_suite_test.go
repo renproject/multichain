@@ -9,5 +9,5 @@ import (
 
 func TestPeercoin(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Bitcoin Suite")
+	RunSpecs(t, "Peercoin Suite")
 }

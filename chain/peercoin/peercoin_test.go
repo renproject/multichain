@@ -24,7 +24,7 @@ var _ = Describe("Peercoin", func() {
 		Context("when sending PPC to multiple addresses", func() {
 			It("should work", func() {
 				// Load private key, and assume that the associated address has
-				// funds to spend. You can do this by setting BITCOIN_PK to the
+				// funds to spend. You can do this by setting PEERCOIN_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
 				pkEnv := os.Getenv("PEERCOIN_PK")
 				if pkEnv == "" {
@@ -105,7 +105,7 @@ var _ = Describe("Peercoin", func() {
 				}
 				Expect(tx.Sign(signatures, pack.NewBytes(wif.SerializePubKey()))).To(Succeed())
 
-				// Submit the transaction to the Bitcoin node. Again, this
+				// Submit the transaction to the Peercoin node. Again, this
 				// should be running a la `./multichaindeploy`.
 				txHash, err := tx.Hash()
 				Expect(err).ToNot(HaveOccurred())
@@ -118,7 +118,7 @@ var _ = Describe("Peercoin", func() {
 					// confirmations. This implies that the transaction is
 					// definitely valid, and the test has passed. We were
 					// successfully able to use the multichain to construct and
-					// submit a Bitcoin transaction!
+					// submit a Peercoin transaction!
 					confs, err := client.Confirmations(context.Background(), txHash)
 					Expect(err).ToNot(HaveOccurred())
 					log.Printf("                   %v/3 confirmations", confs)
