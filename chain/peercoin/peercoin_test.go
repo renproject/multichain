@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/ppcsuite/ppcd/chaincfg"
 	"github.com/ppcsuite/btcutil"
+	"github.com/ppcsuite/ppcd/chaincfg"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"

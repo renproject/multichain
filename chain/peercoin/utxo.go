@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ppcsuite/btcutil"
 	"github.com/ppcsuite/ppcd/btcec"
 	"github.com/ppcsuite/ppcd/chaincfg"
 	"github.com/ppcsuite/ppcd/chaincfg/chainhash"
 	"github.com/ppcsuite/ppcd/txscript"
 	"github.com/ppcsuite/ppcd/wire"
-	"github.com/ppcsuite/btcutil"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/pack"
 )
