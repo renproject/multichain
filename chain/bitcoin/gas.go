@@ -23,10 +23,10 @@ func NewGasEstimator(satsPerByte pack.U256) GasEstimator {
 	}
 }
 
-// GasPrice returns the number of SATs-per-byte that is needed in order to
-// confirm transactions with an estimated maximum delay of one block. It is the
-// responsibility of the caller to know the number of bytes in their
+// EstimateGasPrice returns the number of SATs-per-byte that is needed in order
+// to confirm transactions with an estimated maximum delay of one block. It is
+// the responsibility of the caller to know the number of bytes in their
 // transaction.
-func (gasEstimator GasEstimator) GasPrice(_ context.Context) (pack.U256, error) {
+func (gasEstimator GasEstimator) EstimateGasPrice(_ context.Context) (pack.U256, error) {
 	return gasEstimator.satsPerByte, nil
 }
