@@ -21,10 +21,10 @@ services:
       context: ./binance
     ports:
       - "0.0.0.0:8575:8575"
-    # entrypoint:
-    #   - "./root/run.sh"
-    #   - "${BINANCE_MNEMONIC}"
-    #   - "${BINANCE_ADDRESS}"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BINANCE_MNEMONIC}"
+      - "${BINANCE_ADDRESS}"
 
   #
   # Bitcoin
