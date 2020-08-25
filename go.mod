@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/btcsuite/btcutil v1.0.2
+	github.com/centrifuge/go-substrate-rpc-client v1.1.0
 	github.com/codahale/blake2 v0.0.0-20150924215134-8d10d0420cbf
 	github.com/cosmos/cosmos-sdk v0.39.1
 	github.com/drand/drand v1.0.3-0.20200714175734-29705eaf09d4 // indirect
@@ -25,6 +26,7 @@ require (
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
+	github.com/pierrec/xxHash v0.1.5 // indirect
 	github.com/raulk/clock v1.1.0 // indirect
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.3
