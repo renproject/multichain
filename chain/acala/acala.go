@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const DefaultClientRPCURL = "ws://127.0.0.1:9933"
+const DefaultClientRPCURL = "http://127.0.0.1:9944"
 
 type ClientOptions struct {
 	Logger *zap.Logger
@@ -52,68 +52,13 @@ func NewClient(opts ClientOptions) (*Client, error) {
 }
 
 func printEvents(meta *types.Metadata, data *types.StorageDataRaw, nhBlock types.Hash) error {
-	// key, err := types.CreateStorageKey(meta, "RenToken", "Events", nil, nil)
-	// if err != nil {
-	// 	return err
-	// }
-
-	fmt.Printf("Meta: %#v\n", meta)
-
-	// var er EventRecordsRaw
-	// err = est.getStorage(key, &er, nhBlock)
-	// if err != nil {
-	// 	return err
-	// }
-
-	fmt.Printf("data: %#v\n", data)
-
 	er := types.EventRecordsRaw(*data)
-
 	e := EventsWithMint{}
 	err := DecodeEvents(&er, meta, &e)
 	if err != nil {
 		return err
 	}
 
-	// decoder := scale.NewDecoder(bytes.NewReader(er))
-
-	// // determine number of events
-	// n, err := decoder.DecodeUintCompact()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// fmt.Printf("found %v events", n)
-
-	// // iterate over events
-	// for i := uint64(0); i < n.Uint64(); i++ {
-	// 	fmt.Printf("decoding event #%v\n", i)
-
-	// 	// decode Phase
-	// 	phase := types.Phase{}
-	// 	err := decoder.Decode(&phase)
-	// 	if err != nil {
-	// 		return fmt.Errorf("unable to decode Phase for event #%v: %v", i, err)
-	// 	}
-
-	// 	// decode EventID
-	// 	id := types.EventID{}
-	// 	err = decoder.Decode(&id)
-	// 	if err != nil {
-	// 		return fmt.Errorf("unable to decode EventID for event #%v: %v", i, err)
-	// 	}
-
-	// 	fmt.Printf("event #%v has EventID %v\n", i, id)
-
-	// }
-
-	// events := types.EventRecords{}
-	// err := EventRecordsRaw(*data).DecodeEventRecords(meta, &events)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// Show what we are busy with
 	for _, e := range e.RenToken_AssetsMinted {
 		fmt.Printf("[EVENT] RenToken::AssetsMinted:: (phase=%#v)\n", e.Phase)
 		fmt.Printf("[EVENT] RenToken::AssetsMinted:: (phase=%#v)\n", e.Who)
@@ -121,93 +66,6 @@ func printEvents(meta *types.Metadata, data *types.StorageDataRaw, nhBlock types
 		fmt.Printf("[EVENT] RenToken::AssetsMinted:: (phase=%#v)\n", e.Amount)
 		fmt.Printf("[EVENT] RenToken::AssetsMinted:: (phase=%#v)\n", e.Topics)
 	}
-	// for _, e := range e.Balances_Endowed {
-	// 	fmt.Printf("[EVENT] Balances:Endowed:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x, %v\n", e.Who, e.Balance)
-	// }
-	// for _, e := range e.Balances_DustLost {
-	// 	fmt.Printf("[EVENT] Balances:DustLost:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x, %v\n", e.Who, e.Balance)
-	// }
-	// for _, e := range e.Balances_Transfer {
-	// 	fmt.Printf("[EVENT] Balances:Transfer:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v, %v, %v\n", e.From, e.To, e.Value)
-	// }
-	// for _, e := range e.Balances_BalanceSet {
-	// 	fmt.Printf("[EVENT] Balances:BalanceSet:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v, %v, %v\n", e.Who, e.Free, e.Reserved)
-	// }
-	// for _, e := range e.Balances_Deposit {
-	// 	fmt.Printf("[EVENT] Balances:Deposit:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v, %v\n", e.Who, e.Balance)
-	// }
-	// for _, e := range e.Grandpa_NewAuthorities {
-	// 	fmt.Printf("[EVENT] Grandpa:NewAuthorities:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.NewAuthorities)
-	// }
-	// for _, e := range e.Grandpa_Paused {
-	// 	fmt.Printf("[EVENT] Grandpa:Paused:: (phase=%#v)\n", e.Phase)
-	// }
-	// for _, e := range e.Grandpa_Resumed {
-	// 	fmt.Printf("[EVENT] Grandpa:Resumed:: (phase=%#v)\n", e.Phase)
-	// }
-	// for _, e := range e.ImOnline_HeartbeatReceived {
-	// 	fmt.Printf("[EVENT] ImOnline:HeartbeatReceived:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x\n", e.AuthorityID)
-	// }
-	// for _, e := range e.ImOnline_AllGood {
-	// 	fmt.Printf("[EVENT] ImOnline:AllGood:: (phase=%#v)\n", e.Phase)
-	// }
-	// for _, e := range e.ImOnline_SomeOffline {
-	// 	fmt.Printf("[EVENT] ImOnline:SomeOffline:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.IdentificationTuples)
-	// }
-	// for _, e := range e.Indices_IndexAssigned {
-	// 	fmt.Printf("[EVENT] Indices:IndexAssigned:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x%v\n", e.AccountID, e.AccountIndex)
-	// }
-	// for _, e := range e.Indices_IndexFreed {
-	// 	fmt.Printf("[EVENT] Indices:IndexFreed:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.AccountIndex)
-	// }
-	// for _, e := range e.Offences_Offence {
-	// 	fmt.Printf("[EVENT] Offences:Offence:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v%v\n", e.Kind, e.OpaqueTimeSlot)
-	// }
-	// for _, e := range e.Session_NewSession {
-	// 	fmt.Printf("[EVENT] Session:NewSession:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.SessionIndex)
-	// }
-	// for _, e := range e.Staking_Reward {
-	// 	fmt.Printf("[EVENT] Staking:Reward:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.Balance)
-	// }
-	// for _, e := range e.Staking_Slash {
-	// 	fmt.Printf("[EVENT] Staking:Slash:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x%v\n", e.AccountID, e.Balance)
-	// }
-	// for _, e := range e.Staking_OldSlashingReportDiscarded {
-	// 	fmt.Printf("[EVENT] Staking:OldSlashingReportDiscarded:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.SessionIndex)
-	// }
-	// for _, e := range e.System_ExtrinsicSuccess {
-	// 	fmt.Printf("[EVENT] System:ExtrinsicSuccess:: (phase=%#v)\n", e.Phase)
-	// }
-	// for _, e := range e.System_ExtrinsicFailed {
-	// 	fmt.Printf("[EVENT] System:ErtrinsicFailed:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%v\n", e.DispatchError)
-	// }
-	// for _, e := range e.System_CodeUpdated {
-	// 	fmt.Printf("[EVENT] System:CodeUpdated:: (phase=%#v)\n", e.Phase)
-	// }
-	// for _, e := range e.System_NewAccount {
-	// 	fmt.Printf("[EVENT] System:NewAccount:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#x\n", e.Who)
-	// }
-	// for _, e := range e.System_KilledAccount {
-	// 	fmt.Printf("[EVENT] System:KilledAccount:: (phase=%#v)\n", e.Phase)
-	// 	fmt.Printf("\t%#X\n", e.Who)
-	// }
 
 	return nil
 }
