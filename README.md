@@ -2,15 +2,13 @@
 
 ## Layout
 
-`/` defines all of the functions/types/constants that are common to all underlying chains.
+`/` declares the assets and chains that exist, but provides no chain-specific implementations.
 
-`/compat` contains all of the Compat APIs. These APIs are the interfaces required to be implemented by underlying chains that are similar to each other. For example, the `/compat/bitcoincompat` folder defines the Bitcoin Compat API. The `Address`, `Client`, `Tx`, and `TxBuilder` interfaces must be implemented by all underlying chains that want to be compatible with the Bitcoin runtime. It also defines implementations that are likely to be common to these underlying chains (although, each underlying chain can override whatever it needs to).
+`/infra` defines a local deployment of the multichain using `docker-compose`. All underlying chains provide a `Dockerfile` and service definition to make running node instances easy. All chains need to add a `Dockerfile` and service definition that allows the multichain to spin up a local development-mode instance of the chain. This is necessary for running comprehensive local test suites.
 
-`/chain`  contains all the implementations of the Compat APIs. Each chain has its own sub-package. For example, Bitcoin, Bitcoin Cash, Dogecoin, and Zcash are all underyling chains that implement the Bitcoin Compat API (defined in `/compat/bitcoincompat`), and each of these implementations are in `/chain/bitcoin`, `/chain/bitcoincash`, `/chain/dogecoin`, and `/chain/zcash` respectively.
+`/api` defines the different compatibility APIs that exist: Account, Address, Contract, Gas, and UTXO. Chains should implement the APIs that are relevant to them. For example, Bitcoin (and its forks) implements the Address, Gas, and UTXO APIs. No actual implementations should be added to this folder.
 
-`/docker` defines a local deployment of the multichain using `docker-compose`. All underlying chains provide a `Dockerfile` and service definition to make running node instances easy.
-
-`/runtime` contains all of the Runtime modules. There is exactly one Runtime module for each Compat API, and you can think of a Runtime module as a way of accessing all of the Compat APIs in one place. This is the primary package used by users of the multichain (including the RenVM execution engine). If your chain implements one of the existing Compat APIs, you will *not* need to modify any of the Runtime modules.
+`/chain`  defines all of the chain-specific implementations of the APIs. Each chain has its own sub-package. For example, Bitcoin, Bitcoin Cash, Dogecoin, and Zcash are all chains that implement the Address, Gas, and UTXO APIs, and each of these implementations are in `/chain/bitcoin`, `/chain/bitcoincash`, `/chain/dogecoin`, and `/chain/zcash` respectively.
 
 ## Example
 
@@ -53,26 +51,26 @@ const (
 
 ### Docker
 
-Next, we need to setup a Docker container in the `docker/` folder. This is needed for local test suites, allowing for end-to-end integrated testing directly against a node. Doing this requires a couple of steps.
+Next, we need to setup a Docker container in the `/infra` folder. This is needed for local test suites, allowing for end-to-end integrated testing directly against a node. Doing this requires a couple of steps.
 
-First, we create a new `dogecoin/` folder in the `docker/` folder:
+First, we create a new `dogecoin/` folder in the `/infra` folder:
 
 ```
-docker/
-|-- bitcoin/
-|-- bitcoincash/
-|-- dogecoin/         # This is our new folder!
+/infra
+|-- /bitcoin
+|-- /bitcoincash
+|-- /dogecoin         # This is our new folder!
 |   |-- Dockerfile    # This is our new Dockerfile!
 |   |-- dogecoin.conf
 |   |-- run.sh        # This is our new run file!
-|-- zcash/
-|-- docker-compose.env
+|-- /zcash
+|-- .env
 |-- docker-compose.yaml
 ```
 
-The new folder _must_ at least contain a `Dockerfile` that installs the node, and a `run.sh` file that runs the nodes. The node _should_ be run in test mode. The new folder can also contain other files that are specific to the needs of the chain being added. In our case, the `dogecoin.conf` file is also needed to configure the node. (We will omit showing all the code here, since there is quite a bit of it, but you can check it out in the `docker/dogecoin/` folder.)
+The new folder _must_ at least contain a `Dockerfile` that installs the node, and a `run.sh` file that runs the nodes. The node _should_ be run in test mode. The new folder can also contain other files that are specific to the needs of the chain being added. In our case, the `dogecoin.conf` file is also needed to configure the node. (We will omit showing all the code here, since there is quite a bit of it, but you can check it out in the `/infra/dogecoin` folder.)
 
-Second, we add an entry to the `docker-compose.env` file. Our entry _must_ include a private key that will have access to funds, and the public address associated with that private key. We will add:
+Second, we add an entry to the `.env` file. Our entry _must_ include a private key that will have access to funds, and the public address associated with that private key. We will add:
 
 ```sh
 #
@@ -103,44 +101,127 @@ dogecoin:
     - "${DOGECOIN_ADDRESS}"
 ```
 
-### Runtime
+### Address API
 
-The final thing that is required before the `🔗 multichain` supports our new chain is an integration into the runtime, defined in `package runtime`. The exact requirements for integration into the runtime vary from chain-to-chain. To make life easier, there is a set of common interfaces, known as the _Compat API_, that can be implemented by new chains. The Compat API is a set of interfaces, designed with the intention for multiple implementations to exist. For example, the Bitcoin Compat API is used by Bitcoin, Bitcoin Cash, and Zcash.
+All chains _should_ implement the Address API. Luckily for Dogecoin, it is so similar to Bitcoin that we can re-export the Bitcoin implementation without the need for custom modifications. In `/chain/dogecoin/address.go` we add:
 
-The Compat API is defined by `package compat` (and is used by the `Runtime` type in `package runtime`). All of the interfaces in `package bitcoincompat` belong to the Bitcoin Compat API, all of the interfaces in `package ethereumcompat` belong to the Ethereum Compat API, all of the interfaces in `package substratecompat` belong to the Substrate Compat API, and so on. Similarly, the `BitcoinXX`, `EthereumXXX`, and `SubstrateXXX` methods (defined by the `Runtime` type in `package runtime`) are all abstractions over the respective Compat APIs, but do not need to be modified!
+```go
+package dogecoin
 
-Dogecoin is a fork of Bitcoin, so it is natural that we will support it by implementing the Bitcoin Compat API. Dogecoin is, in fact, so similar to Bitcoin that the implementation is trivial. All implementations belond in `package chain`, so we will create a new `package dogecoin` in that directory. Here, we create the `dogecoin.go` file and fill it with:
+import "github.com/renproject/multichain/chain/bitcoin"
+
+type (
+	AddressEncoder       = bitcoin.AddressEncoder
+	AddressDecoder       = bitcoin.AddressDecoder
+	AddressEncodeDecoder = bitcoin.AddressEncodeDecoder
+)
+```
+
+These three interfaces allow users of the `🔗 multichain` to easily encode and decode Dogecoin addresses. Other chains will need to provide their own implementations, based on their chains address standards.
+
+### Gas API
+
+Most, but not all, chains _should_ implement the Gas API. Again, Dogecoin is so similar to Bitcoin that we can re-export the Bitcoin implementation in `/chain/dogecoin/gas.go`:
+
+```go
+package dogecoin
+
+import "github.com/renproject/multichain/chain/bitcoin"
+
+type GasEstimator = bitcoin.GasEstimator
+
+var NewGasEstimator = bitcoin.NewGasEstimator
+```
+
+The interface allows users of the `🔗 multichain` to estimate gas prices (although, the current implementation is _very_ simple). The associated function allows users to construct an instance of the interface for Dogecoin.
+
+### UTXO API
+
+Generally speaking, chains fall into two categories: account-based or UTXO-based (and some can even be both). Bitcoin, and its forks, are all UTXO-based chains. As a fork of Bitcoin, Dogecoin is a UTXO-based chain, so we implement the UTXO API. To implement the UTXO API, we must implement the `Tx`, `TxBuilder`, and `Client` interfaces. More information can be found in the comments of `/api/utxo` folder.
+
+Again, the implementation for Dogecoin is trivial. In `/chain/dogecoin/utxo`, we have:
+
+```go
+package dogecoin
+
+import "github.com/renproject/multichain/chain/bitcoin"
+
+type (
+	Tx            = bitcoin.Tx
+	TxBuilder     = bitcoin.TxBuilder
+	Client        = bitcoin.Client
+	ClientOptions = bitcoin.ClientOptions
+)
+
+var (
+	NewTxBuilder         = bitcoin.NewTxBuilder
+	NewClient            = bitcoin.NewClient
+	DefaultClientOptions = bitcoin.DefaultClientOptions
+)
+```
+
+Up to this point, we have done nothing but re-export Bitcoin. So what makes Dogecoin different? And how can we express that difference? Well, the `/chain/dogecoin` folder is the place where we must define anything else Dogecoin users will need. In the case of Dogecoin, the only thing that differentiates it from Bitcoin is the `*chaincfg.Param` object. We define this in `/chain/dogecoin/dogecoin.go`:
 
 ```go
 package dogecoin
 
 import (
-    "github.com/renproject/multichain/chain/bitcoin"
-    "github.com/renproject/multichain/compat/bitcoincompat"
+	"github.com/btcsuite/btcd/chaincfg"
 )
 
-// NewTxBuilder returns an implementation of the transaction builder interface
-// from the Bitcoin Compat API, and exposes the functionality to build simple
-// Dogecoin transactions.
-func NewTxBuilder() bitcoincompat.TxBuilder {
-    return bitcoin.NewTxBuilder()
+func init() {
+	if err := chaincfg.Register(&MainNetParams); err != nil {
+		panic(err)
+	}
+	if err := chaincfg.Register(&RegressionNetParams); err != nil {
+		panic(err)
+	}
 }
 
-// The Tx type is copied from Bitcoin.
-type Tx = bitcoin.Tx
+var MainNetParams = chaincfg.Params{
+	Name: "mainnet",
+	Net:  0xc0c0c0c0,
+
+	// Address encoding magics
+	PubKeyHashAddrID: 30,
+	ScriptHashAddrID: 22,
+	PrivateKeyID:     158,
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x02, 0xfa, 0xc3, 0x98}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x02, 0xfa, 0xca, 0xfd}, // starts with xpub
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173. Dogecoin does not actually support this, but we do not want to
+	// collide with real addresses, so we specify it.
+	Bech32HRPSegwit: "doge",
+}
+
+var RegressionNetParams = chaincfg.Params{
+	Name: "regtest",
+
+	// Dogecoin has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
+	// Setting it to an arbitrary value (leet_hex(dogecoin)), so that we can
+	// register the regtest network.
+	Net: 0xd063c017,
+
+	// Address encoding magics
+	PubKeyHashAddrID: 111,
+	ScriptHashAddrID: 196,
+	PrivateKeyID:     239,
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with xpub
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173. Dogecoin does not actually support this, but we do not want to
+	// collide with real addresses, so we specify it.
+	Bech32HRPSegwit: "dogert",
+}
 ```
 
-For a coin as simple as Dogecoin, nothing else is required! For more complex examples, you can checkout `package bitcoincash` and `package zcash` which need to define their own address and transaction formats.
-
-### Custom Runtimes
-
-Not all chains are as simple as the Dogecoin chain, and an existing Compat API may not be sufficient for your needs. In these scenarios, a little more work is required.
-
-1. Define your own compat package (e.g. `package myawesomechaincompat`) in the `compat/` folder.
-2. Define your own compat interfaces in your new compat package.
-3. Define your own compat methods on the `Runtime` type in `package runtime`. You will always need a `MyAwesomeChainDecodeAddress(pack.String) (myawesoemcompat.Address, error)` method. If your blockchain is programmable, then defining methods for querying relevant events is usually sufficient. Otherwise, building/submitting transactions is probably going to be required.
-
-If in doubt, get in touch with the Ren team at https://t.me/renproject and we will help you out!
+Most of the functions that we have re-exported expected `*chaincfg.Params` as an argument. By defining one for regnet and mainnet, users can construct Dogecoin instances of the UTXO API by using these params.
 
 ## Test Suite
 
