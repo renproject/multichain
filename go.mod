@@ -37,5 +37,3 @@ require (
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 )
-
-replace github.com/filecoin-project/filecoin-ffi => /Users/rohitnarurkar/Develop/go-workspace/src/github.com/renproject/multichain/chain/filecoin/filecoin-ffi
