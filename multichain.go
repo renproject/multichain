@@ -95,6 +95,17 @@ func (asset Asset) OriginChain() Chain {
 	}
 }
 
+func (asset Asset) ChainType() ChainType {
+	switch asset {
+	case BCH, BTC, DGB, DOGE, ZEC:
+		return ChainTypeUTXOBased
+	case BNB, ETH:
+		return ChainTypeAccountBased
+	default:
+		return ChainType("")
+	}
+}
+
 // SizeHint returns the number of bytes required to represent the asset in
 // binary.
 func (asset Asset) SizeHint() int {
@@ -149,3 +160,39 @@ func (chain Chain) Marshal(buf []byte, rem int) ([]byte, int, error) {
 func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
+
+func (chain Chain) ChainType() ChainType {
+	switch chain {
+	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
+		return ChainTypeUTXOBased
+	case BinanceSmartChain, Ethereum:
+		return ChainTypeAccountBased
+	default:
+		return ChainType("")
+	}
+}
+
+func (chain Chain) IsAccountBased() bool {
+	switch chain {
+	case BinanceSmartChain, Ethereum:
+		return true
+	default:
+		return false
+	}
+}
+
+func (chain Chain) IsUTXOBased() bool {
+	switch chain {
+	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
+		return true
+	default:
+		return false
+	}
+}
+
+type ChainType string
+
+const (
+	ChainTypeAccountBased = ChainType("AccountBased")
+	ChainTypeUTXOBased    = ChainType("UTXOBased")
+)
