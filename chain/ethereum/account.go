@@ -60,7 +60,7 @@ func (tx *Tx) Payload() contract.CallData {
 	return contract.CallData(pack.NewBytes(tx.tx.Data()))
 }
 
-func (tx *Tx) Sighashes() (pack.Bytes32, error) {
+func (tx *Tx) Sighash() (pack.Bytes32, error) {
 	sighash := tx.signer.Hash(tx.tx)
 	return pack.NewBytes32(sighash), nil
 }

@@ -37,9 +37,9 @@ type Tx interface {
 	// call functions on a contract.
 	Payload() contract.CallData
 
-	// Sighashes that must be signed before the transaction can be submitted by
+	// Sighash that must be signed before the transaction can be submitted by
 	// the client.
-	Sighashes() (pack.Bytes32, error)
+	Sighash() (pack.Bytes32, error)
 
 	// Sign the transaction by injecting signatures for the required sighashes.
 	// The serialized public key used to sign the sighashes should also be
