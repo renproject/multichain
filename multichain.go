@@ -98,6 +98,17 @@ func (asset Asset) OriginChain() Chain {
 	}
 }
 
+func (asset Asset) ChainType() ChainType {
+	switch asset {
+	case BCH, BTC, DGB, DOGE, ZEC:
+		return ChainTypeUTXOBased
+	case BNB, ETH:
+		return ChainTypeAccountBased
+	default:
+		return ChainType("")
+	}
+}
+
 // SizeHint returns the number of bytes required to represent the asset in
 // binary.
 func (asset Asset) SizeHint() int {
