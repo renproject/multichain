@@ -10,6 +10,12 @@ import (
 	"github.com/renproject/pack"
 )
 
+type TxType uint8
+
+const (
+	ETHTransfer = TxType(0)
+)
+
 // The Estimator interface defines the functionality required to know the
 // current recommended gas prices.
 type Estimator interface {
@@ -22,4 +28,7 @@ type Estimator interface {
 	// required to get a transaction into one of the next few blocks (because
 	// blocks happen a lot faster).
 	EstimateGasPrice(context.Context) (pack.U256, error)
+
+	// EstimateGasLimit ...
+	EstimateGasLimit(TxType) (pack.U256, error)
 }
