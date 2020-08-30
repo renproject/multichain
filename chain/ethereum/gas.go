@@ -2,7 +2,9 @@ package ethereum
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/pack"
 )
 
@@ -29,4 +31,14 @@ func NewGasEstimator(wei pack.U256) GasEstimator {
 // transaction.
 func (gasEstimator GasEstimator) EstimateGasPrice(_ context.Context) (pack.U256, error) {
 	return gasEstimator.wei, nil
+}
+
+// EstimateGasLimit returns the gas limit depending on what type of transaction we wish to do
+func (gasEstimator GasEstimator) EstimateGasLimit(txType gas.TxType) (pack.U256, error) {
+	switch txType {
+	case gas.ETHTransfer:
+		return pack.NewU256FromU64(pack.NewU64(21000)), nil
+	default:
+		return pack.NewU256([32]byte{}), fmt.Errorf("non-exhaustive transaction type: %v", txType)
+	}
 }

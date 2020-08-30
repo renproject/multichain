@@ -1,9 +1,12 @@
 package ethereum
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
@@ -22,9 +25,24 @@ func NewTxBuilder(config *params.ChainConfig) TxBuilder {
 func (txBuilder TxBuilder) BuildTx(
 	from, to address.Address,
 	value, nonce pack.U256,
+	gasPrice, gasLimit pack.U256,
 	payload pack.Bytes,
 ) (account.Tx, error) {
-	panic("unimplemented")
+	toAddr, err := NewAddressFromHex(string(to))
+	if err != nil {
+		return nil, fmt.Errorf("decoding address: %v", err)
+	}
+	fromAddr, err := NewAddressFromHex(string(from))
+	if err != nil {
+		return nil, fmt.Errorf("decoding address: %v", err)
+	}
+
+	tx := types.NewTransaction(nonce.Int().Uint64(), common.Address(toAddr), value.Int(), gasLimit.Int().Uint64(), gasPrice.Int(), []byte(payload))
+
+	signer := types.MakeSigner(txBuilder.config, nil)
+	signed := false
+
+	return &Tx{fromAddr, tx, signer, signed}, nil
 }
 
 type Tx struct {
@@ -87,4 +105,43 @@ func (tx *Tx) Serialize() (pack.Bytes, error) {
 	}
 
 	return pack.NewBytes(serialized), nil
+}
+
+type EthClient struct {
+	client *ethclient.Client
+}
+
+func NewClient(rpcURL pack.String) (account.Client, error) {
+	client, err := ethclient.Dial(string(rpcURL))
+	if err != nil {
+		return nil, fmt.Errorf("dialing RPC URL %v: %v", rpcURL, err)
+	}
+
+	return EthClient{client}, nil
+}
+
+func (client EthClient) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack.U64, error) {
+	txHash := common.BytesToHash(txId)
+	tx, isPending, err := client.client.TransactionByHash(ctx, txHash)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("fetching tx: %v", err)
+	}
+	if isPending {
+		return nil, pack.NewU64(0), fmt.Errorf("tx not confirmed")
+	}
+	txReceipt, err := client.client.TransactionReceipt(ctx, txHash)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("fetching tx receipt: %v", err)
+	}
+	block, err := client.client.BlockByNumber(ctx, nil)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("fetching current block: %v", err)
+	}
+	confs := block.NumberU64() - txReceipt.BlockNumber.Uint64() + 1
+
+	return &Tx{tx: tx}, pack.NewU64(confs), nil
+}
+
+func (client EthClient) SubmitTx(ctx context.Context, tx account.Tx) error {
+	panic("unimplemented")
 }

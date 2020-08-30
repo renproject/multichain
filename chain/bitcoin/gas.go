@@ -3,6 +3,7 @@ package bitcoin
 import (
 	"context"
 
+	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/pack"
 )
 
@@ -29,4 +30,10 @@ func NewGasEstimator(satsPerByte pack.U256) GasEstimator {
 // transaction.
 func (gasEstimator GasEstimator) EstimateGasPrice(_ context.Context) (pack.U256, error) {
 	return gasEstimator.satsPerByte, nil
+}
+
+// EstimateGasLimit returns the gas limit for a transaction. This is not relevant
+// for UTXO type of chains
+func (gasEstimator GasEstimator) EstimateGasLimit(txType gas.TxType) (pack.U256, error) {
+	return pack.NewU256([32]byte{}), nil
 }
