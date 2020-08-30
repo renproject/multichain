@@ -62,6 +62,19 @@ services:
       - "${ETHEREUM_ADDRESS}"
 
   #
+  # Fantom
+  #
+  fantom:
+    build:
+      context: ./fantom
+    ports:
+      - "0.0.0.0:18545:18545"
+    entrypoint:
+      - "./root/run.sh"
+      - "${FANTOM_MNEMONIC}"
+      - "${FANTOM_ADDRESS}"
+
+  #
   # Filecoin
   #
   filecoin:
