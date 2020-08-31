@@ -135,8 +135,8 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U
 			To:        filto,
 			Value:     big.Int{Int: value.Int()},
 			Nonce:     value.Int().Uint64(),
-			GasPrice:  big.Int{Int: txBuilder.gasPrice.Int()},
-			GasFeeCap: txBuilder.gasLimit.Int().Int64(),
+			GasFeeCap: big.Int{Int: txBuilder.gasPrice.Int()},
+			GasLimit:  txBuilder.gasLimit.Int().Int64(),
 			Method:    methodNum,
 			Params:    payload,
 		},
@@ -188,7 +188,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		requestHeaders.Add(AuthorizationKey, opts.AuthToken)
 	}
 
-	node, closer, err := filclient.NewFullNodeRPC(opts.MultiAddress, requestHeaders)
+	node, closer, err := filclient.NewFullNodeRPC(context.Background(), opts.MultiAddress, requestHeaders)
 	if err != nil {
 		return nil, err
 	}
@@ -220,6 +220,7 @@ func (client *Client) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack
 	// 2. choose the most recent block from tipset.blks
 	//		https://github.com/filecoin-project/lotus/blob/80e6e56a824599e7b8a71241197a7dfa04d14cfc/chain/types/tipset.go#L22
 	// https://github.com/filecoin-project/lotus/blob/master/api/api_full.go#L41
+	panic("unimplemented")
 }
 
 // SubmitTx to the underlying blockchain network.
@@ -237,4 +238,5 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	// if err != nil {
 	// 	return fmt.Errorf("pushing message to message pool: %v", err)
 	// }
+	panic("unimplemented")
 }
