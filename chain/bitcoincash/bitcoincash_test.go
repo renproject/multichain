@@ -10,8 +10,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/multichain/chain/bitcoincash"
-	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -41,8 +42,8 @@ var _ = Describe("Bitcoin Cash", func() {
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
-				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:19443"))
-				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, pkhAddr)
+				client := bitcoincash.NewClient(bitcoincash.DefaultClientOptions())
+				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, address.Address(pkhAddr.EncodeAddress()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
 				output := outputs[0]
@@ -56,17 +57,20 @@ var _ = Describe("Bitcoin Cash", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
-				recipients := []bitcoincompat.Recipient{
+				inputs := []utxo.Input{
+					{Output: output},
+				}
+				recipients := []utxo.Recipient{
 					{
-						Address: pkhAddr,
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						To:    address.Address(pkhAddr.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 2)),
 					},
 					{
-						Address: pkhAddrUncompressed,
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 2),
+						To:    address.Address(pkhAddrUncompressed.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 2)),
 					},
 				}
-				tx, err := bitcoincash.NewTxBuilder().BuildTx([]bitcoincompat.Output{output}, recipients)
+				tx, err := bitcoincash.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and
@@ -87,7 +91,9 @@ var _ = Describe("Bitcoin Cash", func() {
 
 				// Submit the transaction to the Bitcoin Cash node. Again, this
 				// should be running a la `./multichaindeploy`.
-				txHash, err := client.SubmitTx(context.Background(), tx)
+				txHash, err := tx.Hash()
+				Expect(err).ToNot(HaveOccurred())
+				err = client.SubmitTx(context.Background(), tx)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("TXID               %v", txHash)
 
