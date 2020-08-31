@@ -102,7 +102,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH:
+	case BNB, ETH, FIL:
 		return ChainTypeAccountBased
 	default:
 		return ChainType("")
@@ -169,7 +169,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum:
+	case BinanceSmartChain, Ethereum, Filecoin:
 		return ChainTypeAccountBased
 	default:
 		return ChainType("")
