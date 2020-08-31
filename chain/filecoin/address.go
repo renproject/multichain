@@ -5,7 +5,7 @@ import (
 	"github.com/renproject/multichain/api/address"
 )
 
-type AddressEncoderDecoder struct {
+type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
@@ -13,8 +13,8 @@ type AddressEncoderDecoder struct {
 type AddressEncoder struct{}
 type AddressDecoder struct{}
 
-func NewAddressEncoderDecoder() AddressEncoderDecoder {
-	return AddressEncoderDecoder{
+func NewAddressEncodeDecoder() AddressEncodeDecoder {
+	return AddressEncodeDecoder{
 		AddressEncoder: AddressEncoder{},
 		AddressDecoder: AddressDecoder{},
 	}
