@@ -82,8 +82,8 @@ type Tx struct {
 }
 
 func (tx *Tx) Hash() (pack.Bytes, error) {
-	hash := tx.msgTx.TxHash()
-	return pack.NewBytes(hash[:]), nil
+	txhash := tx.msgTx.TxHash()
+	return pack.NewBytes(txhash[:]), nil
 }
 
 func (tx *Tx) Inputs() ([]utxo.Input, error) {

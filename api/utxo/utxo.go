@@ -19,7 +19,7 @@ type Outpoint struct {
 // An Output is produced by a transaction. It includes the conditions required
 // to spend the output (called the pubkey script, based on Bitcoin).
 type Output struct {
-	Outpoint
+	Outpoint     `json:"outpoint"`
 	Value        pack.U256  `json:"value"`
 	PubKeyScript pack.Bytes `json:"pubKeyScript"`
 }
@@ -29,7 +29,7 @@ type Output struct {
 // conditions specified by the consumed output (called the sig script, based on
 // Bitcoin).
 type Input struct {
-	Output
+	Output    `json:"output"`
 	SigScript pack.Bytes `json:"sigScript"`
 }
 

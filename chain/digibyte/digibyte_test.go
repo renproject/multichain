@@ -9,8 +9,10 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/digibyte"
-	"github.com/renproject/multichain/compat/bitcoincompat"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -45,8 +47,8 @@ var _ = Describe("DigiByte", func() {
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
 				// Setup the client and load the unspent transaction outputs.
-				client := bitcoincompat.NewClient(bitcoincompat.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
-				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, wpkhAddr)
+				client := bitcoin.NewClient(bitcoin.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
+				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, address.Address(pkhAddr.EncodeAddress()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
 				output := outputs[0]
@@ -60,21 +62,21 @@ var _ = Describe("DigiByte", func() {
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
-				inputs := []bitcoincompat.Input{
+				inputs := []utxo.Input{
 					{Output: output},
 				}
-				recipients := []bitcoincompat.Recipient{
+				recipients := []utxo.Recipient{
 					{
-						Address: pack.String(wpkhAddr.EncodeAddress()),
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
+						To:    address.Address(wpkhAddr.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
 					},
 					{
-						Address: pack.String(pkhAddr.EncodeAddress()),
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
+						To:    address.Address(pkhAddr.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
 					},
 					{
-						Address: pack.String(pkhAddrUncompressed.EncodeAddress()),
-						Value:   pack.NewU64((output.Value.Uint64() - 1000) / 3),
+						To:    address.Address(pkhAddrUncompressed.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
 					},
 				}
 				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx(inputs, recipients)
@@ -98,7 +100,9 @@ var _ = Describe("DigiByte", func() {
 
 				// Submit the transaction to the DigiByte node. Again, this
 				// should be running a la `./multichaindeploy`.
-				txHash, err := client.SubmitTx(context.Background(), tx)
+				txHash, err := tx.Hash()
+				Expect(err).ToNot(HaveOccurred())
+				err = client.SubmitTx(context.Background(), tx)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("TXID               %v", txHash)
 

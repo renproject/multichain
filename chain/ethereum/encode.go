@@ -56,7 +56,7 @@ func Encode(vals ...interface{}) []byte {
 
 		case Address:
 			ethval = val
-			ty, err = abi.NewType("bytes20", "", nil)
+			ty, err = abi.NewType("address", "", nil)
 
 		default:
 			panic(fmt.Errorf("non-exhaustive pattern: %T", val))

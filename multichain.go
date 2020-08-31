@@ -8,12 +8,15 @@ import (
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/multichain/api/utxo"
+	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/surge"
 )
 
 type (
-	Address    = address.Address
-	RawAddress = address.RawAddress
+	Address               = address.Address
+	AddressEncodeDecoder  = address.EncodeDecoder
+	EthereumCompatAddress = ethereum.Address
+	RawAddress            = address.RawAddress
 )
 
 type (
@@ -24,7 +27,7 @@ type (
 
 type (
 	UTXOutpoint   = utxo.Outpoint
-	UTXO          = utxo.Output
+	UTXOutput     = utxo.Output
 	UTXOInput     = utxo.Input
 	UTXORecipient = utxo.Recipient
 	UTXOTx        = utxo.Tx
@@ -51,10 +54,12 @@ const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
 	BNB  = Asset("BNB")  // Binance Coin
 	BTC  = Asset("BTC")  // Bitcoin
+	CELO = Asset("CELO") // Celo
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
-	FIL  = Asset("FIL")  // Filecoin
+	FIL  = Asset("FIL")  // Filecoin	
+	FTM  = Asset("FTM")  // Fantom
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
@@ -70,6 +75,8 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
+	case CELO:
+		return Celo
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -78,6 +85,8 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case FIL:
 		return Filecoin
+	case FTM:
+		return Fantom
 	case LUNA:
 		return Terra
 	case SOL:
@@ -116,9 +125,11 @@ const (
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
+	Celo              = Chain("Celo")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
+	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")

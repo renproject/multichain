@@ -6,14 +6,32 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
+type AddressEncodeDecoder struct {
+	AddressEncoder
+	AddressDecoder
+}
+
+type AddressEncoder interface {
+	EncodeAddress(address.RawAddress) (address.Address, error)
+}
+
+type addressEncoder struct{}
+
+func NewAddressEncodeDecoder() address.EncodeDecoder {
+	return AddressEncodeDecoder{
+		AddressEncoder: NewAddressEncoder(),
+		AddressDecoder: NewAddressDecoder(),
+	}
+}
+
 type AddressDecoder interface {
-	DecodeAddress(pack.String) (pack.Bytes, error)
+	DecodeAddress(address.Address) (address.RawAddress, error)
 }
 
 type addressDecoder struct{}
@@ -22,17 +40,26 @@ func NewAddressDecoder() AddressDecoder {
 	return addressDecoder{}
 }
 
-func (addressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
-	ethaddr, err := NewAddressFromHex(encoded.String())
+func NewAddressEncoder() AddressEncoder {
+	return addressEncoder{}
+}
+
+func (addressDecoder) DecodeAddress(encoded address.Address) (address.RawAddress, error) {
+	ethaddr, err := NewAddressFromHex(string(pack.String(encoded)))
 	if err != nil {
 		return nil, err
 	}
-	return pack.Bytes(ethaddr[:]), nil
+	return address.RawAddress(pack.Bytes(ethaddr[:])), nil
+}
+
+func (addressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	encodedAddr := common.Bytes2Hex([]byte(rawAddr))
+	return address.Address(pack.NewString(encodedAddr)), nil
 }
 
 // An Address represents a public address on the Ethereum blockchain. It can be
 // the address of an external account, or the address of a smart contract.
-type Address ethcommon.Address
+type Address common.Address
 
 // NewAddressFromHex returns an Address decoded from a hex
 // string.
@@ -47,7 +74,7 @@ func NewAddressFromHex(str string) (Address, error) {
 	if err != nil {
 		return Address{}, fmt.Errorf("invalid ethaddress %v: %v", str, err)
 	}
-	ethaddr := ethcommon.Address{}
+	ethaddr := common.Address{}
 	copy(ethaddr[:], ethaddrData)
 	return Address(ethaddr), nil
 }
@@ -55,31 +82,31 @@ func NewAddressFromHex(str string) (Address, error) {
 // SizeHint returns the number of bytes needed to represent this address in
 // binary.
 func (Address) SizeHint() int {
-	return ethcommon.AddressLength
+	return common.AddressLength
 }
 
 // Marshal the address to binary.
 func (addr Address) Marshal(buf []byte, rem int) ([]byte, int, error) {
-	if len(buf) < ethcommon.AddressLength || rem < ethcommon.AddressLength {
+	if len(buf) < common.AddressLength || rem < common.AddressLength {
 		return buf, rem, surge.ErrUnexpectedEndOfBuffer
 	}
 	copy(buf, addr[:])
-	return buf[ethcommon.AddressLength:], rem - ethcommon.AddressLength, nil
+	return buf[common.AddressLength:], rem - common.AddressLength, nil
 }
 
 // Unmarshal the address from binary.
 func (addr *Address) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
-	if len(buf) < ethcommon.AddressLength || rem < ethcommon.AddressLength {
+	if len(buf) < common.AddressLength || rem < common.AddressLength {
 		return buf, rem, surge.ErrUnexpectedEndOfBuffer
 	}
-	copy(addr[:], buf[:ethcommon.AddressLength])
-	return buf[ethcommon.AddressLength:], rem - ethcommon.AddressLength, nil
+	copy(addr[:], buf[:common.AddressLength])
+	return buf[common.AddressLength:], rem - common.AddressLength, nil
 }
 
 // MarshalJSON implements JSON marshaling by encoding the address as a hex
 // string.
 func (addr Address) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ethcommon.Address(addr).Hex())
+	return json.Marshal(common.Address(addr).Hex())
 }
 
 // UnmarshalJSON implements JSON unmarshaling by expected the data be a hex
