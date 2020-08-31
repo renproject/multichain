@@ -1,7 +1,6 @@
 package digibyte
 
 import (
-	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -13,7 +12,7 @@ func init() {
 	if err := chaincfg.Register(&MainNetParams); err != nil {
 		panic(err)
 	}
-	if err := chaincfg.Register(&DigiByteTestnetParams); err != nil {
+	if err := chaincfg.Register(&TestnetParams); err != nil {
 		panic(err)
 	}	
 	if err := chaincfg.Register(&RegressionNetParams); err != nil {
@@ -98,7 +97,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 }
 
 
-var DigiByteMainNetParams = &chaincfg.Params{
+var MainNetParams = chaincfg.Params{
 	Name:        "mainnet",
 	Net:         0xdab6c3fa,
 	DefaultPort: "12024",
@@ -127,7 +126,7 @@ var DigiByteMainNetParams = &chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
-var DigiByteTestnetParams = &chaincfg.Params{
+var TestnetParams = chaincfg.Params{
 	Name:        "testnet",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
@@ -161,7 +160,7 @@ var DigiByteTestnetParams = &chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
-var DigiByteRegtestParams = &chaincfg.Params{
+var RegressionNetParams = chaincfg.Params{
 	Name:        "regtest",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
