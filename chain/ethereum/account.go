@@ -78,17 +78,21 @@ func (tx *Tx) Payload() contract.CallData {
 	return contract.CallData(pack.NewBytes(tx.tx.Data()))
 }
 
-func (tx *Tx) Sighash() (pack.Bytes32, error) {
+func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighash := tx.signer.Hash(tx.tx)
-	return pack.NewBytes32(sighash), nil
+	return []pack.Bytes32{pack.NewBytes32(sighash)}, nil
 }
 
-func (tx *Tx) Sign(signature pack.Bytes65, pubKey pack.Bytes) error {
+func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("already signed")
 	}
 
-	signedTx, err := tx.tx.WithSignature(tx.signer, signature.Bytes())
+	if len(signatures) != 1 {
+		return fmt.Errorf("expected exactly signature")
+	}
+
+	signedTx, err := tx.tx.WithSignature(tx.signer, signatures[0].Bytes())
 	if err != nil {
 		return err
 	}

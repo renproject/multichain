@@ -7,10 +7,13 @@ import (
 	"net/http"
 
 	filaddress "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-jsonrpc"
+	"github.com/filecoin-project/lotus/api"
 	filclient "github.com/filecoin-project/lotus/api/client"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/abi"
 	"github.com/filecoin-project/specs-actors/actors/abi/big"
+	"github.com/filecoin-project/specs-actors/actors/crypto"
 	"github.com/ipfs/go-cid"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
@@ -129,15 +132,16 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U
 	}
 	return Tx{
 		msg: types.Message{
-			Version:  types.MessageVersion,
-			From:     filfrom,
-			To:       filto,
-			Value:    big.Int{Int: value.Int()},
-			Nonce:    value.Int().Uint64(),
-			GasPrice: big.Int{Int: txBuilder.gasPrice.Int()},
-			GasLimit: txBuilder.gasLimit.Int().Int64(),
-			Method:   methodNum,
-			Params:   payload,
+			Version:    types.MessageVersion,
+			From:       filfrom,
+			To:         filto,
+			Value:      big.Int{Int: value.Int()},
+			Nonce:      value.Int().Uint64(),
+			GasFeeCap:  big.Int{Int: txBuilder.gasPrice.Int()},
+			GasPremium: big.Int{Int: pack.NewU256([32]byte{}).Int()},
+			GasLimit:   txBuilder.gasLimit.Int().Int64(),
+			Method:     methodNum,
+			Params:     payload,
 		},
 		signature: pack.Bytes65{},
 	}, nil
@@ -187,7 +191,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		requestHeaders.Add(AuthorizationKey, opts.AuthToken)
 	}
 
-	node, closer, err := filclient.NewFullNodeRPC(opts.MultiAddress, requestHeaders)
+	node, closer, err := filclient.NewFullNodeRPC(context.Background(), opts.MultiAddress, requestHeaders)
 	if err != nil {
 		return nil, err
 	}
@@ -199,41 +203,57 @@ func NewClient(opts ClientOptions) (*Client, error) {
 // hash. It also returns the number of confirmations for the transaction.
 func (client *Client) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack.U64, error) {
 	// parse the transaction ID to a message ID
-	// msgId, err := cid.Parse(txId.String())
-	// if err != nil {
-	// 	return nil, nil, fmt.Errorf("parsing txId: %v", err)
-	// }
+	msgId, err := cid.Parse(txId.String())
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("parsing txId: %v", err)
+	}
 
-	// get message
-	// message, err := client.node.ChainGetMessage(ctx, msgId)
-	// if err != nil {
-	// 	return nil, nil, fmt.Errorf("fetching tx: %v", err)
-	// }
+	// lookup message receipt to get its height
+	messageLookup, err := client.node.StateSearchMsg(ctx, msgId)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("searching msg: %v", err)
+	}
 
-	// TODO?: See if we can get a signed message
+	// get the most recent tipset and its height
+	headTipset, err := client.node.ChainHead(ctx)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("fetching head: %v", err)
+	}
+	confs := headTipset.Height() - messageLookup.Height + 1
 
-	// TODO?: API call to get the block number for the above message
+	// get the message
+	msg, err := client.node.ChainGetMessage(ctx, msgId)
+	if err != nil {
+		return nil, pack.NewU64(0), fmt.Errorf("fetching msg: %v", err)
+	}
 
-	// get most recent block number
-	// 1. get chain tipset
-	// 2. choose the most recent block from tipset.blks
-	//		https://github.com/filecoin-project/lotus/blob/80e6e56a824599e7b8a71241197a7dfa04d14cfc/chain/types/tipset.go#L22
-	// https://github.com/filecoin-project/lotus/blob/master/api/api_full.go#L41
+	return &Tx{msg: *msg}, pack.NewU64(uint64(confs)), nil
 }
 
 // SubmitTx to the underlying blockchain network.
 // TODO: should also return a transaction hash (pack.Bytes) ?
 func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
-	// construct crypto.Signature
-	// https://github.com/filecoin-project/specs-actors/blob/master/actors/crypto/signature.go
+	switch tx := tx.(type) {
+	case Tx:
+		// construct crypto.Signature
+		signature := crypto.Signature{
+			Type: crypto.SigTypeSecp256k1,
+			Data: tx.signature.Bytes(),
+		}
 
-	// construct types.SignedMessage
-	// https://github.com/filecoin-project/lotus/blob/80e6e56a824599e7b8a71241197a7dfa04d14cfc/chain/types/signedmessage.go
+		// construct types.SignedMessage
+		signedMessage := types.SignedMessage{
+			Message:   tx.msg,
+			Signature: signature,
+		}
 
-	// submit transaction to mempool
-	// https://github.com/filecoin-project/lotus/blob/master/api/api_full.go#L169
-	// msgId, err := client.node.MpoolPush(ctx, &signedMessage)
-	// if err != nil {
-	// 	return fmt.Errorf("pushing message to message pool: %v", err)
-	// }
+		// submit transaction to mempool
+		_, err := client.node.MpoolPush(ctx, &signedMessage)
+		if err != nil {
+			return fmt.Errorf("pushing msg to mpool: %v", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("invalid tx type: %v", tx)
+	}
 }
