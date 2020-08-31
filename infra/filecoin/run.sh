@@ -14,6 +14,8 @@ sleep 10
 
 ./lotus wallet import /root/miner.key
 
+./lotus auth create-token --perm admin
+
 kill $PID
 
 echo '
