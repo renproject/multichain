@@ -7,11 +7,12 @@ import (
 	"net/http"
 
 	filaddress "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-jsonrpc"
+	"github.com/filecoin-project/lotus/api"
 	filclient "github.com/filecoin-project/lotus/api/client"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/filecoin-project/specs-actors/actors/abi"
 	"github.com/filecoin-project/specs-actors/actors/abi/big"
-	"github.com/ipfs/go-cid"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
@@ -129,15 +130,15 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U
 	}
 	return Tx{
 		msg: types.Message{
-			Version:  types.MessageVersion,
-			From:     filfrom,
-			To:       filto,
-			Value:    big.Int{Int: value.Int()},
-			Nonce:    value.Int().Uint64(),
-			GasPrice: big.Int{Int: txBuilder.gasPrice.Int()},
-			GasLimit: txBuilder.gasLimit.Int().Int64(),
-			Method:   methodNum,
-			Params:   payload,
+			Version:   types.MessageVersion,
+			From:      filfrom,
+			To:        filto,
+			Value:     big.Int{Int: value.Int()},
+			Nonce:     value.Int().Uint64(),
+			GasPrice:  big.Int{Int: txBuilder.gasPrice.Int()},
+			GasFeeCap: txBuilder.gasLimit.Int().Int64(),
+			Method:    methodNum,
+			Params:    payload,
 		},
 		signature: pack.Bytes65{},
 	}, nil
