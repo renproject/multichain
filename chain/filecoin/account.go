@@ -130,15 +130,16 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce pack.U
 	}
 	return Tx{
 		msg: types.Message{
-			Version:   types.MessageVersion,
-			From:      filfrom,
-			To:        filto,
-			Value:     big.Int{Int: value.Int()},
-			Nonce:     value.Int().Uint64(),
-			GasFeeCap: big.Int{Int: txBuilder.gasPrice.Int()},
-			GasLimit:  txBuilder.gasLimit.Int().Int64(),
-			Method:    methodNum,
-			Params:    payload,
+			Version:    types.MessageVersion,
+			From:       filfrom,
+			To:         filto,
+			Value:      big.Int{Int: value.Int()},
+			Nonce:      value.Int().Uint64(),
+			GasFeeCap:  big.Int{Int: txBuilder.gasPrice.Int()},
+			GasPremium: big.Int{Int: pack.NewU256([32]byte{}).Int()},
+			GasLimit:   txBuilder.gasLimit.Int().Int64(),
+			Method:     methodNum,
+			Params:     payload,
 		},
 		signature: pack.Bytes65{},
 	}, nil
