@@ -24,14 +24,16 @@ var (
 )
 
 const (
+	// DeploymentTestDummy ...
 	DeploymentTestDummy = iota
+
+	// DeploymentCSV ...
 	DeploymentCSV
+
+	// DeploymentSegwit ...
 	DeploymentSegwit
-	// DeploymentVersionBits
-	// DeploymentVersionReserveAlgos
-	// DeploymentOdo
-	// DeploymentEquihash
-	// DeploymentEthash
+
+	// DefinedDeployments ...
 	DefinedDeployments
 )
 
@@ -111,6 +113,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 	return hash
 }
 
+// MainNetParams returns the chain configuration for mainnet
 var MainNetParams = chaincfg.Params{
 	Name:        "mainnet",
 	Net:         0xdab6c3fa,
@@ -305,6 +308,7 @@ var MainNetParams = chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
+// RegressionNetParams returns the chain configuration for a devnet/regnet
 var RegressionNetParams = chaincfg.Params{
 	Name: "regtest",
 

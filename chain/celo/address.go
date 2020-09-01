@@ -19,5 +19,7 @@ type AddressDecoder = ethereum.AddressDecoder
 type AddressEncodeDecoder = ethereum.AddressEncodeDecoder
 
 var (
+	// NewAddressEncodeDecoder creates a new address encode-decoder that
+	// implements the address.Encoder and address.Decoder interfaces
 	NewAddressEncodeDecoder = ethereum.NewAddressEncodeDecoder
 )
