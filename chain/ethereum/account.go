@@ -111,7 +111,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	}
 
 	if len(signatures) != 1 {
-		return fmt.Errorf("expected exactly signature")
+		return fmt.Errorf("expected 1 signature, got %v signatures", len(signatures))
 	}
 
 	signedTx, err := tx.tx.WithSignature(tx.signer, signatures[0].Bytes())
@@ -126,6 +126,10 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 
 // Serialize serializes the transaction to bytes.
 func (tx *Tx) Serialize() (pack.Bytes, error) {
+	// FIXME: I am pretty sure that this is not the format the Ethereum expects
+	// transactions to be serialised to on the network. Although the client
+	// might expect to send JSON objects, that is different from serialization,
+	// and can better represented by implementing MarshalJSON on this type.
 	serialized, err := tx.tx.MarshalJSON()
 	if err != nil {
 		return pack.Bytes{}, err
