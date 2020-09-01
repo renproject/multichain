@@ -18,9 +18,9 @@ import (
 var _ = Describe("Address", func() {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	encoderDecoder := filecoin.NewAddressEncoderDecoder()
+	encoderDecoder := filecoin.NewAddressEncodeDecoder()
 
-	Context("when encoding and decoding", func() {
+	Context("when encoding and decoding", func() {
 		Context("for ID protocol", func() {
 			It("should behave correctly without errors", func() {
 				f := func() bool {

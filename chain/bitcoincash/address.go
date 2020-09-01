@@ -176,6 +176,7 @@ func EncodeAddress(version byte, hash []byte, params *chaincfg.Params) (string, 
 	return EncodeToString(AppendChecksum(AddressPrefix(params), data)), nil
 }
 
+// DecodeAddress implements the address.Decoder interface
 func DecodeAddress(addr string, params *chaincfg.Params) (Address, error) {
 	// Legacy address decoding
 	if address, err := btcutil.DecodeAddress(addr, params); err == nil {

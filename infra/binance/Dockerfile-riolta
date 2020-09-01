@@ -1,0 +1,23 @@
+# Build Geth in a stock Go builder container
+FROM golang:1.14-alpine as builder
+
+RUN apk add --no-cache make gcc musl-dev linux-headers git
+
+WORKDIR /app
+RUN git clone -b 1.0.1.beta.2 https://github.com/binance-chain/bsc
+WORKDIR /app/bsc
+
+RUN make geth
+
+RUN touch genesis.json
+RUN touch config.yaml
+RUN wget -q -O genesis.json https://github.com/binance-chain/bsc/releases/download/v1.0.0-beta.1/genesis.json
+RUN wget -q -O config.yaml https://github.com/binance-chain/bsc/releases/download/v1.0.0-beta.1/config.toml
+
+# RPC port
+EXPOSE 8575
+
+# init the node with genesis file
+RUN ./build/bin/geth --datadir node init genesis.json
+
+ENTRYPOINT ["./build/bin/geth", "--config", "./config.yaml", "--datadir", "./node", "--rpc", "--rpcport", "8575"]

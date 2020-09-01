@@ -1,6 +1,32 @@
 version: "2"
 services:
   #
+  # Acala
+  #
+  acala:
+    build:
+      context: ./acala
+    ports:
+      - "0.0.0.0:9933:9933"
+      - "0.0.0.0:9944:9944"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ACALA_ADDRESS}"
+
+  #
+  # Binance Smart Chain
+  #
+  binance:
+    build:
+      context: ./binance
+    ports:
+      - "0.0.0.0:8575:8575"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BINANCE_MNEMONIC}"
+      - "${BINANCE_ADDRESS}"
+
+  #
   # Bitcoin
   #
   bitcoin:
