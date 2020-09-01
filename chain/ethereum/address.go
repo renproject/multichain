@@ -12,17 +12,20 @@ import (
 	"github.com/renproject/surge"
 )
 
+// AddressEncodeDecoder implements the address.EncodeDecoder interface
 type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
 
+// AddressEncoder implements the address.Encoder interface.
 type AddressEncoder interface {
 	EncodeAddress(address.RawAddress) (address.Address, error)
 }
 
 type addressEncoder struct{}
 
+// NewAddressEncodeDecoder constructs a new AddressEncodeDecoder.
 func NewAddressEncodeDecoder() address.EncodeDecoder {
 	return AddressEncodeDecoder{
 		AddressEncoder: NewAddressEncoder(),
@@ -30,16 +33,19 @@ func NewAddressEncodeDecoder() address.EncodeDecoder {
 	}
 }
 
+// AddressDecoder implements the address.Decoder interface.
 type AddressDecoder interface {
 	DecodeAddress(address.Address) (address.RawAddress, error)
 }
 
 type addressDecoder struct{}
 
+// NewAddressDecoder constructs a new AddressDecoder.
 func NewAddressDecoder() AddressDecoder {
 	return addressDecoder{}
 }
 
+// NewAddressEncoder constructs a new AddressEncoder.
 func NewAddressEncoder() AddressEncoder {
 	return addressEncoder{}
 }

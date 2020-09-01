@@ -17,6 +17,7 @@ const (
 	versionSaplingGroupID           = 0x892f2085
 )
 
+// Params signifies the chain specific parameters of the Zcash network.
 type Params struct {
 	// TODO: We do not actually need to embed the entire chaincfg params object.
 	*chaincfg.Params
@@ -26,6 +27,7 @@ type Params struct {
 	Upgrades    []ParamsUpgrade
 }
 
+// ParamsUpgrade ...
 type ParamsUpgrade struct {
 	ActivationHeight uint32
 	BranchID         []byte
@@ -34,6 +36,7 @@ type ParamsUpgrade struct {
 var (
 	witnessMarkerBytes = []byte{0x00, 0x01}
 
+	// MainNetParams defines the mainnet configuration.
 	MainNetParams = Params{
 		Params: &chaincfg.MainNetParams,
 
@@ -46,6 +49,8 @@ var (
 			{653600, []byte{0x60, 0x0E, 0xB4, 0x2B}},
 		},
 	}
+
+	// TestNet3Params defines the testnet configuration.
 	TestNet3Params = Params{
 		Params: &chaincfg.TestNet3Params,
 
@@ -58,6 +63,8 @@ var (
 			{584000, []byte{0x60, 0x0E, 0xB4, 0x2B}},
 		},
 	}
+
+	// RegressionNetParams defines a devet/regnet configuration.
 	RegressionNetParams = Params{
 		Params: &chaincfg.RegressionNetParams,
 

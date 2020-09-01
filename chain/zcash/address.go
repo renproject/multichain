@@ -122,6 +122,8 @@ func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }
 
+// DecodeAddress decodes a string-representation of an address to an address
+// type that implements the zcash.Address interface
 func DecodeAddress(addr string) (Address, error) {
 	var decoded = base58.Decode(addr)
 	if len(decoded) != 26 && len(decoded) != 25 {

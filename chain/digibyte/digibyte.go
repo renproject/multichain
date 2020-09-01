@@ -14,7 +14,7 @@ func init() {
 	}
 	if err := chaincfg.Register(&TestnetParams); err != nil {
 		panic(err)
-	}	
+	}
 	if err := chaincfg.Register(&RegressionNetParams); err != nil {
 		panic(err)
 	}
@@ -127,13 +127,13 @@ var MainNetParams = chaincfg.Params{
 }
 
 var TestnetParams = chaincfg.Params{
-	Name:        "testnet",
+	Name: "testnet",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
 	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
 	// register the regtest network.
 	// DigiByte Core Developers will change this soon.
-	Net:         0xddbdc8fd, 
+	Net:         0xddbdc8fd,
 	DefaultPort: "12026",
 
 	// Chain parameters
@@ -167,7 +167,7 @@ var RegressionNetParams = chaincfg.Params{
 	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
 	// register the regtest network.
 	// DigiByte Core Developers will change this soon.
-	Net:         0xd191841e, 
+	Net:         0xd191841e,
 	DefaultPort: "18444",
 
 	// Chain parameters

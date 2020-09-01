@@ -14,14 +14,21 @@ import (
 	"github.com/renproject/pack"
 )
 
+// The TxBuilder is an implementation of a Account-based chains compatible
+// transaction builder for Ethereum.
 type TxBuilder struct {
 	config *params.ChainConfig
 }
 
+// NewTxBuilder returns a transaction builder that builds Account-compatible
+// Ethereum transactions for the given chain configuration.
 func NewTxBuilder(config *params.ChainConfig) TxBuilder {
 	return TxBuilder{config: config}
 }
 
+// BuildTx returns an Ethereum transaction that transfers value from an address
+// to another address, with other transaction-specific fields. The returned
+// transaction implements the multichain.AccountTx interface.
 func (txBuilder TxBuilder) BuildTx(
 	from, to address.Address,
 	value, nonce pack.U256,
@@ -45,6 +52,8 @@ func (txBuilder TxBuilder) BuildTx(
 	return &Tx{fromAddr, tx, signer, signed}, nil
 }
 
+// Tx represents an Ethereum transaction that implements the
+// multichain.AccountTx interface
 type Tx struct {
 	from Address
 
@@ -54,35 +63,48 @@ type Tx struct {
 	signed bool
 }
 
+// Hash returns the transaction hash of the given transaction.
 func (tx *Tx) Hash() pack.Bytes {
 	return pack.NewBytes(tx.tx.Hash().Bytes())
 }
 
+// From returns the sender of the transaction.
 func (tx *Tx) From() address.Address {
 	return address.Address(tx.from.String())
 }
 
+// To returns the recipient of the transaction.
 func (tx *Tx) To() address.Address {
 	return address.Address(tx.tx.To().String())
 }
 
+// Value returns the value (in native tokens) that is being transferred in the
+// transaction.
 func (tx *Tx) Value() pack.U256 {
 	return pack.NewU256FromInt(tx.tx.Value())
 }
 
+// Nonce returns the transaction nonce for the transaction sender. This is a
+// one-time use incremental identifier to protect against double spending.
 func (tx *Tx) Nonce() pack.U256 {
 	return pack.NewU256FromU64(pack.NewU64(tx.tx.Nonce()))
 }
 
+// Payload returns the data/payload attached in the transaction.
 func (tx *Tx) Payload() contract.CallData {
 	return contract.CallData(pack.NewBytes(tx.tx.Data()))
 }
 
+// Sighashes returns the digest that must be signed by the sender before the
+// transaction can be submitted by the client.
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighash := tx.signer.Hash(tx.tx)
 	return []pack.Bytes32{pack.NewBytes32(sighash)}, nil
 }
 
+// Sign consumes a list of signatures, and adds them to the underlying
+// Ethereum transaction. In case of Ethereum, we expect only a single signature
+// per transaction.
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("already signed")
@@ -102,6 +124,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	return nil
 }
 
+// Serialize serializes the transaction to bytes.
 func (tx *Tx) Serialize() (pack.Bytes, error) {
 	serialized, err := tx.tx.MarshalJSON()
 	if err != nil {
@@ -111,10 +134,13 @@ func (tx *Tx) Serialize() (pack.Bytes, error) {
 	return pack.NewBytes(serialized), nil
 }
 
+// EthClient interacts with an instance of the Ethereum network using the RPC
+// interface exposed by an Ethereum node.
 type EthClient struct {
 	client *ethclient.Client
 }
 
+// NewClient returns a new Client.
 func NewClient(rpcURL pack.String) (account.Client, error) {
 	client, err := ethclient.Dial(string(rpcURL))
 	if err != nil {
@@ -124,8 +150,10 @@ func NewClient(rpcURL pack.String) (account.Client, error) {
 	return EthClient{client}, nil
 }
 
-func (client EthClient) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack.U64, error) {
-	txHash := common.BytesToHash(txId)
+// Tx queries the Ethereum node to fetch a transaction with the provided tx ID
+// and also returns the number of block confirmations for the transaction.
+func (client EthClient) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
+	txHash := common.BytesToHash(txID)
 	tx, isPending, err := client.client.TransactionByHash(ctx, txHash)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("fetching tx: %v", err)
@@ -146,6 +174,7 @@ func (client EthClient) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pa
 	return &Tx{tx: tx}, pack.NewU64(confs), nil
 }
 
+// SubmitTx submits a signed transaction to the Ethereum network.
 func (client EthClient) SubmitTx(ctx context.Context, tx account.Tx) error {
 	panic("unimplemented")
 }

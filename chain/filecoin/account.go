@@ -23,11 +23,21 @@ import (
 )
 
 const (
-	AuthorizationKey          = "Authorization"
-	DefaultClientMultiAddress = ""
-	DefaultClientAuthToken    = ""
+	// AuthorizationKey is the header key used for authorization
+	AuthorizationKey = "Authorization"
+
+	// DefaultClientMultiAddress is the RPC websocket URL used by default, to
+	// interact with the filecoin lotus node.
+	DefaultClientMultiAddress = "ws://127.0.0.1:1234/rpc/v0"
+
+	// DefaultClientAuthToken is the auth token used to instantiate the lotus
+	// client. A valid lotus auth token is required to write messages to the
+	// filecoin storage. To do read-only queries, auth token is not required.
+	DefaultClientAuthToken = ""
 )
 
+// Tx represents a filecoin transaction, encapsulating a message and its
+// signature.
 type Tx struct {
 	msg       types.Message
 	signature pack.Bytes65
@@ -107,15 +117,20 @@ func (tx Tx) Serialize() (pack.Bytes, error) {
 	return buf.Bytes(), nil
 }
 
+// TxBuilder represents a transaction builder that builds transactions to be
+// broadcasted to the filecoin network. The TxBuilder is configured using a
+// gas price and gas limit.
 type TxBuilder struct {
 	gasPrice pack.U256
 	gasLimit pack.U256
 }
 
+// NewTxBuilder creates a new transaction builder.
 func NewTxBuilder(gasPrice, gasLimit pack.U256) TxBuilder {
 	return TxBuilder{gasPrice: gasPrice, gasLimit: gasLimit}
 }
 
+// BuildTx receives transaction fields and constructs a new transaction.
 func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, _, _ pack.U256, payload pack.Bytes) (account.Tx, error) {
 	filfrom, err := filaddress.NewFromString(string(from))
 	if err != nil {
@@ -177,6 +192,8 @@ func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
 	return opts
 }
 
+// Client holds options to connect to a filecoin lotus node, and the underlying
+// RPC client instance.
 type Client struct {
 	opts   ClientOptions
 	node   api.FullNode
@@ -200,15 +217,15 @@ func NewClient(opts ClientOptions) (*Client, error) {
 
 // Tx returns the transaction uniquely identified by the given transaction
 // hash. It also returns the number of confirmations for the transaction.
-func (client *Client) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack.U64, error) {
+func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
 	// parse the transaction ID to a message ID
-	msgId, err := cid.Parse(txId.String())
+	msgID, err := cid.Parse(txID.String())
 	if err != nil {
-		return nil, pack.NewU64(0), fmt.Errorf("parsing txId: %v", err)
+		return nil, pack.NewU64(0), fmt.Errorf("parsing txID: %v", err)
 	}
 
 	// lookup message receipt to get its height
-	messageLookup, err := client.node.StateSearchMsg(ctx, msgId)
+	messageLookup, err := client.node.StateSearchMsg(ctx, msgID)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("searching msg: %v", err)
 	}
@@ -221,7 +238,7 @@ func (client *Client) Tx(ctx context.Context, txId pack.Bytes) (account.Tx, pack
 	confs := headTipset.Height() - messageLookup.Height + 1
 
 	// get the message
-	msg, err := client.node.ChainGetMessage(ctx, msgId)
+	msg, err := client.node.ChainGetMessage(ctx, msgID)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("fetching msg: %v", err)
 	}

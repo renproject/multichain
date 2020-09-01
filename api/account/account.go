@@ -56,6 +56,8 @@ type Tx interface {
 // information, and this should be accepted during the construction of the
 // chain-specific transaction builder.
 type TxBuilder interface {
+	// BuildTx consumes transaction fields to construct and return a transaction
+	// that implements the multichain.AccountTx interface
 	BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
 }
 
