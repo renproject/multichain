@@ -71,14 +71,15 @@ var _ = Describe("Terra", func() {
 				})
 
 				// build the transaction
+				payload := pack.NewBytes([]byte("multichain"))
 				tx, err := txBuilder.BuildTx(
 					multichain.Address(addr.String()),           // from
 					multichain.Address(recipient.String()),      // to
 					pack.NewU256FromU64(pack.U64(2000000)),      // amount
 					pack.NewU256FromU64(account.SequenceNumber), // nonce
-					pack.NewU256FromU64(pack.U64(30000)),        // gas
+					pack.NewU256FromU64(pack.U64(300000)),       // gas
 					pack.NewU256FromU64(pack.U64(300)),          // fee
-					pack.NewBytes([]byte("multichain")),         // memo
+					payload,                                     // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -109,8 +110,8 @@ var _ = Describe("Terra", func() {
 					// submit a Bitcoin transaction!
 					foundTx, confs, err := client.Tx(ctx, txHash)
 					if err == nil {
-						Expect(confs).To(Equal(1))
-						Expect(foundTx.Hash()).To(Equal(txHash))
+						Expect(confs.Uint64()).To(Equal(uint64(1)))
+						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData(payload)))
 						break
 					}
 
