@@ -62,6 +62,7 @@ const (
 	FTM  = Asset("FTM")  // Fantom
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
+	ONE  = Asset("ONE")  // Harmony
 	ZEC  = Asset("ZEC")  // Zcash
 )
 
@@ -91,6 +92,8 @@ func (asset Asset) OriginChain() Chain {
 		return Terra
 	case SOL:
 		return Solana
+	case ONE:
+		return Harmony
 	case ZEC:
 		return Zcash
 	default:
@@ -131,6 +134,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Harmony           = Chain("Harmony")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
