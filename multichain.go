@@ -197,3 +197,29 @@ func (chainType ChainType) Marshal(buf []byte, rem int) ([]byte, int, error) {
 func (chainType *ChainType) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chainType), buf, rem)
 }
+
+type Network string
+
+const (
+	NetworkLocalnet = Network("localnet")
+	NetworkTestnet  = Network("testnet")
+	NetworkMainnet  = Network("mainnet")
+)
+
+// SizeHint returns the number of bytes required to represent the network in
+// binary.
+func (net Network) SizeHint() int {
+	return surge.SizeHintString(string(net))
+}
+
+// Marshal the network to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
+func (net Network) Marshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.MarshalString(string(net), buf, rem)
+}
+
+// Unmarshal the network from binary. You should not call this function
+// directly, unless you are implementing unmarshalling for a container type.
+func (net *Network) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.UnmarshalString((*string)(net), buf, rem)
+}
