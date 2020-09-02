@@ -97,15 +97,16 @@ func (tx *Tx) Payload() contract.CallData {
 
 // Sighashes returns the digest that must be signed by the sender before the
 // transaction can be submitted by the client.
-func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
-	sighash := tx.signer.Hash(tx.tx)
-	return []pack.Bytes32{pack.NewBytes32(sighash)}, nil
+func (tx *Tx) Sighashes() ([]pack.Bytes, error) {
+	sighash32 := tx.signer.Hash(tx.tx)
+	sighash := sighash32[:]
+	return []pack.Bytes{pack.NewBytes(sighash)}, nil
 }
 
 // Sign consumes a list of signatures, and adds them to the underlying
 // Ethereum transaction. In case of Ethereum, we expect only a single signature
 // per transaction.
-func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
+func (tx *Tx) Sign(signatures []pack.Bytes, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("already signed")
 	}
@@ -114,7 +115,11 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		return fmt.Errorf("expected 1 signature, got %v signatures", len(signatures))
 	}
 
-	signedTx, err := tx.tx.WithSignature(tx.signer, signatures[0].Bytes())
+	if len(signatures[0]) != 65 {
+		return fmt.Errorf("expected signature to be 65 bytes, got %v bytes", len(signatures[0]))
+	}
+
+	signedTx, err := tx.tx.WithSignature(tx.signer, []byte(signatures[0]))
 	if err != nil {
 		return err
 	}
