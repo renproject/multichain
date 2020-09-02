@@ -3,6 +3,9 @@ package terra
 import "github.com/renproject/multichain/chain/cosmos"
 
 type (
+	// Address re-exports cosmos-compatible address
+	Address = cosmos.Address
+
 	// AddressDecoder re-exports cosmos.AddressDecoder
 	AddressDecoder = cosmos.AddressDecoder
 

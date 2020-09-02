@@ -2,6 +2,7 @@ package cosmos
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -113,14 +114,14 @@ func (client *client) Account(addr Address) (Account, error) {
 
 // Tx query transaction with txHash
 func (client *client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
-	res, err := utils.QueryTx(client.cliCtx, txHash.String())
+	res, err := utils.QueryTx(client.cliCtx, hex.EncodeToString(txHash[:]))
 	if err != nil {
-		return &StdTx{}, pack.NewU64(0), err
+		return &StdTx{}, pack.NewU64(0), fmt.Errorf("query fail: %v", err)
 	}
 
 	authStdTx := res.Tx.(auth.StdTx)
 	if res.Code != 0 {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
+		return &StdTx{}, pack.NewU64(0), fmt.Errorf("tx failed code: %v, log: %v", res.Code, res.RawLog)
 	}
 
 	stdTx, err := parseStdTx(authStdTx)
@@ -144,7 +145,7 @@ func (client *client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	}
 
 	if res.Code != 0 {
-		return fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
+		return fmt.Errorf("tx failed code: %v, log: %v", res.Code, res.RawLog)
 	}
 
 	return nil

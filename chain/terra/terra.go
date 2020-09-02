@@ -17,6 +17,11 @@ type (
 	TxBuilderOptions = cosmos.TxBuilderOptions
 )
 
+var (
+	// DefaultClientOptions re-exports default cosmos-compatible client options
+	DefaultClientOptions = cosmos.DefaultClientOptions
+)
+
 // NewClient returns returns a new Client with terra codec
 func NewClient(opts ClientOptions) Client {
 	return cosmos.NewClient(opts, app.MakeCodec())

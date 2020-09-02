@@ -73,8 +73,10 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 		}},
 	}
 
-	feeAmount := gasLimit.Int().Uint64() * gasPrice.Int().Uint64()
-	fees := Coins{Coin{Denom: builder.coinDenom, Amount: pack.NewU64(feeAmount)}}
+	fees := Coins{Coin{
+		Denom:  builder.coinDenom,
+		Amount: pack.NewU64(gasPrice.Int().Uint64()),
+	}}
 
 	txBuilder := auth.NewTxBuilder(
 		utils.GetTxEncoder(builder.cdc),
@@ -257,9 +259,7 @@ func (tx StdTx) Hash() pack.Bytes {
 		return pack.Bytes{}
 	}
 
-	hashBytes := pack.Bytes32{}
-	hashBytes.Unmarshal(tmhash.Sum(txBytes), 32)
-	return pack.NewBytes(hashBytes[:])
+	return pack.NewBytes(tmhash.Sum(txBytes))
 }
 
 // Sighashes that need to be signed before this transaction can be submitted.
