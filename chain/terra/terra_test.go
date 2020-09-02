@@ -111,7 +111,7 @@ var _ = Describe("Terra", func() {
 					foundTx, confs, err := client.Tx(ctx, txHash)
 					if err == nil {
 						Expect(confs.Uint64()).To(Equal(uint64(1)))
-						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData(payload)))
+						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
 						break
 					}
 
