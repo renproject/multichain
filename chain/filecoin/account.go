@@ -99,7 +99,7 @@ func (tx Tx) Sighashes() ([]pack.Bytes32, error) {
 // Sign the transaction by injecting signatures for the required sighashes.
 // The serialized public key used to sign the sighashes must also be
 // specified.
-func (tx Tx) Sign(signatures []pack.Bytes65, pubkey pack.Bytes) error {
+func (tx *Tx) Sign(signatures []pack.Bytes65, pubkey pack.Bytes) error {
 	if len(signatures) != 1 {
 		return fmt.Errorf("expected 1 signature, got %v signatures", len(signatures))
 	}
@@ -145,7 +145,7 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, _, _ 
 		methodNum = abi.MethodNum(payload[0])
 		payload = payload[1:]
 	}
-	return Tx{
+	return &Tx{
 		msg: types.Message{
 			Version:   types.MessageVersion,
 			From:      filfrom,
@@ -250,7 +250,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 // TODO: should also return a transaction hash (pack.Bytes) ?
 func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	switch tx := tx.(type) {
-	case Tx:
+	case *Tx:
 		// construct crypto.Signature
 		signature := crypto.Signature{
 			Type: crypto.SigTypeSecp256k1,
