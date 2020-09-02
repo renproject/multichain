@@ -288,7 +288,7 @@ func retry(ctx context.Context, dur time.Duration, f func() error) error {
 		log.Printf("retrying: %v", err)
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return err
 		case <-ticker.C:
 			err = f()
 		}
