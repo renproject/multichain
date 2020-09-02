@@ -99,25 +99,12 @@ services:
       - "./root/run.sh"
 
   #
-  # Zcash
+  # Waves
   #
-  zcash:
+  waves:
     build:
-      context: ./zcash
+      context: ./waves
     ports:
-      - "0.0.0.0:18232:18232"
+      - "0.0.0.0:6870:6870"
     entrypoint:
       - "./root/run.sh"
-      - "${ZCASH_ADDRESS}"
-
-  ##
-  ## Terra
-  ##
-  terra:
-    build:
-      context: ./terra
-    ports:
-      - "0.0.0.0:26657:26657"
-    entrypoint:
-      - "./root/run.sh"
-      - "${TERRA_ADDRESS}"
