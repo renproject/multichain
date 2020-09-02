@@ -4,61 +4,105 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
+	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
-// TxBuilder defines an interface that can be used to build simple Bitcoin
-// transactions.
-type TxBuilder interface {
-	// BuildTx returns a simple Bitcoin transaction that consumes a set of
-	// Bitcoin outputs and uses the funds to make payments to a set of Bitcoin
-	// recipients. The sum value of the inputs must be greater than the sum
-	// value of the outputs, and the difference is paid as a fee to the Bitcoin
-	// network.
-	BuildTx(msgs []MsgSend) (Tx, error)
-	WithCodec(cdc *codec.Codec) TxBuilder
-}
-
-// Tx defines an interface that must be implemented by all types of Bitcoin
-// transactions.
-type Tx interface {
-	// Hash of the transaction.
-	Hash() (pack.Bytes32, error)
-
-	// SigBytes that need to be signed before this transaction can be
-	// submitted.
-	SigBytes() pack.Bytes
-
-	// Sign the transaction by injecting signatures and the serialized pubkey of
-	// the signer.
-	Sign([]StdSignature) error
-
-	// Serialize the transaction.
-	Serialize() (pack.Bytes, error)
-}
-
-// An Address is a public address that can be encoded/decoded to/from strings.
-// Addresses are usually formatted different between different network
-// configurations.
-type Address sdk.AccAddress
-
-// AccAddress convert Address to sdk.AccAddress
-func (addr Address) AccAddress() sdk.AccAddress {
-	return sdk.AccAddress(addr)
+type txBuilder struct {
+	cdc           *codec.Codec
+	coinDenom     pack.String
+	chainID       pack.String
+	accountNumber pack.U64
 }
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	AccountNumber  pack.U64    `json:"account_number"`
-	SequenceNumber pack.U64    `json:"sequence_number"`
-	Gas            pack.U64    `json:"gas"`
-	ChainID        pack.String `json:"chain_id"`
-	Memo           pack.String `json:"memo"`
-	Fees           Coins       `json:"fees"`
+	Cdc           *codec.Codec `json:"cdc"`
+	AccountNumber pack.U64     `json:"account_number"`
+	ChainID       pack.String  `json:"chain_id"`
+	CoinDenom     pack.String  `json:"coin_denom"`
+}
+
+// NewTxBuilder returns an implementation of the transaction builder interface
+// from the Cosmos Compat API, and exposes the functionality to build simple
+// Cosmos based transactions.
+func NewTxBuilder(options TxBuilderOptions) account.TxBuilder {
+	if options.Cdc == nil {
+		options.Cdc = simapp.MakeCodec()
+	}
+
+	return txBuilder{
+		cdc:           options.Cdc,
+		coinDenom:     options.CoinDenom,
+		chainID:       options.ChainID,
+		accountNumber: options.AccountNumber,
+	}
+}
+
+// BuildTx consumes a list of MsgSend to build and return a cosmos transaction.
+// This transaction is unsigned, and must be signed before submitting to the
+// cosmos chain.
+func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (account.Tx, error) {
+	fromAddr, err := sdk.AccAddressFromBech32(string(from))
+	if err != nil {
+		return nil, err
+	}
+
+	toAddr, err := sdk.AccAddressFromBech32(string(to))
+	if err != nil {
+		return nil, err
+	}
+
+	sendMsg := MsgSend{
+		FromAddress: Address(fromAddr),
+		ToAddress:   Address(toAddr),
+		Amount: []Coin{Coin{
+			Denom:  builder.coinDenom,
+			Amount: pack.NewU64(value.Int().Uint64()),
+		}},
+	}
+
+	feeAmount := gasLimit.Int().Uint64() * gasPrice.Int().Uint64()
+	fees := Coins{Coin{Denom: builder.coinDenom, Amount: pack.NewU64(feeAmount)}}
+
+	txBuilder := auth.NewTxBuilder(
+		utils.GetTxEncoder(builder.cdc),
+		builder.accountNumber.Uint64(),
+		nonce.Int().Uint64(),
+		gasLimit.Int().Uint64(),
+		0,
+		false,
+		builder.chainID.String(),
+		payload.String(),
+		fees.Coins(),
+		sdk.DecCoins{},
+	)
+
+	sdkMsgs := []sdk.Msg{sendMsg.Msg()}
+
+	signMsg, err := txBuilder.BuildSignMsg(sdkMsgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StdTx{
+		msgs:    []MsgSend{sendMsg},
+		fee:     parseStdFee(signMsg.Fee),
+		memo:    pack.String(payload.String()),
+		cdc:     builder.cdc,
+		signMsg: signMsg,
+	}, nil
 }
 
 // Coin copy type from sdk.coin
@@ -80,7 +124,7 @@ type Coins []Coin
 
 // parseCoins parse sdk.Coins to Coins
 func parseCoins(sdkCoins sdk.Coins) Coins {
-	var coins Coins
+	coins := make(Coins, 0, len(sdkCoins))
 	for _, sdkCoin := range sdkCoins {
 		coins = append(coins, parseCoin(sdkCoin))
 	}
@@ -89,14 +133,12 @@ func parseCoins(sdkCoins sdk.Coins) Coins {
 
 // Coins parse pack coins to sdk coins
 func (coins Coins) Coins() sdk.Coins {
-	sdkCoins := sdk.Coins{}
+	sdkCoins := make(sdk.Coins, 0, len(coins))
 	for _, coin := range coins {
-		sdkCoin := sdk.Coin{
+		sdkCoins = append(sdkCoins, sdk.Coin{
 			Denom:  coin.Denom.String(),
 			Amount: sdk.NewInt(int64(coin.Amount.Uint64())),
-		}
-
-		sdkCoins = append(sdkCoins, sdkCoin)
+		})
 	}
 
 	sdkCoins.Sort()
@@ -128,9 +170,9 @@ func parseMsg(msg sdk.Msg) (MsgSend, error) {
 			ToAddress:   Address(msg.ToAddress),
 			Amount:      parseCoins(msg.Amount),
 		}, nil
-	} else {
-		return MsgSend{}, fmt.Errorf("Failed to parse %v to MsgSend", msg)
 	}
+
+	return MsgSend{}, fmt.Errorf("Failed to parse %v to MsgSend", msg)
 }
 
 // StdFee auth.StdFee wrapper
@@ -163,10 +205,112 @@ func parseStdSignature(stdSig auth.StdSignature) StdSignature {
 
 // StdTx auth.StStdTx wrapper
 type StdTx struct {
-	Msgs       []MsgSend      `json:"msgs" yaml:"msgs"`
-	Fee        StdFee         `json:"fee" yaml:"fee"`
-	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
-	Memo       pack.String    `json:"memo" yaml:"memo"`
+	msgs       []MsgSend
+	fee        StdFee
+	memo       pack.String
+	signatures []auth.StdSignature
+
+	cdc     *codec.Codec
+	signMsg auth.StdSignMsg
+}
+
+// From returns the sender of the transaction
+func (tx StdTx) From() address.Address {
+	return address.Address(tx.msgs[0].FromAddress.AccAddress().String())
+}
+
+// To returns the recipients of the transaction. For the cosmos chain, there
+// can be multiple recipients from a single transaction.
+func (tx StdTx) To() address.Address {
+	return address.Address(tx.msgs[0].ToAddress.AccAddress().String())
+}
+
+// Value returns the values being transferred in a transaction. For the cosmos
+// chain, there can be multiple messages (each with a different value being
+// transferred) in a single transaction.
+func (tx StdTx) Value() pack.U256 {
+	value := pack.NewU64(0)
+	for _, msg := range tx.msgs {
+		value.AddAssign(msg.Amount[0].Amount)
+	}
+	return pack.NewU256FromU64(value)
+}
+
+// Nonce returns the transaction count of the transaction sender.
+func (tx StdTx) Nonce() pack.U256 {
+	return pack.NewU256FromU64(pack.NewU64(tx.signMsg.Sequence))
+}
+
+// Payload returns the memo attached to the transaction.
+func (tx StdTx) Payload() contract.CallData {
+	return contract.CallData(pack.NewBytes([]byte(tx.memo)))
+}
+
+// Hash return txhash bytes.
+func (tx StdTx) Hash() pack.Bytes {
+	if len(tx.signatures) == 0 {
+		return pack.Bytes{}
+	}
+
+	txBytes, err := tx.Serialize()
+	if err != nil {
+		return pack.Bytes{}
+	}
+
+	hashBytes := pack.Bytes32{}
+	hashBytes.Unmarshal(tmhash.Sum(txBytes), 32)
+	return pack.NewBytes(hashBytes[:])
+}
+
+// Sighashes that need to be signed before this transaction can be submitted.
+func (tx StdTx) Sighashes() ([]pack.Bytes, error) {
+	return []pack.Bytes{tx.signMsg.Bytes()}, nil
+}
+
+// Sign the transaction by injecting signatures and the serialized pubkey of
+// the signer.
+func (tx *StdTx) Sign(signatures []pack.Bytes, pubKey pack.Bytes) error {
+	var stdSignatures []auth.StdSignature
+	for _, sig := range signatures {
+		var cpPubKey secp256k1.PubKeySecp256k1
+		copy(cpPubKey[:], pubKey[:secp256k1.PubKeySecp256k1Size])
+
+		stdSignatures = append(stdSignatures, auth.StdSignature{
+			Signature: sig,
+			PubKey:    cpPubKey,
+		})
+	}
+
+	signers := make(map[string]bool)
+	for _, msg := range tx.signMsg.Msgs {
+		for _, signer := range msg.GetSigners() {
+			signers[signer.String()] = true
+		}
+	}
+
+	for _, sig := range stdSignatures {
+		signer := sdk.AccAddress(sig.Address()).String()
+		if _, ok := signers[signer]; !ok {
+			return fmt.Errorf("wrong signer: %s", signer)
+		}
+	}
+
+	if len(signers) != len(stdSignatures) {
+		return fmt.Errorf("insufficient signers")
+	}
+
+	tx.signatures = stdSignatures
+	return nil
+}
+
+// Serialize the transaction.
+func (tx StdTx) Serialize() (pack.Bytes, error) {
+	txBytes, err := tx.cdc.MarshalBinaryLengthPrefixed(auth.NewStdTx(tx.signMsg.Msgs, tx.signMsg.Fee, tx.signatures, tx.signMsg.Memo))
+	if err != nil {
+		return pack.Bytes{}, err
+	}
+
+	return txBytes, nil
 }
 
 // parseStdTx parse auth.StdTx to StdTx
@@ -181,18 +325,13 @@ func parseStdTx(stdTx auth.StdTx) (StdTx, error) {
 		msgs = append(msgs, msg)
 	}
 
-	var sigs []StdSignature
-	for _, sig := range stdTx.Signatures {
-		sigs = append(sigs, parseStdSignature(sig))
-	}
-
 	fee := parseStdFee(stdTx.Fee)
 	memo := pack.NewString(stdTx.Memo)
 
 	return StdTx{
-		Msgs:       msgs,
-		Fee:        fee,
-		Memo:       memo,
-		Signatures: sigs,
+		msgs:       msgs,
+		fee:        fee,
+		memo:       memo,
+		signatures: stdTx.Signatures,
 	}, nil
 }

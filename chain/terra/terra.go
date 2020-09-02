@@ -1,15 +1,19 @@
 package terra
 
 import (
+	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/terra-project/core/app"
 )
 
 type (
-	Client           = cosmos.Client
-	ClientOptions    = cosmos.ClientOptions
-	Tx               = cosmos.Tx
-	TxBuilder        = cosmos.TxBuilder
+	// Client re-exports cosmos.Client
+	Client = cosmos.Client
+
+	// ClientOptions re-exports cosmos.ClientOptions
+	ClientOptions = cosmos.ClientOptions
+
+	// TxBuilderOptions re-exports cosmos.TxBuilderOptions
 	TxBuilderOptions = cosmos.TxBuilderOptions
 )
 
@@ -21,6 +25,6 @@ func NewClient(opts ClientOptions) Client {
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Terra transactions.
-func NewTxBuilder(opts TxBuilderOptions) TxBuilder {
-	return cosmos.NewTxBuilder(opts).WithCodec(app.MakeCodec())
+func NewTxBuilder(opts TxBuilderOptions) account.TxBuilder {
+	return cosmos.NewTxBuilder(opts)
 }

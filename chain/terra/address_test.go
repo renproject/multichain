@@ -1,6 +1,7 @@
 package terra_test
 
 import (
+	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/pack"
 
@@ -12,13 +13,11 @@ var _ = Describe("Terra", func() {
 	Context("when decoding address", func() {
 		Context("when decoding Terra address", func() {
 			It("should work", func() {
-				decoder := terra.NewAddressDecoder()
-			
+				decoder := terra.NewAddressDecoder("terra")
+
 				addrStr := "terra1ztez03dp94y2x55fkhmrvj37ck204geq33msma"
-				addr, err := decoder.DecodeAddress(pack.NewString(addrStr))
-	
+				_, err := decoder.DecodeAddress(multichain.Address(pack.NewString(addrStr)))
 				Expect(err).ToNot(HaveOccurred())
-				Expect(addr.AccAddress().String()).Should(Equal(addrStr))
 			})
 		})
 	})

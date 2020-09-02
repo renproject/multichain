@@ -1,7 +1,9 @@
 package terra_test
 
 import (
+	"context"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -11,8 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-project/core/app"
 
+	"github.com/renproject/multichain"
+	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/renproject/multichain/chain/terra"
-	"github.com/renproject/multichain/compat/cosmoscompat"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -23,6 +26,10 @@ var _ = Describe("Terra", func() {
 	Context("when submitting transactions", func() {
 		Context("when sending LUNA to multiple addresses", func() {
 			It("should work", func() {
+				// create context for the test
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+
 				// Load private key, and assume that the associated address has
 				// funds to spend. You can do this by setting TERRA_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
@@ -45,76 +52,89 @@ var _ = Describe("Terra", func() {
 				var pk secp256k1.PrivKeySecp256k1
 				copy(pk[:], pkBz)
 
-				addr := cosmoscompat.Address(pk.PubKey().Address())
+				addr := cosmos.Address(pk.PubKey().Address())
 
-				decoder := terra.NewAddressDecoder()
-				expectedAddr, err := decoder.DecodeAddress(pack.NewString(addrEnv))
+				decoder := terra.NewAddressDecoder("terra")
+				expectedAddr, err := decoder.DecodeAddress(multichain.Address(pack.NewString(addrEnv)))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(addr).Should(Equal(expectedAddr))
 
 				pk1 := secp256k1.GenPrivKey()
-				pk2 := secp256k1.GenPrivKey()
+				// pk2 := secp256k1.GenPrivKey()
 
 				recipient1 := sdk.AccAddress(pk1.PubKey().Address())
-				recipient2 := sdk.AccAddress(pk2.PubKey().Address())
+				// recipient2 := sdk.AccAddress(pk2.PubKey().Address())
 
-				msgs := []cosmoscompat.MsgSend{
-					{
-						FromAddress: cosmoscompat.Address(addr),
-						ToAddress:   cosmoscompat.Address(recipient1),
-						Amount: cosmoscompat.Coins{
-							{
-								Denom:  "uluna",
-								Amount: pack.U64(1000000),
-							},
-						},
-					},
-					{
-						FromAddress: cosmoscompat.Address(addr),
-						ToAddress:   cosmoscompat.Address(recipient2),
-						Amount: cosmoscompat.Coins{
-							{
-								Denom:  "uluna",
-								Amount: pack.U64(2000000),
-							},
-						},
-					},
-				}
+				// msgs := []cosmos.MsgSend{
+				// 	{
+				// 		FromAddress: cosmos.Address(addr),
+				// 		ToAddress:   cosmos.Address(recipient1),
+				// 		Amount: cosmos.Coins{
+				// 			{
+				// 				Denom:  "uluna",
+				// 				Amount: pack.U64(1000000),
+				// 			},
+				// 		},
+				// 	},
+				// 	{
+				// 		FromAddress: cosmos.Address(addr),
+				// 		ToAddress:   cosmos.Address(recipient1),
+				// 		Amount: cosmos.Coins{
+				// 			{
+				// 				Denom:  "uluna",
+				// 				Amount: pack.U64(2000000),
+				// 			},
+				// 		},
+				// 	},
+				// }
 
-				client := cosmoscompat.NewClient(cosmoscompat.DefaultClientOptions(), app.MakeCodec())
+				client := cosmos.NewClient(cosmos.DefaultClientOptions(), app.MakeCodec())
 				account, err := client.Account(addr)
 				Expect(err).NotTo(HaveOccurred())
 
-				txBuilder := terra.NewTxBuilder(cosmoscompat.TxOptions{
-					AccountNumber:  account.AccountNumber,
-					SequenceNumber: account.SequenceNumber,
-					Gas:            200000,
-					ChainID:        "testnet",
-					Memo:           "multichain",
-					Fees: cosmoscompat.Coins{
-						{
-							Denom:  "uluna",
-							Amount: pack.U64(3000),
-						},
-					},
-				}).WithCodec(app.MakeCodec())
+				fmt.Printf("account = %v\n", account)
 
-				tx, err := txBuilder.BuildTx(msgs)
+				txBuilder := terra.NewTxBuilder(cosmos.TxBuilderOptions{
+					AccountNumber: account.AccountNumber,
+					// SequenceNumber: account.SequenceNumber,
+					// Gas:            200000,
+					ChainID:   "testnet",
+					CoinDenom: "uluna",
+					Cdc:       app.MakeCodec(),
+					// Memo:           "multichain",
+					// Fees: cosmos.Coins{
+					// 	{
+					// 		Denom:  "uluna",
+					// 		Amount: pack.U64(3000),
+					// 	},
+					// },
+				})
+
+				tx, err := txBuilder.BuildTx(
+					multichain.Address(recipient1.String()),
+					multichain.Address(addr.String()),
+					pack.NewU256FromU64(pack.U64(2000000)), // value
+					pack.NewU256FromU64(account.SequenceNumber),
+					pack.NewU256FromU64(pack.U64(20000)), // gas limit
+					pack.NewU256FromU64(pack.U64(300)),   // gas price,
+					pack.NewBytes([]byte("multichain")),  // memo
+				)
 				Expect(err).NotTo(HaveOccurred())
 
-				sigBytes, err := pk.Sign(tx.SigBytes())
+				sighashes, err := tx.Sighashes()
+				Expect(err).NotTo(HaveOccurred())
+				sigBytes, err := pk.Sign([]byte(sighashes[0]))
 				Expect(err).NotTo(HaveOccurred())
 
 				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
-				err = tx.Sign([]cosmoscompat.StdSignature{
-					{
-						Signature: pack.NewBytes(sigBytes),
-						PubKey:    pack.NewBytes(pubKey[:]),
-					},
-				})
+				err = tx.Sign(
+					[]pack.Bytes{pack.NewBytes(sigBytes)},
+					pack.NewBytes(pubKey[:]),
+				)
 				Expect(err).NotTo(HaveOccurred())
 
-				txHash, err := client.SubmitTx(tx, pack.NewString("sync"))
+				txHash := tx.Hash()
+				err = client.SubmitTx(ctx, tx)
 				Expect(err).NotTo(HaveOccurred())
 
 				for {
@@ -123,7 +143,7 @@ var _ = Describe("Terra", func() {
 					// definitely valid, and the test has passed. We were
 					// successfully able to use the multichain to construct and
 					// submit a Bitcoin transaction!
-					_, err := client.Tx(txHash)
+					_, confs, err := client.Tx(ctx, txHash)
 					if err == nil {
 						break
 					}
@@ -132,7 +152,9 @@ var _ = Describe("Terra", func() {
 						Expect(err).NotTo(HaveOccurred())
 					}
 
-					time.Sleep(10 * time.Second)
+					Expect(confs).To(Equal(1))
+
+					time.Sleep(2 * time.Second)
 				}
 			})
 		})

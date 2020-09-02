@@ -1,13 +1,14 @@
 package cosmos
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/pack"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	cliContext "github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
@@ -22,13 +23,20 @@ const (
 	// DefaultClientHost used by the Client. This should only be used for local
 	// deployments of the multichain.
 	DefaultClientHost = "http://0.0.0.0:26657"
+	// DefaultBroadcastMode configures the behaviour of a cosmos client while it
+	// interacts with the cosmos node. Allowed broadcast modes can be async, sync
+	// and block. "async" returns immediately after broadcasting, "sync" returns
+	// after the transaction has been checked and "block" waits until the
+	// transaction is committed to the chain.
+	DefaultBroadcastMode = "sync"
 )
 
 // ClientOptions are used to parameterise the behaviour of the Client.
 type ClientOptions struct {
-	Timeout      time.Duration
-	TimeoutRetry time.Duration
-	Host         string
+	Timeout       time.Duration
+	TimeoutRetry  time.Duration
+	Host          pack.String
+	BroadcastMode pack.String
 }
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
@@ -36,14 +44,15 @@ type ClientOptions struct {
 // multichain. In production, the host, user, and password should be changed.
 func DefaultClientOptions() ClientOptions {
 	return ClientOptions{
-		Timeout:      DefaultClientTimeout,
-		TimeoutRetry: DefaultClientTimeoutRetry,
-		Host:         DefaultClientHost,
+		Timeout:       DefaultClientTimeout,
+		TimeoutRetry:  DefaultClientTimeoutRetry,
+		Host:          pack.String(DefaultClientHost),
+		BroadcastMode: pack.String(DefaultBroadcastMode),
 	}
 }
 
 // WithHost sets the URL of the Bitcoin node.
-func (opts ClientOptions) WithHost(host string) ClientOptions {
+func (opts ClientOptions) WithHost(host pack.String) ClientOptions {
 	opts.Host = host
 	return opts
 }
@@ -53,31 +62,28 @@ func (opts ClientOptions) WithHost(host string) ClientOptions {
 type Client interface {
 	// Account query account with address
 	Account(address Address) (Account, error)
-	// Tx query transaction with txHash
-	Tx(txHash pack.String) (StdTx, error)
-	// SubmitTx to the Cosmos based network.
-	SubmitTx(tx Tx, broadcastMode pack.String) (pack.String, error)
+
+	// Client interface from account.Client
+	account.Client
 }
 
 type client struct {
-	opts          ClientOptions
-	cliCtx        context.CLIContext
-	broadcastMode pack.String
+	opts   ClientOptions
+	cliCtx cliContext.CLIContext
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec, broadcastMode pack.String) Client {
-	httpClient, err := rpchttp.NewWithTimeout(opts.Host, "websocket", uint(opts.Timeout/time.Second))
+func NewClient(opts ClientOptions, cdc *codec.Codec) Client {
+	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
 	}
 
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithClient(httpClient).WithTrustNode(true)
+	cliCtx := cliContext.NewCLIContext().WithCodec(cdc).WithClient(httpClient).WithTrustNode(true)
 
 	return &client{
-		opts:          opts,
-		cliCtx:        cliCtx,
-		broadcastMode: broadcastMode,
+		opts:   opts,
+		cliCtx: cliCtx,
 	}
 }
 
@@ -109,32 +115,37 @@ func (client *client) Account(addr Address) (Account, error) {
 func (client *client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
 	res, err := utils.QueryTx(client.cliCtx, txHash.String())
 	if err != nil {
-		return StdTx{}, 0, err
+		return &StdTx{}, pack.NewU64(0), err
 	}
 
-	stdTx := res.Tx.(auth.StdTx)
+	authStdTx := res.Tx.(auth.StdTx)
 	if res.Code != 0 {
-		return StdTx{}, 0, fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
+		return &StdTx{}, pack.NewU64(0), fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
 	}
 
-	return parseStdTx(stdTx), 1
+	stdTx, err := parseStdTx(authStdTx)
+	if err != nil {
+		return &StdTx{}, pack.NewU64(0), fmt.Errorf("parse tx failed: %v", err)
+	}
+
+	return &stdTx, pack.NewU64(1), nil
 }
 
 // SubmitTx to the Cosmos based network.
-func (client *client) SubmitTx(ctx context.Context, tx account.Tx) (pack.String, error) {
+func (client *client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	txBytes, err := tx.Serialize()
 	if err != nil {
-		return pack.String(""), fmt.Errorf("bad \"submittx\": %v", err)
+		return fmt.Errorf("bad \"submittx\": %v", err)
 	}
 
-	res, err := client.cliCtx.WithBroadcastMode(client.broadcastMode.String()).BroadcastTx(txBytes)
+	res, err := client.cliCtx.WithBroadcastMode(client.opts.BroadcastMode.String()).BroadcastTx(txBytes)
 	if err != nil {
-		return pack.String(""), err
+		return err
 	}
 
 	if res.Code != 0 {
-		return pack.String(""), fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
+		return fmt.Errorf("Tx Failed Code: %v, Log: %v", res.Code, res.RawLog)
 	}
 
-	return pack.NewString(res.TxHash), nil
+	return nil
 }
