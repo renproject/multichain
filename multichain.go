@@ -154,6 +154,25 @@ func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
 
+func (chain Chain) ChainType() ChainType {
+	switch chain {
+	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
+		return ChainTypeUTXOBased
+	case BinanceSmartChain, Ethereum:
+		return ChainTypeAccountBased
+	default:
+		return ChainType("")
+	}
+}
+
+func (chain Chain) IsAccountBased() bool {
+	return chain.ChainType() == ChainTypeAccountBased
+}
+
+func (chain Chain) IsUTXOBased() bool {
+	return chain.ChainType() == ChainTypeUTXOBased
+}
+
 type ChainType string
 
 const (
