@@ -58,7 +58,7 @@ const (
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
-	FIL  = Asset("FIL")  // Filecoin	
+	FIL  = Asset("FIL")  // Filecoin
 	FTM  = Asset("FTM")  // Fantom
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
@@ -152,4 +152,29 @@ func (chain Chain) Marshal(buf []byte, rem int) ([]byte, int, error) {
 // unless you are implementing unmarshalling for a container type.
 func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
+}
+
+type ChainType string
+
+const (
+	ChainTypeAccountBased = ChainType("Account")
+	ChainTypeUTXOBased    = ChainType("UTXO")
+)
+
+// SizeHint returns the number of bytes required to represent the chain type in
+// binary.
+func (chainType ChainType) SizeHint() int {
+	return surge.SizeHintString(string(chainType))
+}
+
+// Marshal the chain type to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
+func (chainType ChainType) Marshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.MarshalString(string(chainType), buf, rem)
+}
+
+// Unmarshal the chain type from binary. You should not call this function
+// directly, unless you are implementing unmarshalling for a container type.
+func (chainType *ChainType) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.UnmarshalString((*string)(chainType), buf, rem)
 }
