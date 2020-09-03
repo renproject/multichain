@@ -2,12 +2,14 @@ package filecoin_test
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
+	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/filecoin"
@@ -38,9 +40,14 @@ var _ = Describe("Filecoin", func() {
 			if senderPrivKeyStr == "" {
 				panic("FILECOIN_PK is undefined")
 			}
-			senderPK, err := ethcrypto.HexToECDSA(senderPrivKeyStr)
+			var ki filtypes.KeyInfo
+			data, err := hex.DecodeString(senderPrivKeyStr)
 			Expect(err).NotTo(HaveOccurred())
-			senderPrivKey := id.PrivKey(*senderPK)
+			err = json.Unmarshal(data, &ki)
+			Expect(err).NotTo(HaveOccurred())
+			senderPrivKey := id.PrivKey{}
+			err = surge.FromBinary(&senderPrivKey, ki.PrivateKey)
+			Expect(err).NotTo(HaveOccurred())
 
 			// read sender's address into the filecoin-compatible format
 			senderAddr := os.Getenv("FILECOIN_ADDRESS")
