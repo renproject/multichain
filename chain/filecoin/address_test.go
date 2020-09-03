@@ -24,7 +24,7 @@ var _ = Describe("Address", func() {
 		Context("for ID protocol", func() {
 			It("should behave correctly without errors", func() {
 				f := func() bool {
-					x := varint.ToUvarint(r.Uint64())
+					x := varint.ToUvarint(uint64(r.Int63()))
 					x = append([]byte{byte(filaddress.ID)}, x...)
 
 					rawAddr := address.RawAddress(pack.NewBytes(x[:]))
