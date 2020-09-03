@@ -164,7 +164,7 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, _, _ 
 			From:       filfrom,
 			To:         filto,
 			Value:      big.Int{Int: value.Int()},
-			Nonce:      value.Int().Uint64(),
+			Nonce:      nonce.Int().Uint64(),
 			GasFeeCap:  big.Int{Int: txBuilder.gasPrice.Int()},
 			GasPremium: big.Int{Int: pack.NewU256([32]byte{}).Int()},
 			GasLimit:   txBuilder.gasLimit.Int().Int64(),
@@ -233,7 +233,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 // hash. It also returns the number of confirmations for the transaction.
 func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
 	// parse the transaction ID to a message ID
-	msgID, err := cid.Parse(txID.String())
+	msgID, err := cid.Parse([]byte(txID))
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("parsing txID: %v", err)
 	}
@@ -242,6 +242,10 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	messageLookup, err := client.node.StateSearchMsg(ctx, msgID)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("searching msg: %v", err)
+	}
+	if messageLookup == nil {
+		// FIXME: should this be an error? If the message is not yet found on-chain
+		return nil, pack.NewU64(0), nil
 	}
 
 	// get the most recent tipset and its height

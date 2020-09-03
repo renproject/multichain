@@ -13,6 +13,7 @@ sleep 10
 ./lotus wallet import ~/.genesis-sectors/pre-seal-t01000.key
 
 ./lotus wallet import /root/miner.key
+
 ./lotus wallet import /root/user.key
 
 ./lotus auth create-token --perm admin

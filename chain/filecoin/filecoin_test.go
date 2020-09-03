@@ -10,6 +10,7 @@ import (
 
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
+	"github.com/ipfs/go-cid"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/filecoin"
@@ -67,10 +68,10 @@ var _ = Describe("Filecoin", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// construct the transaction builder
-			gasPrice := pack.NewU256FromU64(pack.NewU64(100))
-			gasLimit := pack.NewU256FromU64(pack.NewU64(100000))
+			gasPrice := pack.NewU256FromU64(pack.NewU64(10000))
+			gasLimit := pack.NewU256FromU64(pack.NewU64(10000000))
 			amount := pack.NewU256FromU64(pack.NewU64(100))
-			nonce := pack.NewU256FromU64(pack.NewU64(0))
+			nonce := pack.NewU256FromU64(pack.NewU64(11))
 			payload := pack.Bytes(nil)
 			filTxBuilder := filecoin.NewTxBuilder(gasPrice, gasLimit)
 
@@ -103,19 +104,19 @@ var _ = Describe("Filecoin", func() {
 
 			// submit the transaction
 			txHash := tx.Hash()
-			fmt.Printf("tx     = %v\n", tx)
-			fmt.Printf("txhash = %v\n", txHash)
+			txID, err := cid.Parse(txHash[:])
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Printf("msgID = %v\n", txID)
 			err = client.SubmitTx(ctx, tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			// wait for the transaction to be included in a block
 			for {
-				time.Sleep(time.Second)
+				time.Sleep(2 * time.Second)
 				fetchedTx, confs, err := client.Tx(ctx, txHash)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(fetchedTx.Hash().Equal(txHash)).To(BeTrue())
-				Expect(confs).To(BeNumerically(">=", 0))
-				if confs >= 1 {
+				if fetchedTx != nil {
+					Expect(confs).To(BeNumerically(">=", 0))
 					break
 				}
 			}
