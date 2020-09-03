@@ -68,14 +68,15 @@ var _ = Describe("Filecoin", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// construct the transaction builder
-			gasPrice := pack.NewU256FromU64(pack.NewU64(10000))
-			gasLimit := pack.NewU256FromU64(pack.NewU64(10000000))
-			amount := pack.NewU256FromU64(pack.NewU64(100))
-			nonce := pack.NewU256FromU64(pack.NewU64(11))
-			payload := pack.Bytes(nil)
-			filTxBuilder := filecoin.NewTxBuilder(gasPrice, gasLimit)
+			gasFeeCap := pack.NewU256FromU64(pack.NewU64(149838))
+			gasLimit := pack.NewU256FromU64(pack.NewU64(495335))
+			gasPremium := pack.NewU256FromU64(pack.NewU64(149514))
+			filTxBuilder := filecoin.NewTxBuilder(gasFeeCap, gasLimit, gasPremium)
 
 			// build the transaction
+			amount := pack.NewU256FromU64(pack.NewU64(100000000))
+			nonce := pack.NewU256FromU64(pack.NewU64(0))
+			payload := pack.Bytes(nil)
 			tx, err := filTxBuilder.BuildTx(
 				multichain.Address(pack.String(senderFilAddr.String())),
 				multichain.Address(pack.String(recipientFilAddr.String())),
@@ -104,7 +105,7 @@ var _ = Describe("Filecoin", func() {
 
 			// submit the transaction
 			txHash := tx.Hash()
-			txID, err := cid.Parse(txHash[:])
+			txID, err := cid.Parse([]byte(txHash))
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Printf("msgID = %v\n", txID)
 			err = client.SubmitTx(ctx, tx)

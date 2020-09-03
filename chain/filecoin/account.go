@@ -134,13 +134,14 @@ func (tx Tx) Serialize() (pack.Bytes, error) {
 // broadcasted to the filecoin network. The TxBuilder is configured using a
 // gas price and gas limit.
 type TxBuilder struct {
-	gasPrice pack.U256
-	gasLimit pack.U256
+	gasFeeCap  pack.U256
+	gasLimit   pack.U256
+	gasPremium pack.U256
 }
 
 // NewTxBuilder creates a new transaction builder.
-func NewTxBuilder(gasPrice, gasLimit pack.U256) TxBuilder {
-	return TxBuilder{gasPrice: gasPrice, gasLimit: gasLimit}
+func NewTxBuilder(gasFeeCap, gasLimit, gasPremium pack.U256) TxBuilder {
+	return TxBuilder{gasFeeCap: gasFeeCap, gasLimit: gasLimit, gasPremium: gasPremium}
 }
 
 // BuildTx receives transaction fields and constructs a new transaction.
@@ -165,9 +166,9 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, _, _ 
 			To:         filto,
 			Value:      big.Int{Int: value.Int()},
 			Nonce:      nonce.Int().Uint64(),
-			GasFeeCap:  big.Int{Int: txBuilder.gasPrice.Int()},
-			GasPremium: big.Int{Int: pack.NewU256([32]byte{}).Int()},
+			GasFeeCap:  big.Int{Int: txBuilder.gasFeeCap.Int()},
 			GasLimit:   txBuilder.gasLimit.Int().Int64(),
+			GasPremium: big.Int{Int: txBuilder.gasPremium.Int()},
 			Method:     methodNum,
 			Params:     payload,
 		},
