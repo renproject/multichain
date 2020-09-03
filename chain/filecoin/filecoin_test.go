@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
@@ -33,27 +34,30 @@ var _ = Describe("Filecoin", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// read the private key that we will send transactions from
-			filPrivKeyStr := os.Getenv("FILECOIN_PK")
-			if filPrivKeyStr == "" {
+			senderPrivKeyStr := os.Getenv("FILECOIN_PK")
+			if senderPrivKeyStr == "" {
 				panic("FILECOIN_PK is undefined")
 			}
-			filAddress := os.Getenv("FILECOIN_ADDRESS")
-			if filAddress == "" {
+			senderPK, err := ethcrypto.HexToECDSA(senderPrivKeyStr)
+			Expect(err).NotTo(HaveOccurred())
+			senderPrivKey := id.PrivKey(*senderPK)
+
+			// read sender's address into the filecoin-compatible format
+			senderAddr := os.Getenv("FILECOIN_ADDRESS")
+			if senderAddr == "" {
 				panic("FILECOIN_ADDRESS is undefined")
 			}
-			filPrivKey := id.PrivKey{}
-			err = surge.FromBinary(&filPrivKey, []byte(filPrivKeyStr))
-			Expect(err).ToNot(HaveOccurred())
-			filPubKey := filPrivKey.PubKey()
-			filPubKeyCompressed, err := surge.ToBinary(filPubKey)
+			senderFilAddr, err := filaddress.NewFromString(string(senderAddr))
 			Expect(err).NotTo(HaveOccurred())
 
+			// FIXME
 			// random recipient
 			recipientPK := id.NewPrivKey()
 			recipientPubKey := recipientPK.PubKey()
 			recipientPubKeyCompressed, err := surge.ToBinary(recipientPubKey)
 			Expect(err).NotTo(HaveOccurred())
-			recipientAddr, err := filaddress.NewSecp256k1Address(recipientPubKeyCompressed)
+			recipientFilAddr, err := filaddress.NewSecp256k1Address(recipientPubKeyCompressed)
+			Expect(err).NotTo(HaveOccurred())
 
 			// construct the transaction builder
 			gasPrice := pack.NewU256FromU64(pack.NewU64(100))
@@ -65,8 +69,8 @@ var _ = Describe("Filecoin", func() {
 
 			// build the transaction
 			tx, err := filTxBuilder.BuildTx(
-				multichain.Address(pack.String(filAddress)),
-				multichain.Address(pack.String(recipientAddr.String())),
+				multichain.Address(pack.String(senderFilAddr.String())),
+				multichain.Address(pack.String(recipientFilAddr.String())),
 				amount, nonce,
 				pack.U256{}, pack.U256{},
 				payload,
@@ -83,12 +87,12 @@ var _ = Describe("Filecoin", func() {
 				sighash32[i] = b
 			}
 			hash := id.Hash(sighash32)
-			sig, err := filPrivKey.Sign(&hash)
+			sig, err := senderPrivKey.Sign(&hash)
 			Expect(err).NotTo(HaveOccurred())
 			sigBytes, err := surge.ToBinary(sig)
 			Expect(err).NotTo(HaveOccurred())
 			txSignature := pack.NewBytes(sigBytes)
-			Expect(tx.Sign([]pack.Bytes{txSignature}, pack.NewBytes(filPubKeyCompressed))).To(Succeed())
+			Expect(tx.Sign([]pack.Bytes{txSignature}, []byte{})).To(Succeed())
 
 			// submit the transaction
 			txHash := tx.Hash()
