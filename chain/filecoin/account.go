@@ -47,7 +47,7 @@ type Tx struct {
 // Generally, hashes are irreversible hash functions that consume the
 // content of the transaction.
 func (tx Tx) Hash() pack.Bytes {
-	return pack.NewBytes(tx.msg.Cid().Hash())
+	return pack.NewBytes(tx.msg.Cid().Bytes())
 }
 
 // From returns the address that is sending the transaction. Generally,
