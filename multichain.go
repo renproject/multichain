@@ -1,5 +1,3 @@
-// Package multichain defines all supported assets and chains. It also
-// re-exports the individual multichain APIs.
 package multichain
 
 import (
@@ -63,6 +61,7 @@ const (
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
+	PPC = Asset("PPC")   // Peercoin
 )
 
 // OriginChain returns the chain upon which the asset originates. For example,
@@ -89,6 +88,8 @@ func (asset Asset) OriginChain() Chain {
 		return Fantom
 	case LUNA:
 		return Terra
+	case PPC:
+		return Peercoin
 	case SOL:
 		return Solana
 	case ZEC:
@@ -131,6 +132,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Peercoin    	  = Chain("Peercoin")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")

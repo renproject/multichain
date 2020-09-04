@@ -1,0 +1,1 @@
+package peercoin_test
