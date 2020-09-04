@@ -2,7 +2,7 @@ FROM ubuntu:xenial
 
 RUN apt-get update --fix-missing && apt-get install --yes software-properties-common wget
 
-RUN wget https://github.com/Jenova7/dev_purpose/releases/download/2.1.3T/electra-2.1.3-x86_64-linux-gnu.tar.gz -O - | tar xz
+RUN wget https://github.com/Electra-project/electra-core/releases/download/2.1.3/electra-2.1.3-x86_64-linux-gnu.tar.gz -O - | tar xz
 RUN mv ./electra-2.1.3 /app
 
 RUN chmod +x /app/bin/electrad
