@@ -62,6 +62,20 @@ services:
       - "${ETHEREUM_ADDRESS}"
 
   #
+  # Harmony
+  #
+  harmony:
+    build:
+      context: ./harmony
+    ports:
+      - "0.0.0.0:9500:9500"
+      - "0.0.0.0:9501:9501"
+      - "0.0.0.0:9599:9599"
+      - "0.0.0.0:9598:9598"
+    entrypoint:
+      - "./root/run.sh"
+
+  #
   # Fantom
   #
   fantom:
