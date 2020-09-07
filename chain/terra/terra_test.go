@@ -59,12 +59,10 @@ var _ = Describe("Terra", func() {
 
 				// instantiate a new client
 				client := terra.NewClient(cosmos.DefaultClientOptions())
-				account, err := client.Account(addr)
-				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
-					AccountNumber: account.AccountNumber,
+					AccountNumber: pack.NewU64(1),
 					ChainID:       "testnet",
 					CoinDenom:     "uluna",
 					Cdc:           app.MakeCodec(),
@@ -73,13 +71,13 @@ var _ = Describe("Terra", func() {
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
 				tx, err := txBuilder.BuildTx(
-					multichain.Address(addr.String()),           // from
-					multichain.Address(recipient.String()),      // to
-					pack.NewU256FromU64(pack.U64(2000000)),      // amount
-					pack.NewU256FromU64(account.SequenceNumber), // nonce
-					pack.NewU256FromU64(pack.U64(300000)),       // gas
-					pack.NewU256FromU64(pack.U64(300)),          // fee
-					payload,                                     // memo
+					multichain.Address(addr.String()),      // from
+					multichain.Address(recipient.String()), // to
+					pack.NewU256FromU64(pack.U64(2000000)), // amount
+					pack.NewU256FromU64(0),                 // nonce
+					pack.NewU256FromU64(pack.U64(300000)),  // gas
+					pack.NewU256FromU64(pack.U64(300)),     // fee
+					payload,                                // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 

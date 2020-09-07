@@ -67,5 +67,6 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 // EncodeAddress consumes raw bytes and encodes them to a human-readable
 // address format.
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
-	panic("unimplemented")
+	bech32Addr := sdk.AccAddress(rawAddr)
+	return address.Address(bech32Addr.String()), nil
 }

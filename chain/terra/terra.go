@@ -23,7 +23,7 @@ var (
 )
 
 // NewClient returns returns a new Client with terra codec
-func NewClient(opts ClientOptions) Client {
+func NewClient(opts ClientOptions) account.Client {
 	return cosmos.NewClient(opts, app.MakeCodec())
 }
 

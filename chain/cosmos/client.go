@@ -58,23 +58,15 @@ func (opts ClientOptions) WithHost(host pack.String) ClientOptions {
 	return opts
 }
 
-// A Client interacts with an instance of the Cosmos based network using the REST
+// Client interacts with an instance of the Cosmos based network using the REST
 // interface exposed by a lightclient node.
-type Client interface {
-	// Account query account with address
-	Account(address Address) (Account, error)
-
-	// Client interface from account.Client
-	account.Client
-}
-
-type client struct {
+type Client struct {
 	opts   ClientOptions
 	cliCtx cliContext.CLIContext
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec) account.Client {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -82,38 +74,14 @@ func NewClient(opts ClientOptions, cdc *codec.Codec) Client {
 
 	cliCtx := cliContext.NewCLIContext().WithCodec(cdc).WithClient(httpClient).WithTrustNode(true)
 
-	return &client{
+	return &Client{
 		opts:   opts,
 		cliCtx: cliCtx,
 	}
 }
 
-// Account contains necessary info for sdk.Account
-type Account struct {
-	Address        Address  `json:"address"`
-	AccountNumber  pack.U64 `json:"account_number"`
-	SequenceNumber pack.U64 `json:"sequence_number"`
-	Coins          Coins    `json:"coins"`
-}
-
-// Account query account with address
-func (client *client) Account(addr Address) (Account, error) {
-	accGetter := auth.NewAccountRetriever(client.cliCtx)
-	acc, err := accGetter.GetAccount(addr.AccAddress())
-	if err != nil {
-		return Account{}, err
-	}
-
-	return Account{
-		Address:        addr,
-		AccountNumber:  pack.U64(acc.GetAccountNumber()),
-		SequenceNumber: pack.U64(acc.GetSequence()),
-		Coins:          parseCoins(acc.GetCoins()),
-	}, nil
-}
-
 // Tx query transaction with txHash
-func (client *client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
+func (client *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
 	res, err := utils.QueryTx(client.cliCtx, hex.EncodeToString(txHash[:]))
 	if err != nil {
 		return &StdTx{}, pack.NewU64(0), fmt.Errorf("query fail: %v", err)
@@ -133,7 +101,7 @@ func (client *client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pa
 }
 
 // SubmitTx to the Cosmos based network.
-func (client *client) SubmitTx(ctx context.Context, tx account.Tx) error {
+func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	txBytes, err := tx.Serialize()
 	if err != nil {
 		return fmt.Errorf("bad \"submittx\": %v", err)
