@@ -31,7 +31,7 @@ var _ = Describe("Filecoin", func() {
 			// instantiate the client
 			client, err := filecoin.NewClient(
 				filecoin.DefaultClientOptions().
-					WithRpcURL("ws://127.0.0.1:1234/rpc/v0").
+					WithRPCURL("ws://127.0.0.1:1234/rpc/v0").
 					WithAuthToken("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.673MLa4AmbhNeC1Hj2Bn6c4t_ci68I0amkqAEHea8ik"),
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -111,8 +111,8 @@ var _ = Describe("Filecoin", func() {
 			for {
 				time.Sleep(2 * time.Second)
 				fetchedTx, confs, err := client.Tx(ctx, txHash)
-				Expect(err).ToNot(HaveOccurred())
 				if fetchedTx != nil {
+					Expect(err).ToNot(HaveOccurred())
 					Expect(confs).To(BeNumerically(">=", 0))
 					break
 				}

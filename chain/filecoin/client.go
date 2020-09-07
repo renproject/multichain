@@ -19,9 +19,9 @@ const (
 	// AuthorizationKey is the header key used for authorization
 	AuthorizationKey = "Authorization"
 
-	// DefaultClientRpcURL is the RPC websocket URL used by default, to
+	// DefaultClientRPCURL is the RPC websocket URL used by default, to
 	// interact with the filecoin lotus node.
-	DefaultClientRpcURL = "ws://127.0.0.1:1234/rpc/v0"
+	DefaultClientRPCURL = "ws://127.0.0.1:1234/rpc/v0"
 
 	// DefaultClientAuthToken is the auth token used to instantiate the lotus
 	// client. A valid lotus auth token is required to write messages to the
@@ -31,7 +31,7 @@ const (
 
 // ClientOptions are used to parameterise the behaviour of the Client.
 type ClientOptions struct {
-	RpcURL    string
+	RPCURL    string
 	AuthToken string
 }
 
@@ -41,15 +41,15 @@ type ClientOptions struct {
 // changed.
 func DefaultClientOptions() ClientOptions {
 	return ClientOptions{
-		RpcURL:    DefaultClientRpcURL,
+		RPCURL:    DefaultClientRPCURL,
 		AuthToken: DefaultClientAuthToken,
 	}
 }
 
-// WithRpcURL returns a modified version of the options with the given API
+// WithRPCURL returns a modified version of the options with the given API
 // rpc-url
-func (opts ClientOptions) WithRpcURL(rpcURL string) ClientOptions {
-	opts.RpcURL = rpcURL
+func (opts ClientOptions) WithRPCURL(rpcURL string) ClientOptions {
+	opts.RPCURL = rpcURL
 	return opts
 }
 
@@ -75,7 +75,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		requestHeaders.Add(AuthorizationKey, opts.AuthToken)
 	}
 
-	node, closer, err := filclient.NewFullNodeRPC(context.Background(), opts.RpcURL, requestHeaders)
+	node, closer, err := filclient.NewFullNodeRPC(context.Background(), opts.RPCURL, requestHeaders)
 	if err != nil {
 		return nil, err
 	}
