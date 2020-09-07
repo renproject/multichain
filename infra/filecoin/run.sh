@@ -14,6 +14,8 @@ sleep 10
 
 ./lotus wallet import /root/miner.key
 
+./lotus wallet import /root/user.key
+
 ./lotus auth create-token --perm admin
 
 kill $PID
@@ -59,7 +61,7 @@ sleep 15
 
 MAIN_WALLET="$(jq -r '.t01000.Owner' ~/.genesis-sectors/pre-seal-t01000.json)"
 
-./lotus send --from $MAIN_WALLET t17lz42vyixtlfs4a3j76cw53w32qb57w7g4g6qua 1000000
+./lotus send --from $MAIN_WALLET t1ej2tountzqwnu6uswhqdzvw6yy5xvcig6rxl2qa 1000000
 
 while :
 do

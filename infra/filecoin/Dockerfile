@@ -19,8 +19,10 @@ RUN ./lotus-seed genesis add-miner localnet.json ~/.genesis-sectors/pre-seal-t01
 
 COPY run.sh /root/run.sh
 COPY miner.key /root/miner.key
+COPY user.key /root/user.key
 RUN chmod +x /root/run.sh
 RUN chmod +x /root/miner.key
+RUN chmod +x /root/user.key
 
 EXPOSE 1234
 
