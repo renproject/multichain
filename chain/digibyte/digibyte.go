@@ -96,15 +96,14 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 	return hash
 }
 
-
 var MainNetParams = chaincfg.Params{
 	Name:        "mainnet",
 	Net:         0xdab6c3fa,
 	DefaultPort: "12024",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
@@ -137,8 +136,8 @@ var TestnetParams = chaincfg.Params{
 	DefaultPort: "12026",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
@@ -161,7 +160,7 @@ var TestnetParams = chaincfg.Params{
 }
 
 var RegressionNetParams = chaincfg.Params{
-	Name:        "regtest",
+	Name: "regtest",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
 	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
@@ -171,8 +170,8 @@ var RegressionNetParams = chaincfg.Params{
 	DefaultPort: "18444",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
