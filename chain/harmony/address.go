@@ -22,7 +22,7 @@ type Encoder struct {}
 func (Encoder) EncodeAddress(addr address.RawAddress) (address.Address, error) {
 	encodedAddr, err := bech32.ConvertBits(addr, 8, 5, true)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return address.Address(encodedAddr), nil
 }
