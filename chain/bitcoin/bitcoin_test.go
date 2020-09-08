@@ -59,6 +59,9 @@ var _ = Describe("Bitcoin", func() {
 				output2, _, err := client.Output(context.Background(), output.Outpoint)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
+				output2, _, err = client.UnspentOutput(context.Background(), output.Outpoint)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
@@ -122,11 +125,15 @@ var _ = Describe("Bitcoin", func() {
 					confs, err := client.Confirmations(context.Background(), txHash)
 					Expect(err).ToNot(HaveOccurred())
 					log.Printf("                   %v/3 confirmations", confs)
-					if confs >= 3 {
+					if confs >= 1 {
 						break
 					}
 					time.Sleep(10 * time.Second)
 				}
+				ctxWithTimeout, cancelCtxWithTimeout := context.WithTimeout(context.Background(), time.Second)
+				defer cancelCtxWithTimeout()
+				_, _, err = client.UnspentOutput(ctxWithTimeout, output.Outpoint)
+				Expect(err).To(HaveOccurred())
 
 				// Check that we can load the output and that it is equal.
 				// Otherwise, something strange is happening with the RPC

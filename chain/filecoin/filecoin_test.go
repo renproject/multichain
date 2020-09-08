@@ -31,7 +31,7 @@ var _ = Describe("Filecoin", func() {
 			// instantiate the client
 			client, err := filecoin.NewClient(
 				filecoin.DefaultClientOptions().
-					WithAddress("ws://127.0.0.1:1234/rpc/v0").
+					WithRPCURL("ws://127.0.0.1:1234/rpc/v0").
 					WithAuthToken("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.673MLa4AmbhNeC1Hj2Bn6c4t_ci68I0amkqAEHea8ik"),
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -58,7 +58,6 @@ var _ = Describe("Filecoin", func() {
 			senderFilAddr, err := filaddress.NewFromString(string(senderAddr))
 			Expect(err).NotTo(HaveOccurred())
 
-			// FIXME
 			// random recipient
 			recipientPK := id.NewPrivKey()
 			recipientPubKey := recipientPK.PubKey()
@@ -68,21 +67,18 @@ var _ = Describe("Filecoin", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// construct the transaction builder
-			gasFeeCap := pack.NewU256FromU64(pack.NewU64(149838))
-			gasLimit := pack.NewU256FromU64(pack.NewU64(495335))
 			gasPremium := pack.NewU256FromU64(pack.NewU64(149514))
-			filTxBuilder := filecoin.NewTxBuilder(gasFeeCap, gasLimit, gasPremium)
+			filTxBuilder := filecoin.NewTxBuilder(gasPremium)
 
 			// build the transaction
-			amount := pack.NewU256FromU64(pack.NewU64(100000000))
-			nonce := pack.NewU256FromU64(pack.NewU64(0))
-			payload := pack.Bytes(nil)
 			tx, err := filTxBuilder.BuildTx(
 				multichain.Address(pack.String(senderFilAddr.String())),
 				multichain.Address(pack.String(recipientFilAddr.String())),
-				amount, nonce,
-				pack.U256{}, pack.U256{},
-				payload,
+				pack.NewU256FromU64(pack.NewU64(100000000)), // amount
+				pack.NewU256FromU64(pack.NewU64(0)),         // nonce
+				pack.NewU256FromU64(pack.NewU64(495335)),    // gasFeeCap
+				pack.NewU256FromU64(pack.NewU64(149838)),    // gasPrice
+				pack.Bytes(nil),                             // payload
 			)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -115,8 +111,8 @@ var _ = Describe("Filecoin", func() {
 			for {
 				time.Sleep(2 * time.Second)
 				fetchedTx, confs, err := client.Tx(ctx, txHash)
-				Expect(err).ToNot(HaveOccurred())
 				if fetchedTx != nil {
+					Expect(err).ToNot(HaveOccurred())
 					Expect(confs).To(BeNumerically(">=", 0))
 					break
 				}

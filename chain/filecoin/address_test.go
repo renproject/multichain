@@ -20,7 +20,7 @@ var _ = Describe("Address", func() {
 
 	encoderDecoder := filecoin.NewAddressEncodeDecoder()
 
-	Context("when encoding and decoding", func() {
+	Context("when encoding and decoding", func() {
 		Context("for ID protocol", func() {
 			It("should behave correctly without errors", func() {
 				f := func() bool {

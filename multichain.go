@@ -13,34 +13,88 @@ import (
 )
 
 type (
-	Address               = address.Address
-	AddressEncodeDecoder  = address.EncodeDecoder
+	// An Address is a human-readable representation of a public identity. It can
+	// be the address of an external account, contract, or script.
+	Address = address.Address
+
+	// The AddressEncodeDecoder interfaces combines encoding and decoding
+	// functionality into one interface.
+	AddressEncodeDecoder = address.EncodeDecoder
+
+	// An EthereumCompatAddress represents a public address on the Ethereum
+	// blockchain. It can be the address of an external account, or the address of
+	// a smart contract.
 	EthereumCompatAddress = ethereum.Address
-	RawAddress            = address.RawAddress
+
+	// RawAddress is an address that has been decoded into its binary form.
+	RawAddress = address.RawAddress
 )
 
 type (
-	AccountTx        = account.Tx
+	// The AccountTx interface defines the functionality that must be exposed by
+	// account-based transactions.
+	AccountTx = account.Tx
+
+	// The AccountTxBuilder interface defines the functionality required to build
+	// account-based transactions. Most chain implementations require additional
+	// information, and this should be accepted during the construction of the
+	// chain-specific transaction builder.
 	AccountTxBuilder = account.TxBuilder
-	AccountClient    = account.Client
+
+	// The AccountClient interface defines the functionality required to interact
+	// with a chain over RPC.
+	AccountClient = account.Client
 )
 
 type (
-	UTXOutpoint   = utxo.Outpoint
-	UTXOutput     = utxo.Output
-	UTXOInput     = utxo.Input
+	// A UTXOutpoint identifies a specific output produced by a transaction.
+	UTXOutpoint = utxo.Outpoint
+
+	// A UTXOutput is produced by a transaction. It includes the conditions
+	// required to spend the output (called the pubkey script, based on Bitcoin).
+	UTXOutput = utxo.Output
+
+	// A UTXOInput specifies an existing output, produced by a previous
+	// transaction, to be consumed by another transaction. It includes the script
+	// that meets the conditions specified by the consumed output (called the sig
+	// script, based on Bitcoin).
+	UTXOInput = utxo.Input
+
+	// A UTXORecipient specifies an address, and an amount, for which a
+	// transaction will produce an output. Depending on the output, the address
+	// can take on different formats (e.g. in Bitcoin, addresses can be P2PK,
+	// P2PKH, or P2SH).
 	UTXORecipient = utxo.Recipient
-	UTXOTx        = utxo.Tx
+
+	// A UTXOTx interfaces defines the functionality that must be exposed by
+	// utxo-based transactions.
+	UTXOTx = utxo.Tx
+
+	// A UTXOTxBuilder interface defines the functionality required to build
+	// account-based transactions. Most chain implementations require additional
+	// information, and this should be accepted during the construction of the
+	// chain-specific transaction builder.
 	UTXOTxBuilder = utxo.TxBuilder
-	UTXOClient    = utxo.Client
+
+	// A UTXOClient interface defines the functionality required to interact with
+	// a chain over RPC.
+	UTXOClient = utxo.Client
 )
 
 type (
+	// ContractCallData is used to specify a function and its parameters when
+	// invoking business logic on a contract.
 	ContractCallData = contract.CallData
-	ContractCaller   = contract.Caller
+
+	// The ContractCaller interface defines the functionality required to call
+	// readonly functions on a contract. Calling functions that mutate contract
+	// state should be done using the Account API.
+	ContractCaller = contract.Caller
 )
 
 type (
+	// The GasEstimator interface defines the functionality required to know the
+	// current recommended gas prices.
 	GasEstimator = gas.Estimator
 )
 
@@ -98,6 +152,7 @@ func (asset Asset) OriginChain() Chain {
 	}
 }
 
+// ChainType returns the chain-type (Account or UTXO) for the given asset
 func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
@@ -165,6 +220,8 @@ func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
 
+// ChainType returns the chain type (whether account-based or utxo-based chain)
+// for the chain.
 func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
@@ -176,27 +233,77 @@ func (chain Chain) ChainType() ChainType {
 	}
 }
 
+// IsAccountBased returns true when invoked on an account-based chain, otherwise
+// returns false.
 func (chain Chain) IsAccountBased() bool {
-	switch chain {
-	case BinanceSmartChain, Ethereum, Filecoin:
-		return true
-	default:
-		return false
-	}
+	return chain.ChainType() == ChainTypeAccountBased
 }
 
+// IsUTXOBased returns true when invoked on a utxo-based chain, otherwise
+// returns false.
 func (chain Chain) IsUTXOBased() bool {
-	switch chain {
-	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
-		return true
-	default:
-		return false
-	}
+	return chain.ChainType() == ChainTypeUTXOBased
 }
 
+// ChainType represents the type of chain (whether account-based or utxo-based)
 type ChainType string
 
 const (
-	ChainTypeAccountBased = ChainType("AccountBased")
-	ChainTypeUTXOBased    = ChainType("UTXOBased")
+	// ChainTypeAccountBased is an identifier for all account-based chains,
+	// namely, BinanceSmartChain, Ethereum, Filecoin, and so on.
+	ChainTypeAccountBased = ChainType("Account")
+
+	// ChainTypeUTXOBased is an identifier for all utxo-based chains, namely,
+	// Bitcoin, BitcoinCash, DigiByte, and so on.
+	ChainTypeUTXOBased = ChainType("UTXO")
 )
+
+// SizeHint returns the number of bytes required to represent the chain type in
+// binary.
+func (chainType ChainType) SizeHint() int {
+	return surge.SizeHintString(string(chainType))
+}
+
+// Marshal the chain type to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
+func (chainType ChainType) Marshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.MarshalString(string(chainType), buf, rem)
+}
+
+// Unmarshal the chain type from binary. You should not call this function
+// directly, unless you are implementing unmarshalling for a container type.
+func (chainType *ChainType) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.UnmarshalString((*string)(chainType), buf, rem)
+}
+
+// Network identifies the network type for the multichain deployment
+type Network string
+
+const (
+	// NetworkLocalnet represents a locally deployed network for chains
+	NetworkLocalnet = Network("localnet")
+
+	// NetworkTestnet represents the test network for chains
+	NetworkTestnet = Network("testnet")
+
+	// NetworkMainnet represents the main network for chains
+	NetworkMainnet = Network("mainnet")
+)
+
+// SizeHint returns the number of bytes required to represent the network in
+// binary.
+func (net Network) SizeHint() int {
+	return surge.SizeHintString(string(net))
+}
+
+// Marshal the network to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
+func (net Network) Marshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.MarshalString(string(net), buf, rem)
+}
+
+// Unmarshal the network from binary. You should not call this function
+// directly, unless you are implementing unmarshalling for a container type.
+func (net *Network) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.UnmarshalString((*string)(net), buf, rem)
+}

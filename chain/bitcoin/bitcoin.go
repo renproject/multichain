@@ -111,7 +111,7 @@ func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.
 	hash := chainhash.Hash{}
 	copy(hash[:], outpoint.Hash)
 	if err := client.send(ctx, &resp, "getrawtransaction", hash.String(), 1); err != nil {
-		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"getrawtransaction\": %v", err)
 	}
 	if outpoint.Index.Uint32() >= uint32(len(resp.Vout)) {
 		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad index: %v is out of range", outpoint.Index)
@@ -134,6 +134,40 @@ func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.
 		PubKeyScript: pack.NewBytes(pubKeyScript),
 	}
 	return output, pack.NewU64(resp.Confirmations), nil
+}
+
+// UnspentOutput returns the unspent transaction output identified by the
+// given outpoint. It also returns the number of confirmations for the
+// output. If the output cannot be found before the context is done, the
+// output is invalid, or the output has been spent, then an error should be
+// returned.
+func (client *client) UnspentOutput(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
+	resp := btcjson.GetTxOutResult{}
+	hash := chainhash.Hash{}
+	copy(hash[:], outpoint.Hash)
+	if err := client.send(ctx, &resp, "gettxout", hash.String(), outpoint.Index.Uint32()); err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+	}
+	amount, err := btcutil.NewAmount(resp.Value)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", err)
+	}
+	if amount < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", amount)
+	}
+	if resp.Confirmations < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad confirmations: %v", resp.Confirmations)
+	}
+	pubKeyScript, err := hex.DecodeString(resp.ScriptPubKey.Hex)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad pubkey script: %v", err)
+	}
+	output := utxo.Output{
+		Outpoint:     outpoint,
+		Value:        pack.NewU256FromU64(pack.NewU64(uint64(amount))),
+		PubKeyScript: pack.NewBytes(pubKeyScript),
+	}
+	return output, pack.NewU64(uint64(resp.Confirmations)), nil
 }
 
 // SubmitTx to the Bitcoin network.
@@ -288,7 +322,7 @@ func retry(ctx context.Context, dur time.Duration, f func() error) error {
 		log.Printf("retrying: %v", err)
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return fmt.Errorf("%v: %v", ctx.Err(), err)
 		case <-ticker.C:
 			err = f()
 		}
