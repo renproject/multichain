@@ -87,17 +87,15 @@ var _ = Describe("Filecoin", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(txSighashes)).To(Equal(1))
 			Expect(len(txSighashes[0])).To(Equal(32))
-			sighash32 := [32]byte{}
-			for i, b := range []byte(txSighashes[0]) {
-				sighash32[i] = b
-			}
+			sighash32 := txSighashes[0]
 			hash := id.Hash(sighash32)
 			sig, err := senderPrivKey.Sign(&hash)
 			Expect(err).NotTo(HaveOccurred())
 			sigBytes, err := surge.ToBinary(sig)
 			Expect(err).NotTo(HaveOccurred())
-			txSignature := pack.NewBytes(sigBytes)
-			Expect(tx.Sign([]pack.Bytes{txSignature}, []byte{})).To(Succeed())
+			txSignature := pack.Bytes65{}
+			copy(txSignature[:], sigBytes)
+			Expect(tx.Sign([]pack.Bytes65{txSignature}, []byte{})).To(Succeed())
 
 			// submit the transaction
 			txHash := tx.Hash()

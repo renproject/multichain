@@ -8,7 +8,6 @@ import (
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/surge"
 )
 
@@ -20,11 +19,6 @@ type (
 	// The AddressEncodeDecoder interfaces combines encoding and decoding
 	// functionality into one interface.
 	AddressEncodeDecoder = address.EncodeDecoder
-
-	// An EthereumCompatAddress represents a public address on the Ethereum
-	// blockchain. It can be the address of an external account, or the address of
-	// a smart contract.
-	EthereumCompatAddress = ethereum.Address
 
 	// RawAddress is an address that has been decoded into its binary form.
 	RawAddress = address.RawAddress

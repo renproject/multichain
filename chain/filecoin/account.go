@@ -115,25 +115,18 @@ func (tx Tx) Payload() contract.CallData {
 
 // Sighashes returns the digests that must be signed before the transaction
 // can be submitted by the client.
-func (tx Tx) Sighashes() ([]pack.Bytes, error) {
-	sighash32 := blake2b.Sum256(tx.Hash())
-	sighash := sighash32[:]
-	return []pack.Bytes{pack.NewBytes(sighash)}, nil
+func (tx Tx) Sighashes() ([]pack.Bytes32, error) {
+	return []pack.Bytes32{pack.Bytes32(blake2b.Sum256(tx.Hash()))}, nil
 }
 
 // Sign the transaction by injecting signatures for the required sighashes.
 // The serialized public key used to sign the sighashes must also be
 // specified.
-func (tx *Tx) Sign(signatures []pack.Bytes, pubkey pack.Bytes) error {
+func (tx *Tx) Sign(signatures []pack.Bytes65, pubkey pack.Bytes) error {
 	if len(signatures) != 1 {
 		return fmt.Errorf("expected 1 signature, got %v signatures", len(signatures))
 	}
-
-	if len(signatures[0]) != 65 {
-		return fmt.Errorf("expected signature to be 65 bytes, got %v bytes", len(signatures[0]))
-	}
-
-	copy(tx.signature[:], signatures[0])
+	tx.signature = signatures[0]
 	return nil
 }
 
