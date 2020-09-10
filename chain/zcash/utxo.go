@@ -105,8 +105,8 @@ func (tx *Tx) Hash() (pack.Bytes, error) {
 	if err != nil {
 		return pack.Bytes{}, err
 	}
-	hash := chainhash.DoubleHashH(serial)
-	return pack.NewBytes(hash[:]), nil
+	txhash := chainhash.DoubleHashH(serial)
+	return pack.NewBytes(txhash[:]), nil
 }
 
 func (tx *Tx) Inputs() ([]utxo.Input, error) {

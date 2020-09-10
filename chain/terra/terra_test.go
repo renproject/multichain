@@ -1,19 +1,18 @@
 package terra_test
 
 import (
+	"context"
 	"encoding/hex"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/terra-project/core/app"
-
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/renproject/multichain"
+	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/renproject/multichain/chain/terra"
-	"github.com/renproject/multichain/compat/cosmoscompat"
 	"github.com/renproject/pack"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/terra-project/core/app"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,8 +20,12 @@ import (
 
 var _ = Describe("Terra", func() {
 	Context("when submitting transactions", func() {
-		Context("when sending LUNA to multiple addresses", func() {
+		Context("when sending LUNA", func() {
 			It("should work", func() {
+				// create context for the test
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+
 				// Load private key, and assume that the associated address has
 				// funds to spend. You can do this by setting TERRA_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
@@ -36,85 +39,63 @@ var _ = Describe("Terra", func() {
 					panic("TERRA_ADDRESS is undefined")
 				}
 
-				// pkEnv := "a96e62ed3955e65be32703f12d87b6b5cf26039ecfa948dc5107a495418e5330"
-				// addrEnv := "terra10s4mg25tu6termrk8egltfyme4q7sg3hl8s38u"
-
 				pkBz, err := hex.DecodeString(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
 				var pk secp256k1.PrivKeySecp256k1
 				copy(pk[:], pkBz)
 
-				addr := cosmoscompat.Address(pk.PubKey().Address())
+				addr := terra.Address(pk.PubKey().Address())
 
-				decoder := terra.NewAddressDecoder()
-				expectedAddr, err := decoder.DecodeAddress(pack.NewString(addrEnv))
+				decoder := terra.NewAddressDecoder("terra")
+				_, err = decoder.DecodeAddress(multichain.Address(pack.NewString(addrEnv)))
 				Expect(err).ToNot(HaveOccurred())
-				Expect(addr).Should(Equal(expectedAddr))
 
-				pk1 := secp256k1.GenPrivKey()
-				pk2 := secp256k1.GenPrivKey()
+				// random recipient
+				pkRecipient := secp256k1.GenPrivKey()
+				recipient := types.AccAddress(pkRecipient.PubKey().Address())
 
-				recipient1 := sdk.AccAddress(pk1.PubKey().Address())
-				recipient2 := sdk.AccAddress(pk2.PubKey().Address())
+				// instantiate a new client
+				client := terra.NewClient(cosmos.DefaultClientOptions())
 
-				msgs := []cosmoscompat.MsgSend{
-					{
-						FromAddress: cosmoscompat.Address(addr),
-						ToAddress:   cosmoscompat.Address(recipient1),
-						Amount: cosmoscompat.Coins{
-							{
-								Denom:  "uluna",
-								Amount: pack.U64(1000000),
-							},
-						},
-					},
-					{
-						FromAddress: cosmoscompat.Address(addr),
-						ToAddress:   cosmoscompat.Address(recipient2),
-						Amount: cosmoscompat.Coins{
-							{
-								Denom:  "uluna",
-								Amount: pack.U64(2000000),
-							},
-						},
-					},
-				}
-
-				client := cosmoscompat.NewClient(cosmoscompat.DefaultClientOptions(), app.MakeCodec())
-				account, err := client.Account(addr)
-				Expect(err).NotTo(HaveOccurred())
-
-				txBuilder := terra.NewTxBuilder(cosmoscompat.TxOptions{
-					AccountNumber:  account.AccountNumber,
-					SequenceNumber: account.SequenceNumber,
-					Gas:            200000,
-					ChainID:        "testnet",
-					Memo:           "multichain",
-					Fees: cosmoscompat.Coins{
-						{
-							Denom:  "uluna",
-							Amount: pack.U64(3000),
-						},
-					},
-				}).WithCodec(app.MakeCodec())
-
-				tx, err := txBuilder.BuildTx(msgs)
-				Expect(err).NotTo(HaveOccurred())
-
-				sigBytes, err := pk.Sign(tx.SigBytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
-				err = tx.Sign([]cosmoscompat.StdSignature{
-					{
-						Signature: pack.NewBytes(sigBytes),
-						PubKey:    pack.NewBytes(pubKey[:]),
-					},
+				// create a new cosmos-compatible transaction builder
+				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
+					AccountNumber: pack.NewU64(1),
+					ChainID:       "testnet",
+					CoinDenom:     "uluna",
+					Cdc:           app.MakeCodec(),
 				})
+
+				// build the transaction
+				payload := pack.NewBytes([]byte("multichain"))
+				tx, err := txBuilder.BuildTx(
+					multichain.Address(addr.String()),      // from
+					multichain.Address(recipient.String()), // to
+					pack.NewU256FromU64(pack.U64(2000000)), // amount
+					pack.NewU256FromU64(0),                 // nonce
+					pack.NewU256FromU64(pack.U64(300000)),  // gas
+					pack.NewU256FromU64(pack.U64(300)),     // fee
+					payload,                                // memo
+				)
 				Expect(err).NotTo(HaveOccurred())
 
-				txHash, err := client.SubmitTx(tx, pack.NewString("sync"))
+				// get the transaction bytes and sign it
+				sighashes, err := tx.Sighashes()
+				Expect(err).NotTo(HaveOccurred())
+				sigBytes, err := pk.Sign([]byte(sighashes[0]))
+				Expect(err).NotTo(HaveOccurred())
+
+				// attach the signature to the transaction
+				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
+				err = tx.Sign(
+					[]pack.Bytes{pack.NewBytes(sigBytes)},
+					pack.NewBytes(pubKey[:]),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				// submit the transaction to the chain
+				txHash := tx.Hash()
+				err = client.SubmitTx(ctx, tx)
 				Expect(err).NotTo(HaveOccurred())
 
 				for {
@@ -123,16 +104,15 @@ var _ = Describe("Terra", func() {
 					// definitely valid, and the test has passed. We were
 					// successfully able to use the multichain to construct and
 					// submit a Bitcoin transaction!
-					_, err := client.Tx(txHash)
+					foundTx, confs, err := client.Tx(ctx, txHash)
 					if err == nil {
+						Expect(confs.Uint64()).To(Equal(uint64(1)))
+						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
 						break
 					}
 
-					if !strings.Contains(err.Error(), "not found") {
-						Expect(err).NotTo(HaveOccurred())
-					}
-
-					time.Sleep(10 * time.Second)
+					// wait and retry querying for the transaction
+					time.Sleep(2 * time.Second)
 				}
 			})
 		})
