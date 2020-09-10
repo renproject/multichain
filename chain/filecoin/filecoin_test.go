@@ -1,11 +1,14 @@
 package filecoin_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	filaddress "github.com/filecoin-project/go-address"
@@ -28,11 +31,25 @@ var _ = Describe("Filecoin", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
+			// fetch the auth token from filecoin's running docker container
+			cmd := exec.Command("docker", "exec", "infra_filecoin_1", "/bin/bash", "-c", "/app/lotus auth api-info --perm admin")
+			var out bytes.Buffer
+			var stderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stderr
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+				panic(fmt.Sprintf("could not run command: %v", err))
+			}
+			tokenWithSuffix := strings.TrimPrefix(out.String(), "FULLNODE_API_INFO=")
+			authToken := strings.Split(tokenWithSuffix, ":/")
+
 			// instantiate the client
 			client, err := filecoin.NewClient(
 				filecoin.DefaultClientOptions().
 					WithRPCURL("ws://127.0.0.1:1234/rpc/v0").
-					WithAuthToken("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.673MLa4AmbhNeC1Hj2Bn6c4t_ci68I0amkqAEHea8ik"),
+					WithAuthToken(fmt.Sprintf("Bearer %s", authToken[0])),
 			)
 			Expect(err).ToNot(HaveOccurred())
 
