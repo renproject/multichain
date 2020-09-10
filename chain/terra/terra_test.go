@@ -82,13 +82,15 @@ var _ = Describe("Terra", func() {
 				// get the transaction bytes and sign it
 				sighashes, err := tx.Sighashes()
 				Expect(err).NotTo(HaveOccurred())
-				sigBytes, err := pk.Sign([]byte(sighashes[0]))
+				sigBytes, err := pk.Sign(sighashes[0][:])
 				Expect(err).NotTo(HaveOccurred())
+				sig65 := pack.Bytes65{}
+				copy(sig65[:], sigBytes)
 
 				// attach the signature to the transaction
 				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
 				err = tx.Sign(
-					[]pack.Bytes{pack.NewBytes(sigBytes)},
+					[]pack.Bytes65{sig65},
 					pack.NewBytes(pubKey[:]),
 				)
 				Expect(err).NotTo(HaveOccurred())

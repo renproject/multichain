@@ -261,20 +261,24 @@ func (tx StdTx) Hash() pack.Bytes {
 }
 
 // Sighashes that need to be signed before this transaction can be submitted.
-func (tx StdTx) Sighashes() ([]pack.Bytes, error) {
-	return []pack.Bytes{tx.signMsg.Bytes()}, nil
+func (tx StdTx) Sighashes() ([]pack.Bytes32, error) {
+	if len(tx.signMsg.Bytes()) != 32 {
+		return nil, fmt.Errorf("expected 32 bytes, got %v bytes", len(tx.signMsg.Bytes()))
+	}
+	sighash := pack.Bytes32{}
+	copy(sighash[:], tx.signMsg.Bytes())
+	return []pack.Bytes32{sighash}, nil
 }
 
 // Sign the transaction by injecting signatures and the serialized pubkey of
 // the signer.
-func (tx *StdTx) Sign(signatures []pack.Bytes, pubKey pack.Bytes) error {
+func (tx *StdTx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	var stdSignatures []auth.StdSignature
 	for _, sig := range signatures {
 		var cpPubKey secp256k1.PubKeySecp256k1
 		copy(cpPubKey[:], pubKey[:secp256k1.PubKeySecp256k1Size])
-
 		stdSignatures = append(stdSignatures, auth.StdSignature{
-			Signature: sig,
+			Signature: sig[:],
 			PubKey:    cpPubKey,
 		})
 	}
