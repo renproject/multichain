@@ -108,6 +108,7 @@ const (
 	ETH  = Asset("ETH")  // Ether
 	FIL  = Asset("FIL")  // Filecoin
 	FTM  = Asset("FTM")  // Fantom
+	LSK  = Asset("LSK")  // Lisk
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
@@ -135,6 +136,8 @@ func (asset Asset) OriginChain() Chain {
 		return Filecoin
 	case FTM:
 		return Fantom
+	case LSK:
+		return Lisk	
 	case LUNA:
 		return Terra
 	case SOL:
@@ -151,7 +154,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH, FIL:
+	case BNB, ETH, FIL, LSK:
 		return ChainTypeAccountBased
 	default:
 		return ChainType("")
@@ -191,6 +194,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Lisk              = Chain("Lisk")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -220,7 +224,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Filecoin:
+	case BinanceSmartChain, Ethereum, Filecoin, Lisk:
 		return ChainTypeAccountBased
 	default:
 		return ChainType("")

@@ -111,6 +111,20 @@ services:
     entrypoint:
       - "/root/run.sh"
 
+  # Lisk with Postgresql
+  #
+  lisk:
+    build:
+      context: ./lisk
+    ports:
+      - "0.0.0.0:3333:3333"
+    entrypoint:
+      - "/root/run.sh"
+    depends_on: 
+      - liskdb
+  liskdb:
+    image: postgres
+
   #
   # Solana
   #
