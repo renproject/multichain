@@ -122,8 +122,22 @@ services:
       - "/root/run.sh"
     depends_on: 
       - liskdb
+    environment:
+        - LISK_DB_HOST=liskdb
+        - LISK_DB_PASSWORD=${LISK_DB_PW}
+        - LISK_DB_USER=${LISK_DB_USER}
+        - LISK_DB_NAME=${LISK_DB_NAME}
+        - LISK_MNEMONIC=${LISK_MNEMONIC}
+        - LISK_ADDRESS=${LISK_ADDRESS}
   liskdb:
-    image: postgres
+    image: postgres:10-alpine
+    volumes:
+      - lisk-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${LISK_DB_NAME}
+      - POSTGRES_PASSWORD=${LISK_DB_PW}
+      - POSTGRES_USER=${LISK_DB_USER}
 
   #
   # Solana
@@ -161,3 +175,5 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+volumes:
+  lisk-db-data:
