@@ -46,12 +46,18 @@ var _ = Describe("Multichain", func() {
 	logger, err := loggerConfig.Build()
 	Expect(err).ToNot(HaveOccurred())
 
+	//
+	// ADDRESS API
+	//
 	Context("Address API", func() {
 		It("should pass", func() {
 			Fail("not implemented")
 		})
 	})
 
+	//
+	// ACCOUNT API
+	//
 	Context("Account API", func() {
 		accountChainTable := []struct {
 			senderEnv           func() (id.PrivKey, *id.PubKey, multichain.Address)
@@ -266,6 +272,9 @@ var _ = Describe("Multichain", func() {
 		}
 	})
 
+	//
+	// UTXO API
+	//
 	Context("UTXO API", func() {
 		utxoChainTable := []struct {
 			privKeyEnv    string
