@@ -22,6 +22,7 @@ import (
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/terra-project/core/app"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -94,6 +95,7 @@ var _ = Describe("Multichain", func() {
 					AccountNumber: pack.NewU64(1),
 					ChainID:       "testnet",
 					CoinDenom:     "uluna",
+					Cdc:           app.MakeCodec(),
 				}),
 				func() (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
@@ -133,8 +135,7 @@ var _ = Describe("Multichain", func() {
 					// Get the transaction bytes and sign them.
 					sighashes, err := accountTx.Sighashes()
 					Expect(err).NotTo(HaveOccurred())
-					sighash32 := sighashes[0]
-					hash := id.Hash(sighash32)
+					hash := id.Hash(sighashes[0])
 					sig, err := senderPrivKey.Sign(&hash)
 					Expect(err).NotTo(HaveOccurred())
 					sigBytes, err := surge.ToBinary(sig)
@@ -143,14 +144,16 @@ var _ = Describe("Multichain", func() {
 					copy(txSignature[:], sigBytes)
 					senderPubKeyBytes, err := surge.ToBinary(senderPubKey)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(accountTx.Sign(
+					err = accountTx.Sign(
 						[]pack.Bytes65{txSignature},
 						pack.NewBytes(senderPubKeyBytes),
-					)).To(Succeed())
+					)
+					Expect(err).NotTo(HaveOccurred())
 
 					// Submit the transaction to the account chain.
 					txHash := accountTx.Hash()
-					Expect(accountClient.SubmitTx(ctx, accountTx)).To(Succeed())
+					err = accountClient.SubmitTx(ctx, accountTx)
+					Expect(err).NotTo(HaveOccurred())
 
 					// Wait slightly before we query the chain's node.
 					time.Sleep(time.Second)
