@@ -36,11 +36,6 @@ var _ = Describe("Terra", func() {
 					panic("TERRA_PK is undefined")
 				}
 
-				addrEnv := os.Getenv("TERRA_ADDRESS")
-				if addrEnv == "" {
-					panic("TERRA_ADDRESS is undefined")
-				}
-
 				pkBz, err := hex.DecodeString(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -53,16 +48,12 @@ var _ = Describe("Terra", func() {
 
 				addr := terra.Address(pk.PubKey().Address())
 
-				decoder := terra.NewAddressDecoder("terra")
-				_, err = decoder.DecodeAddress(multichain.Address(pack.NewString(addrEnv)))
-				Expect(err).ToNot(HaveOccurred())
-
 				// random recipient
 				pkRecipient := secp256k1.GenPrivKey()
 				recipient := types.AccAddress(pkRecipient.PubKey().Address())
 
 				// instantiate a new client
-				client := terra.NewClient(cosmos.DefaultClientOptions())
+				client := terra.NewClient(terra.DefaultClientOptions())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
