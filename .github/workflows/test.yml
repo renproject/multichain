@@ -24,7 +24,6 @@ jobs:
       - name: Get dependencies
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
-            git submodule
             go get -u github.com/onsi/ginkgo/ginkgo
             go get -u github.com/onsi/gomega/...
             go get -u golang.org/x/lint/golint
@@ -33,6 +32,8 @@ jobs:
 
       - name: Run vetting
         run: |
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
             cd $GITHUB_WORKSPACE
             export PATH=$PATH:$(go env GOPATH)/bin
             go vet ./...
