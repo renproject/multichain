@@ -21,6 +21,10 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
 
+      - name: Install dependency packages
+        run:
+          sudo apt-get install mesa-opencl-icd ocl-icd-opencl-dev
+
       - name: Get dependencies
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
