@@ -37,10 +37,10 @@ import (
 )
 
 var _ = Describe("Multichain", func() {
-	// Create context to work within
+	// Create context to work within.
 	ctx := context.Background()
 
-	// Initialise the logger
+	// Initialise the logger.
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	logger, err := loggerConfig.Build()
@@ -137,11 +137,18 @@ var _ = Describe("Multichain", func() {
 					err = surge.FromBinary(&privKey, ki.PrivateKey)
 					Expect(err).NotTo(HaveOccurred())
 					pubKey := privKey.PubKey()
+
+					// FIXME: add method in renproject/id to get uncompressed pubkey bytes
 					pubKeyCompressed, err := surge.ToBinary(pubKey)
 					Expect(err).NotTo(HaveOccurred())
-					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
+					/*addr*/ _, err = filaddress.NewSecp256k1Address(pubKeyCompressed)
 					Expect(err).NotTo(HaveOccurred())
-					return privKey, pubKey, multichain.Address(pack.String(addr.String()))
+					addrStr := os.Getenv("FILECOIN_ADDRESS")
+					if addrStr == "" {
+						panic("FILECOIN_ADDRESS is undefined")
+					}
+
+					return privKey, pubKey, multichain.Address(pack.String(addrStr))
 				},
 				func(privKey id.PrivKey) multichain.Address {
 					pubKey := privKey.PubKey()
@@ -187,7 +194,7 @@ var _ = Describe("Multichain", func() {
 
 		for _, accountChain := range accountChainTable {
 			accountChain := accountChain
-			FContext(fmt.Sprintf("%v", accountChain.chain), func() {
+			Context(fmt.Sprintf("%v", accountChain.chain), func() {
 				Specify("build, broadcast and fetch tx", func() {
 					// Load private key and the associated address.
 					senderPrivKey, senderPubKey, senderAddr := accountChain.senderEnv()
