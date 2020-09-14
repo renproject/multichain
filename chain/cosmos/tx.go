@@ -280,7 +280,9 @@ func (tx *StdTx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		var cpPubKey secp256k1.PubKeySecp256k1
 		copy(cpPubKey[:], pubKey[:secp256k1.PubKeySecp256k1Size])
 		stdSignatures = append(stdSignatures, auth.StdSignature{
-			Signature: sig[:],
+			// Cosmos uses 64-bytes signature
+			// https://github.com/tendermint/tendermint/blob/v0.33.8/crypto/secp256k1/secp256k1_nocgo.go#L60-L70
+			Signature: sig[:64],
 			PubKey:    cpPubKey,
 		})
 	}
