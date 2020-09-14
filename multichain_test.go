@@ -1,21 +1,28 @@
 package multichain_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
+	filaddress "github.com/filecoin-project/go-address"
+	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
 	"github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
+	"github.com/renproject/multichain/chain/filecoin"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
@@ -51,7 +58,7 @@ var _ = Describe("Multichain", func() {
 			privKeyToAddr       func(pk id.PrivKey) multichain.Address
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
-			initialise          func() multichain.AccountClient
+			initialise          func(pack.String) multichain.AccountClient
 			txBuilder           multichain.AccountTxBuilder
 			txParams            func() (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
@@ -92,8 +99,11 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return recipient
 				},
-				func() multichain.AccountClient {
-					client := terra.NewClient(terra.DefaultClientOptions())
+				func(rpcURL pack.String) multichain.AccountClient {
+					client := terra.NewClient(
+						terra.DefaultClientOptions().
+							WithHost(rpcURL),
+					)
 					return client
 				},
 				terra.NewTxBuilder(terra.TxBuilderOptions{
@@ -112,6 +122,67 @@ var _ = Describe("Multichain", func() {
 				},
 				multichain.Terra,
 			},
+			{
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+					pkEnv := os.Getenv("FILECOIN_PK")
+					if pkEnv == "" {
+						panic("FILECOIN_PK is undefined")
+					}
+					var ki filtypes.KeyInfo
+					data, err := hex.DecodeString(pkEnv)
+					Expect(err).NotTo(HaveOccurred())
+					err = json.Unmarshal(data, &ki)
+					Expect(err).NotTo(HaveOccurred())
+					privKey := id.PrivKey{}
+					err = surge.FromBinary(&privKey, ki.PrivateKey)
+					Expect(err).NotTo(HaveOccurred())
+					pubKey := privKey.PubKey()
+					pubKeyCompressed, err := surge.ToBinary(pubKey)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
+					Expect(err).NotTo(HaveOccurred())
+					return privKey, pubKey, multichain.Address(pack.String(addr.String()))
+				},
+				func(privKey id.PrivKey) multichain.Address {
+					pubKey := privKey.PubKey()
+					pubKeyCompressed, err := surge.ToBinary(pubKey)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(pack.String(addr.String()))
+				},
+				"ws://127.0.0.1:1234/rpc/v0",
+				func() multichain.Address {
+					pk := id.NewPrivKey()
+					pubKey := pk.PubKey()
+					pubKeyCompressed, err := surge.ToBinary(pubKey)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(pack.String(addr.String()))
+				},
+				func(rpcURL pack.String) multichain.AccountClient {
+					// dirty hack to fetch auth token
+					authToken := fetchAuthToken()
+					client, err := filecoin.NewClient(
+						filecoin.DefaultClientOptions().
+							WithRPCURL(rpcURL).
+							WithAuthToken(authToken),
+					)
+					Expect(err).NotTo(HaveOccurred())
+					return client
+				},
+				filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(149514))),
+				func() (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+					amount := pack.NewU256FromU64(pack.NewU64(100000000))
+					nonce := pack.NewU256FromU64(pack.NewU64(0))
+					gasLimit := pack.NewU256FromU64(pack.NewU64(495335))
+					gasPrice := pack.NewU256FromU64(pack.NewU64(149838))
+					payload := pack.Bytes(nil)
+					return amount, nonce, gasLimit, gasPrice, payload
+				},
+				multichain.Filecoin,
+			},
 		}
 
 		for _, accountChain := range accountChainTable {
@@ -127,7 +198,7 @@ var _ = Describe("Multichain", func() {
 					fmt.Printf("random recipient = %v\n", recipientAddr)
 
 					// Initialise the account chain's client.
-					accountClient := accountChain.initialise()
+					accountClient := accountChain.initialise(accountChain.rpcURL)
 
 					// Build a transaction.
 					amount, nonce, gasLimit, gasPrice, payload := accountChain.txParams()
@@ -173,7 +244,7 @@ var _ = Describe("Multichain", func() {
 						// Loop until the transaction has at least a few confirmations.
 						tx, confs, err := accountClient.Tx(ctx, txHash)
 						if err == nil {
-							Expect(confs.Uint64()).To(Equal(uint64(1)))
+							Expect(confs.Uint64()).To(BeNumerically(">", 0))
 							Expect(tx.Value()).To(Equal(amount))
 							Expect(tx.From()).To(Equal(senderAddr))
 							Expect(tx.To()).To(Equal(recipientAddr))
@@ -394,3 +465,20 @@ var _ = Describe("Multichain", func() {
 		}
 	})
 })
+
+func fetchAuthToken() pack.String {
+	// fetch the auth token from filecoin's running docker container
+	cmd := exec.Command("docker", "exec", "infra_filecoin_1", "/bin/bash", "-c", "/app/lotus auth api-info --perm admin")
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		panic(fmt.Sprintf("could not run command: %v", err))
+	}
+	tokenWithSuffix := strings.TrimPrefix(out.String(), "FULLNODE_API_INFO=")
+	authToken := strings.Split(tokenWithSuffix, ":/")
+	return pack.NewString(fmt.Sprintf("Bearer %s", authToken[0]))
+}

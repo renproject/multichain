@@ -48,15 +48,15 @@ func DefaultClientOptions() ClientOptions {
 
 // WithRPCURL returns a modified version of the options with the given API
 // rpc-url
-func (opts ClientOptions) WithRPCURL(rpcURL string) ClientOptions {
-	opts.RPCURL = rpcURL
+func (opts ClientOptions) WithRPCURL(rpcURL pack.String) ClientOptions {
+	opts.RPCURL = string(rpcURL)
 	return opts
 }
 
 // WithAuthToken returns a modified version of the options with the given
 // authentication token.
-func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
-	opts.AuthToken = authToken
+func (opts ClientOptions) WithAuthToken(authToken pack.String) ClientOptions {
+	opts.AuthToken = string(authToken)
 	return opts
 }
 
