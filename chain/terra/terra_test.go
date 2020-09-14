@@ -6,10 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
-	"github.com/renproject/multichain/chain/cosmos"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
@@ -50,7 +49,9 @@ var _ = Describe("Terra", func() {
 
 				// random recipient
 				pkRecipient := secp256k1.GenPrivKey()
-				recipient := types.AccAddress(pkRecipient.PubKey().Address())
+				addrEncoder := terra.NewAddressEncoder("terra")
+				recipient, err := addrEncoder.EncodeAddress(address.RawAddress(pack.Bytes(pkRecipient.PubKey().Address())))
+				Expect(err).NotTo(HaveOccurred())
 
 				// instantiate a new client
 				client := terra.NewClient(terra.DefaultClientOptions())
@@ -67,7 +68,7 @@ var _ = Describe("Terra", func() {
 				payload := pack.NewBytes([]byte("multichain"))
 				tx, err := txBuilder.BuildTx(
 					multichain.Address(addr.String()),      // from
-					multichain.Address(recipient.String()), // to
+					recipient,                              // to
 					pack.NewU256FromU64(pack.U64(2000000)), // amount
 					pack.NewU256FromU64(0),                 // nonce
 					pack.NewU256FromU64(pack.U64(300000)),  // gas

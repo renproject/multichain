@@ -10,7 +10,6 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
@@ -48,17 +47,17 @@ var _ = Describe("Multichain", func() {
 
 	Context("Account API", func() {
 		accountChainTable := []struct {
-			senderEnv           func() (id.PrivKey, *id.PubKey, pack.String)
-			privKeyToAddr       func(pk id.PrivKey) pack.String
+			senderEnv           func() (id.PrivKey, *id.PubKey, multichain.Address)
+			privKeyToAddr       func(pk id.PrivKey) multichain.Address
 			rpcURL              pack.String
-			randomRecipientAddr func() pack.String
+			randomRecipientAddr func() multichain.Address
 			initialise          func() multichain.AccountClient
 			txBuilder           multichain.AccountTxBuilder
 			txParams            func() (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
 			{
-				func() (id.PrivKey, *id.PubKey, pack.String) {
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
 					pkEnv := os.Getenv("TERRA_PK")
 					if pkEnv == "" {
 						panic("TERRA_PK is undefined")
@@ -67,25 +66,31 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					var pk secp256k1.PrivKeySecp256k1
 					copy(pk[:], pkBytes)
-					senderAddr := terra.Address(pk.PubKey().Address())
+					addrEncoder := terra.NewAddressEncoder("terra")
+					senderAddr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
+					Expect(err).NotTo(HaveOccurred())
 					senderPrivKey := id.PrivKey{}
 					err = surge.FromBinary(&senderPrivKey, pkBytes)
 					Expect(err).NotTo(HaveOccurred())
-					return senderPrivKey, senderPrivKey.PubKey(), pack.NewString(senderAddr.String())
+					return senderPrivKey, senderPrivKey.PubKey(), senderAddr
 				},
-				func(privKey id.PrivKey) pack.String {
+				func(privKey id.PrivKey) multichain.Address {
 					pkBytes, err := surge.ToBinary(privKey)
 					Expect(err).NotTo(HaveOccurred())
 					var pk secp256k1.PrivKeySecp256k1
 					copy(pk[:], pkBytes)
-					addr := terra.Address(pk.PubKey().Address())
-					return pack.NewString(addr.String())
+					addrEncoder := terra.NewAddressEncoder("terra")
+					addr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
+					Expect(err).NotTo(HaveOccurred())
+					return addr
 				},
 				"http://127.0.0.1:26657",
-				func() pack.String {
+				func() multichain.Address {
 					recipientKey := secp256k1.GenPrivKey()
-					recipient := types.AccAddress(recipientKey.PubKey().Address())
-					return pack.NewString(recipient.String())
+					addrEncoder := terra.NewAddressEncoder("terra")
+					recipient, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(recipientKey.PubKey().Address())))
+					Expect(err).NotTo(HaveOccurred())
+					return recipient
 				},
 				func() multichain.AccountClient {
 					client := terra.NewClient(terra.DefaultClientOptions())
@@ -115,9 +120,11 @@ var _ = Describe("Multichain", func() {
 				Specify("build, broadcast and fetch tx", func() {
 					// Load private key and the associated address.
 					senderPrivKey, senderPubKey, senderAddr := accountChain.senderEnv()
+					fmt.Printf("sender address   = %v\n", senderAddr)
 
 					// Get a random recipient address.
 					recipientAddr := accountChain.randomRecipientAddr()
+					fmt.Printf("random recipient = %v\n", recipientAddr)
 
 					// Initialise the account chain's client.
 					accountClient := accountChain.initialise()
@@ -126,7 +133,7 @@ var _ = Describe("Multichain", func() {
 					amount, nonce, gasLimit, gasPrice, payload := accountChain.txParams()
 					accountTx, err := accountChain.txBuilder.BuildTx(
 						multichain.Address(senderAddr),
-						multichain.Address(recipientAddr),
+						recipientAddr,
 						amount, nonce, gasLimit, gasPrice,
 						payload,
 					)
@@ -149,9 +156,13 @@ var _ = Describe("Multichain", func() {
 						pack.NewBytes(senderPubKeyBytes),
 					)
 					Expect(err).NotTo(HaveOccurred())
+					ser, err := accountTx.Serialize()
+					Expect(err).NotTo(HaveOccurred())
+					fmt.Printf("tx serialised = %v\n", ser)
 
 					// Submit the transaction to the account chain.
 					txHash := accountTx.Hash()
+					fmt.Printf("tx hash = %v\n", txHash)
 					err = accountClient.SubmitTx(ctx, accountTx)
 					Expect(err).NotTo(HaveOccurred())
 
