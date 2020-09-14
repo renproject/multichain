@@ -10,8 +10,8 @@ type (
 )
 
 var (
-	NewTxBuilder         = bitcoin.NewTxBuilder
-	NewClient            = bitcoin.NewClient
+	NewTxBuilder = bitcoin.NewTxBuilder
+	NewClient    = bitcoin.NewClient
 )
 
 // DefaultClientOptions returns ClientOptions with the default settings. These

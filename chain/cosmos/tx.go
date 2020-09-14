@@ -13,6 +13,7 @@ import (
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
@@ -262,11 +263,12 @@ func (tx StdTx) Hash() pack.Bytes {
 
 // Sighashes that need to be signed before this transaction can be submitted.
 func (tx StdTx) Sighashes() ([]pack.Bytes32, error) {
-	if len(tx.signMsg.Bytes()) != 32 {
+	sighashBytes := crypto.Sha256(tx.signMsg.Bytes())
+	if len(sighashBytes) != 32 {
 		return nil, fmt.Errorf("expected 32 bytes, got %v bytes", len(tx.signMsg.Bytes()))
 	}
 	sighash := pack.Bytes32{}
-	copy(sighash[:], tx.signMsg.Bytes())
+	copy(sighash[:], sighashBytes)
 	return []pack.Bytes32{sighash}, nil
 }
 

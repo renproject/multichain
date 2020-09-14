@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/terra-project/core/app"
 
@@ -44,6 +46,10 @@ var _ = Describe("Terra", func() {
 
 				var pk secp256k1.PrivKeySecp256k1
 				copy(pk[:], pkBz)
+
+				var privKey id.PrivKey
+				err = surge.FromBinary(&privKey, pkBz)
+				Expect(err).NotTo(HaveOccurred())
 
 				addr := terra.Address(pk.PubKey().Address())
 
@@ -82,7 +88,11 @@ var _ = Describe("Terra", func() {
 				// get the transaction bytes and sign it
 				sighashes, err := tx.Sighashes()
 				Expect(err).NotTo(HaveOccurred())
-				sigBytes, err := pk.Sign(sighashes[0][:])
+				Expect(len(sighashes)).To(Equal(1))
+				hash := id.Hash(sighashes[0])
+				sig, err := privKey.Sign(&hash)
+				Expect(err).NotTo(HaveOccurred())
+				sigBytes, err := surge.ToBinary(sig)
 				Expect(err).NotTo(HaveOccurred())
 				sig65 := pack.Bytes65{}
 				copy(sig65[:], sigBytes)
