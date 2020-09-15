@@ -11,6 +11,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 WORKDIR /app
 
 RUN git clone https://github.com/filecoin-project/lotus .
+RUN git checkout 232cc320bd6de432b54008cb37619d45e8869df0
 RUN make 2k
 RUN ./lotus fetch-params 2048
 RUN ./lotus-seed pre-seal --sector-size 2KiB --num-sectors 2
