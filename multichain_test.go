@@ -24,7 +24,7 @@ import (
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
-	"github.com/renproject/multichain/chain/digibyte"
+	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
 	"github.com/renproject/multichain/chain/terra"
@@ -488,26 +488,26 @@ var _ = Describe("Multichain", func() {
 				bitcoincash.NewTxBuilder(&chaincfg.RegressionNetParams),
 				multichain.BitcoinCash,
 			},
-			{
-				"DIGIBYTE_PK",
-				func(pkh []byte) (btcutil.Address, error) {
-					addr, err := btcutil.NewAddressPubKeyHash(pkh, &digibyte.RegressionNetParams)
-					return addr, err
-				},
-				func(script []byte) (btcutil.Address, error) {
-					addr, err := btcutil.NewAddressScriptHash(script, &digibyte.RegressionNetParams)
-					return addr, err
-				},
-				pack.NewString("http://0.0.0.0:20443"),
-				func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
-					client := digibyte.NewClient(digibyte.DefaultClientOptions())
-					outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
-					Expect(err).NotTo(HaveOccurred())
-					return client, outputs, client.Confirmations
-				},
-				digibyte.NewTxBuilder(&digibyte.RegressionNetParams),
-				multichain.DigiByte,
-			},
+			// {
+			// 	"DIGIBYTE_PK",
+			// 	func(pkh []byte) (btcutil.Address, error) {
+			// 		addr, err := btcutil.NewAddressPubKeyHash(pkh, &digibyte.RegressionNetParams)
+			// 		return addr, err
+			// 	},
+			// 	func(script []byte) (btcutil.Address, error) {
+			// 		addr, err := btcutil.NewAddressScriptHash(script, &digibyte.RegressionNetParams)
+			// 		return addr, err
+			// 	},
+			// 	pack.NewString("http://0.0.0.0:20443"),
+			// 	func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
+			// 		client := digibyte.NewClient(digibyte.DefaultClientOptions())
+			// 		outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
+			// 		Expect(err).NotTo(HaveOccurred())
+			// 		return client, outputs, client.Confirmations
+			// 	},
+			// 	digibyte.NewTxBuilder(&digibyte.RegressionNetParams),
+			// 	multichain.DigiByte,
+			// },
 			{
 				"DOGECOIN_PK",
 				func(pkh []byte) (btcutil.Address, error) {
