@@ -30,7 +30,7 @@ type AddressEncodeDecoder struct {
 // NewAddressEncodeDecoder creates a new address encoder-decoder
 func NewAddressEncodeDecoder(hrp string) AddressEncodeDecoder {
 	return AddressEncodeDecoder{
-		AddressEncoder: AddressEncoder{},
+		AddressEncoder: NewAddressEncoder(hrp),
 		AddressDecoder: NewAddressDecoder(hrp),
 	}
 }

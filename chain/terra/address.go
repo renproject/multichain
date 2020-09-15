@@ -23,6 +23,6 @@ var (
 	// NewAddressEncoder re-exports cosmos.NewAddressEncoder
 	NewAddressEncoder = cosmos.NewAddressEncoder
 
-	// NewAddressEnodeDecoder re-exports cosmos.NewAddressEnodeDecoder
-	NewAddressEnodeDecoder = cosmos.NewAddressEncodeDecoder
+	// NewAddressEncodeDecoder re-exports cosmos.NewAddressEnodeDecoder
+	NewAddressEncodeDecoder = cosmos.NewAddressEncodeDecoder
 )
