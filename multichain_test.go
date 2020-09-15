@@ -16,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcutil/base58"
 	cosmossdk "github.com/cosmos/cosmos-sdk/types"
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
@@ -58,6 +59,8 @@ var _ = Describe("Multichain", func() {
 			newEncodeDecoder func() multichain.AddressEncodeDecoder
 			newAddress       func() multichain.Address
 			newRawAddress    func() multichain.RawAddress
+			newSHAddress     func() multichain.Address
+			newSHRawAddress  func() multichain.RawAddress
 		}{
 			{
 				multichain.Bitcoin,
@@ -66,20 +69,52 @@ var _ = Describe("Multichain", func() {
 					return addrEncodeDecoder
 				},
 				func() multichain.Address {
+					// Generate a random SECP256K1 private key.
 					pk := id.NewPrivKey()
+					// Get bitcoin WIF private key with the pub key configured to be in
+					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
-					addrPubKey, err := btcutil.NewAddressPubKey(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
+					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
-					return multichain.Address(addrPubKey.EncodeAddress())
+					// Return the human-readable encoded bitcoin address in base58 format.
+					return multichain.Address(addrPubKeyHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
+					// Generate a random SECP256K1 private key.
 					pk := id.NewPrivKey()
+					// Get bitcoin WIF private key with the pub key configured to be in
+					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
-					addrPubKey, err := btcutil.NewAddressPubKey(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
+					// Get the address pubKey hash. This is the most commonly used format
+					// for a bitcoin address.
+					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
-					return multichain.RawAddress(addrPubKey.ScriptAddress())
+					// Encode into the checksummed base58 format.
+					encoded := addrPubKeyHash.EncodeAddress()
+					return multichain.RawAddress(pack.Bytes(base58.Decode(encoded)))
+				},
+				func() multichain.Address {
+					// Random bytes of script.
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					// Create address script hash from the random script bytes.
+					addrScriptHash, err := btcutil.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Return in human-readable encoded form.
+					return multichain.Address(addrScriptHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					// Random bytes of script.
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					// Create address script hash from the random script bytes.
+					addrScriptHash, err := btcutil.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Encode to the checksummed base58 format.
+					encoded := addrScriptHash.EncodeAddress()
+					return multichain.RawAddress(pack.Bytes(base58.Decode(encoded)))
 				},
 			},
 			{
@@ -100,6 +135,12 @@ var _ = Describe("Multichain", func() {
 					formattedRawAddr := append([]byte{byte(filaddress.SECP256K1)}, rawAddr[:]...)
 					return multichain.RawAddress(pack.NewBytes(formattedRawAddr[:]))
 				},
+				func() multichain.Address {
+					return multichain.Address("")
+				},
+				func() multichain.RawAddress {
+					return multichain.RawAddress([]byte{})
+				},
 			},
 			{
 				multichain.Terra,
@@ -116,6 +157,12 @@ var _ = Describe("Multichain", func() {
 					pk := secp256k1.GenPrivKey()
 					rawAddr := pk.PubKey().Address()
 					return multichain.RawAddress(pack.Bytes(rawAddr))
+				},
+				func() multichain.Address {
+					return multichain.Address("")
+				},
+				func() multichain.RawAddress {
+					return multichain.RawAddress([]byte{})
 				},
 			},
 		}
@@ -142,6 +189,26 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(encodedAddr).To(Equal(addr))
 				})
+
+				if chain.chain.IsUTXOBased() {
+					It("should encoded a raw script address correctly", func() {
+						rawScriptAddr := chain.newSHRawAddress()
+						encodedAddr, err := encodeDecoder.EncodeAddress(rawScriptAddr)
+						Expect(err).NotTo(HaveOccurred())
+						decodedRawAddr, err := encodeDecoder.DecodeAddress(encodedAddr)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(decodedRawAddr).To(Equal(rawScriptAddr))
+					})
+
+					It("should decode a script address correctly", func() {
+						scriptAddr := chain.newSHAddress()
+						decodedRawAddr, err := encodeDecoder.DecodeAddress(scriptAddr)
+						Expect(err).NotTo(HaveOccurred())
+						encodedAddr, err := encodeDecoder.EncodeAddress(decodedRawAddr)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(encodedAddr).To(Equal(scriptAddr))
+					})
+				}
 			})
 		}
 	})
