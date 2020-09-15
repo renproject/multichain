@@ -58,10 +58,10 @@ func NewAddressDecoder(params *chaincfg.Params) AddressDecoder {
 }
 
 // DecodeAddress implements the address.Decoder interface
-func (decoder AddressDecoder) DecodeAddress(addr address.Address) (pack.Bytes, error) {
+func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
 	if _, err := btcutil.DecodeAddress(string(addr), decoder.params); err != nil {
 		// Check that the address is valid.
 		return nil, err
 	}
-	return pack.NewBytes(base58.Decode(string(addr))), nil
+	return address.RawAddress(pack.NewBytes(base58.Decode(string(addr)))), nil
 }

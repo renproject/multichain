@@ -6,14 +6,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
+	cosmossdk "github.com/cosmos/cosmos-sdk/types"
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
@@ -50,9 +53,97 @@ var _ = Describe("Multichain", func() {
 	// ADDRESS API
 	//
 	Context("Address API", func() {
-		It("should pass", func() {
-			Fail("not implemented")
-		})
+		chainTable := []struct {
+			chain            multichain.Chain
+			newEncodeDecoder func() multichain.AddressEncodeDecoder
+			newAddress       func() multichain.Address
+			newRawAddress    func() multichain.RawAddress
+		}{
+			{
+				multichain.Bitcoin,
+				func() multichain.AddressEncodeDecoder {
+					addrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
+					return addrEncodeDecoder
+				},
+				func() multichain.Address {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKey, err := btcutil.NewAddressPubKey(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addrPubKey.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKey, err := btcutil.NewAddressPubKey(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.RawAddress(addrPubKey.ScriptAddress())
+				},
+			},
+			{
+				multichain.Filecoin,
+				func() multichain.AddressEncodeDecoder {
+					return filecoin.NewAddressEncodeDecoder()
+				},
+				func() multichain.Address {
+					pubKey := make([]byte, 64)
+					rand.Read(pubKey)
+					addr, err := filaddress.NewSecp256k1Address(pubKey)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addr.String())
+				},
+				func() multichain.RawAddress {
+					rawAddr := make([]byte, 20)
+					rand.Read(rawAddr)
+					formattedRawAddr := append([]byte{byte(filaddress.SECP256K1)}, rawAddr[:]...)
+					return multichain.RawAddress(pack.NewBytes(formattedRawAddr[:]))
+				},
+			},
+			{
+				multichain.Terra,
+				func() multichain.AddressEncodeDecoder {
+					return terra.NewAddressEncodeDecoder("terra")
+				},
+				func() multichain.Address {
+					pk := secp256k1.GenPrivKey()
+					cosmossdk.GetConfig().SetBech32PrefixForAccount("terra", "terrapub")
+					addr := cosmossdk.AccAddress(pk.PubKey().Address())
+					return multichain.Address(addr.String())
+				},
+				func() multichain.RawAddress {
+					pk := secp256k1.GenPrivKey()
+					rawAddr := pk.PubKey().Address()
+					return multichain.RawAddress(pack.Bytes(rawAddr))
+				},
+			},
+		}
+
+		for _, chain := range chainTable {
+			chain := chain
+			Context(fmt.Sprintf("%v", chain.chain), func() {
+				encodeDecoder := chain.newEncodeDecoder()
+
+				It("should encode a raw address correctly", func() {
+					rawAddr := chain.newRawAddress()
+					encodedAddr, err := encodeDecoder.EncodeAddress(rawAddr)
+					Expect(err).NotTo(HaveOccurred())
+					decodedRawAddr, err := encodeDecoder.DecodeAddress(encodedAddr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(decodedRawAddr).To(Equal(rawAddr))
+				})
+
+				It("should decode an address correctly", func() {
+					addr := chain.newAddress()
+					decodedRawAddr, err := encodeDecoder.DecodeAddress(addr)
+					Expect(err).NotTo(HaveOccurred())
+					encodedAddr, err := encodeDecoder.EncodeAddress(decodedRawAddr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(encodedAddr).To(Equal(addr))
+				})
+			})
+		}
 	})
 
 	//
