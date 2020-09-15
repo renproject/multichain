@@ -163,8 +163,14 @@ func (client *Client) Account(ctx context.Context, addr filaddress.Address) (Acc
 		return Account{}, fmt.Errorf("searching state for addr: %v", addr)
 	}
 
+	balanceBytes, err := actor.Balance.Bytes()
+	if err != nil {
+		return Account{}, fmt.Errorf("extracting balance bytes: %v", err)
+	}
+	balance := big.NewInt(0).SetBytes(balanceBytes)
+
 	return Account{
-		Balance: pack.NewU256FromInt(big.NewInt(actor.Balance.Int64())),
+		Balance: pack.NewU256FromInt(balance),
 		Nonce:   pack.NewU64(actor.Nonce),
 	}, nil
 }
