@@ -22,12 +22,17 @@ jobs:
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
 
       - name: Install dependency packages
-        run:
-          sudo apt-get install mesa-opencl-icd ocl-icd-opencl-dev
+        run: |
+          apt-get update
+          apt-get install -y build-essential
+          apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
 
       - name: Get dependencies
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
             go get -u github.com/onsi/ginkgo/ginkgo
             go get -u github.com/onsi/gomega/...
             go get -u golang.org/x/lint/golint
@@ -36,6 +41,7 @@ jobs:
 
       - name: Run vetting
         run: |
+            source $HOME/.cargo/env
             cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
             make
             cd $GITHUB_WORKSPACE
@@ -50,26 +56,20 @@ jobs:
             golint ./...
 
       - name: Run multichain infrastructure (bitcoin)
-        run: docker run -d -p 18443:18443 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_bitcoin
+        run: docker run -d -p 18443:18443 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_bitcoin
       - name: Run multichain infrastructure (bitcoincash)
-        run: docker run -d -p 19443:19443 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_bitcoincash
-      - name: Run multichain infrastructure (digibyte)
-        run: docker run -d -p 20443:20443 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_digibyte
+        run: docker run -d -p 19443:19443 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_bitcoincash
+      # Skip DigiByte.
+      # - name: Run multichain infrastructure (digibyte)
+      #   run: docker run -d -p 20443:20443 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_digibyte
       - name: Run multichain infrastructure (dogecoin)
-        run: docker run -d -p 18332:18332 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_dogecoin
+        run: docker run -d -p 18332:18332 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_dogecoin
       - name: Run multichain infrastructure (filecoin)
-        run: docker run -d -p 1234:1234 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env --name infra_filecoin_1 rohitnarurkar/multichain_filecoin
+        run: docker run -d -p 1234:1234 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env --name infra_filecoin_1 rohitnarurkar/multichain_filecoin
       - name: Run multichain infrastructure (terra)
-        run: docker run -d -p 26657:26657 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_terra
+        run: docker run -d -p 26657:26657 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_terra
       - name: Run multichain infrastructure (zcash)
-        run: docker run -d -p 18232:18232 -h 0.0.0.0 \
-          --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_zcash
+        run: docker run -d -p 18232:18232 -h 0.0.0.0 --env-file $GITHUB_WORKSPACE/infra/.ci-env rohitnarurkar/multichain_zcash
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
@@ -90,7 +90,6 @@ jobs:
             covermerge              \
               chain/bitcoin.out     \
               chain/bitcoincash.out \
-              chain/digibyte.out    \
               chain/dogecoin.out    \
               chain/ethereum.out    \
               chain/filecoin.out    \
