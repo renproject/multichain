@@ -3,8 +3,10 @@ package filecoin
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 
+	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
 	"github.com/filecoin-project/lotus/api"
 	filclient "github.com/filecoin-project/lotus/api/client"
@@ -145,4 +147,24 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	default:
 		return fmt.Errorf("expected type %T, got type %T", new(Tx), tx)
 	}
+}
+
+// Account contains necessary info for sdk.Account
+type Account struct {
+	Balance pack.U256
+	Nonce   pack.U64
+}
+
+// Account query account with address. This method is not a part of the
+// multichain.AccountClient API, but will be used in the test infrastructure.
+func (client *Client) Account(ctx context.Context, addr filaddress.Address) (Account, error) {
+	actor, err := client.node.StateGetActor(ctx, addr, types.NewTipSetKey(cid.Undef))
+	if err != nil {
+		return Account{}, fmt.Errorf("searching state for addr: %v", addr)
+	}
+
+	return Account{
+		Balance: pack.NewU256FromInt(big.NewInt(actor.Balance.Int64())),
+		Nonce:   pack.NewU64(actor.Nonce),
+	}, nil
 }

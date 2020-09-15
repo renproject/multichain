@@ -66,7 +66,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) account.Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -117,4 +117,29 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	}
 
 	return nil
+}
+
+// Account contains necessary info for sdk.Account
+type Account struct {
+	Address        Address  `json:"address"`
+	AccountNumber  pack.U64 `json:"account_number"`
+	SequenceNumber pack.U64 `json:"sequence_number"`
+	Coins          Coins    `json:"coins"`
+}
+
+// Account query account with address. This method is not a part of the
+// multichain.AccountClient API, but will be used in the test infrastructure.
+func (client *Client) Account(addr Address) (Account, error) {
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(addr.AccAddress())
+	if err != nil {
+		return Account{}, err
+	}
+
+	return Account{
+		Address:        addr,
+		AccountNumber:  pack.U64(acc.GetAccountNumber()),
+		SequenceNumber: pack.U64(acc.GetSequence()),
+		Coins:          parseCoins(acc.GetCoins()),
+	}, nil
 }
