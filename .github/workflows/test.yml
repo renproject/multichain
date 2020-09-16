@@ -110,14 +110,4 @@ jobs:
             export PATH=$PATH:$(go env GOPATH)/bin
             source ./infra/.env
             cd $GITHUB_WORKSPACE
-            CI=true ginkgo --v --race --cover --coverprofile coverprofile.out ./...
-            covermerge              \
-              chain/bitcoin.out     \
-              chain/bitcoincash.out \
-              chain/dogecoin.out    \
-              chain/ethereum.out    \
-              chain/filecoin.out    \
-              chain/terra.out       \
-              chain/zcash.out       \
-              coverprofile.out > coverprofile.out
-              goveralls -coverprofile=coverprofile.out -service=github
+            CI=true go test
