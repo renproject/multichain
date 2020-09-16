@@ -8,6 +8,9 @@ func init() {
 	if err := chaincfg.Register(&MainNetParams); err != nil {
 		panic(err)
 	}
+	if err := chaincfg.Register(&TestNetParams); err != nil {
+		panic(err)
+	}
 	if err := chaincfg.Register(&RegressionNetParams); err != nil {
 		panic(err)
 	}
