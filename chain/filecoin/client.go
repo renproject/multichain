@@ -102,6 +102,9 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	if messageLookup == nil {
 		return nil, pack.NewU64(0), fmt.Errorf("searching state for txid %v: not found", msgID)
 	}
+	if messageLookup.Receipt.ExitCode.IsError() {
+		return nil, pack.NewU64(0), fmt.Errorf("transaction execution error: %v", messageLookup.Receipt.ExitCode.String())
+	}
 
 	// get the most recent tipset and its height
 	headTipset, err := client.node.ChainHead(ctx)
