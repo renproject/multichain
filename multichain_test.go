@@ -165,6 +165,49 @@ var _ = Describe("Multichain", func() {
 					return multichain.RawAddress([]byte{})
 				},
 			},
+			{
+				multichain.BitcoinCash,
+				func() multichain.AddressEncodeDecoder {
+					addrEncodeDecoder := bitcoincash.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
+					return addrEncodeDecoder
+				},
+				func() multichain.Address {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addrPubKeyHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+
+					addrBytes := addrPubKeyHash.ScriptAddress()
+					addrBytes = append([]byte{0x00}, addrBytes...)
+					return multichain.RawAddress(pack.Bytes(addrBytes))
+				},
+				func() multichain.Address {
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addrScriptHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+
+					addrBytes := addrScriptHash.ScriptAddress()
+					addrBytes = append([]byte{8}, addrBytes...)
+					return multichain.RawAddress(pack.Bytes(addrBytes))
+				},
+			},
 		}
 
 		for _, chain := range chainTable {
