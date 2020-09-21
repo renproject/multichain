@@ -4,12 +4,111 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/pack"
 	"golang.org/x/crypto/ripemd160"
 )
+
+type AddressEncodeDecoder struct {
+	AddressEncoder
+	AddressDecoder
+}
+
+type AddressEncoder struct {
+	params *Params
+}
+
+type AddressDecoder struct {
+	params *Params
+}
+
+func NewAddressEncoder(params *Params) AddressEncoder {
+	return AddressEncoder{params: params}
+}
+
+func NewAddressDecoder(params *Params) AddressDecoder {
+	return AddressDecoder{params: params}
+}
+
+func NewAddressEncodeDecoder(params *Params) AddressEncodeDecoder {
+	return AddressEncodeDecoder{
+		AddressEncoder: NewAddressEncoder(params),
+		AddressDecoder: NewAddressDecoder(params),
+	}
+}
+
+func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	if len(rawAddr) != 26 && len(rawAddr) != 25 {
+		return address.Address(""), fmt.Errorf("address of unknown length")
+	}
+
+	var addrType uint8
+	var err error
+	var hash [20]byte
+	var prefix []byte
+	if len(rawAddr) == 26 {
+		prefix = rawAddr[:2]
+		addrType, _, err = parsePrefix(prefix)
+		copy(hash[:], rawAddr[2:22])
+	} else {
+		prefix = rawAddr[:1]
+		addrType, _, err = parsePrefix(prefix)
+		copy(hash[:], rawAddr[1:21])
+	}
+	if err != nil {
+		return address.Address(""), fmt.Errorf("parsing prefix: %v", err)
+	}
+
+	switch addrType {
+	case 0, 1: // P2PKH or P2SH
+		return address.Address(pack.String(encodeAddress(hash[:], prefix))), nil
+	default:
+		return address.Address(""), errors.New("unknown address")
+	}
+}
+
+func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
+	var decoded = base58.Decode(string(addr))
+	if len(decoded) != 26 && len(decoded) != 25 {
+		return nil, base58.ErrInvalidFormat
+	}
+
+	var cksum [4]byte
+	copy(cksum[:], decoded[len(decoded)-4:])
+	if checksum(decoded[:len(decoded)-4]) != cksum {
+		return nil, base58.ErrChecksum
+	}
+
+	if len(decoded)-6 != ripemd160.Size && len(decoded)-5 != ripemd160.Size {
+		return nil, errors.New("incorrect payload len")
+	}
+
+	var addrType uint8
+	var err error
+	var hash [20]byte
+	if len(decoded) == 26 {
+		addrType, _, err = parsePrefix(decoded[:2])
+		copy(hash[:], decoded[2:22])
+	} else {
+		addrType, _, err = parsePrefix(decoded[:1])
+		copy(hash[:], decoded[1:21])
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	switch addrType {
+	case 0, 1: // P2PKH or P2SH
+		return address.RawAddress(pack.Bytes(decoded)), nil
+	default:
+		return nil, errors.New("unknown address")
+	}
+}
 
 // An Address represents a Zcash address.
 type Address interface {
@@ -122,9 +221,9 @@ func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }
 
-// DecodeAddress decodes a string-representation of an address to an address
+// decodeAddress decodes a string-representation of an address to an address
 // type that implements the zcash.Address interface
-func DecodeAddress(addr string) (Address, error) {
+func decodeAddress(addr string) (Address, error) {
 	var decoded = base58.Decode(addr)
 	if len(decoded) != 26 && len(decoded) != 25 {
 		return nil, base58.ErrInvalidFormat
