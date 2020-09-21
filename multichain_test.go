@@ -208,6 +208,43 @@ var _ = Describe("Multichain", func() {
 					return multichain.RawAddress(pack.Bytes(addrBytes))
 				},
 			},
+			{
+				multichain.Zcash,
+				func() multichain.AddressEncodeDecoder {
+					addrEncodeDecoder := zcash.NewAddressEncodeDecoder(&zcash.RegressionNetParams)
+					return addrEncodeDecoder
+				},
+				func() multichain.Address {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), zcash.RegressionNetParams.Params, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &zcash.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addrPubKeyHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), zcash.RegressionNetParams.Params, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &zcash.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.RawAddress(pack.Bytes(base58.Decode(addrPubKeyHash.EncodeAddress())))
+				},
+				func() multichain.Address {
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					addrScriptHash, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addrScriptHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					addrScriptHash, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.RawAddress(pack.Bytes(base58.Decode(addrScriptHash.EncodeAddress())))
+				},
+			},
 		}
 
 		for _, chain := range chainTable {

@@ -78,7 +78,7 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 
 	// Outputs
 	for _, recipient := range recipients {
-		addr, err := DecodeAddress(string(recipient.To))
+		addr, err := decodeAddress(string(recipient.To))
 		if err != nil {
 			return &Tx{}, err
 		}
