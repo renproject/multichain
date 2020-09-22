@@ -434,11 +434,11 @@ var _ = Describe("Multichain", func() {
 
 					return client, pack.NewU256FromU64(accountInfo.Nonce)
 				},
-				filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(149514))),
+				filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(186893))),
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.NewU64(100000000))
-					gasLimit := pack.NewU256FromU64(pack.NewU64(495335))
-					gasPrice := pack.NewU256FromU64(pack.NewU64(149838))
+					gasLimit := pack.NewU256FromU64(pack.NewU64(2189560))
+					gasPrice := pack.NewU256FromU64(pack.NewU64(186893))
 					payload := pack.Bytes(nil)
 					return amount, gasLimit, gasPrice, payload
 				},
@@ -493,6 +493,7 @@ var _ = Describe("Multichain", func() {
 					txHash := accountTx.Hash()
 					err = accountClient.SubmitTx(ctx, accountTx)
 					Expect(err).NotTo(HaveOccurred())
+					logger.Debug("submit tx", zap.String("from", string(senderAddr)), zap.String("to", string(recipientAddr)), zap.Any("txHash", txHash))
 
 					// Wait slightly before we query the chain's node.
 					time.Sleep(time.Second)
