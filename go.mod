@@ -19,7 +19,7 @@ require (
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/renproject/id v0.4.2
-	github.com/renproject/pack v0.2.3
+	github.com/renproject/pack v0.2.5
 	github.com/renproject/surge v1.2.6
 	github.com/tendermint/tendermint v0.33.8
 	github.com/terra-project/core v0.4.0-rc.4
