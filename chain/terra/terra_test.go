@@ -55,6 +55,9 @@ var _ = Describe("Terra", func() {
 
 				// instantiate a new client
 				client := terra.NewClient(terra.DefaultClientOptions())
+				accountInfo, err := client.AccountInfo(ctx, multichain.Address(addr.String()))
+				Expect(err).NotTo(HaveOccurred())
+				nonce := accountInfo.Nonce()
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
@@ -66,14 +69,15 @@ var _ = Describe("Terra", func() {
 
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
+				amount := pack.NewU256FromU64(pack.U64(2000000))
 				tx, err := txBuilder.BuildTx(
-					multichain.Address(addr.String()),      // from
-					recipient,                              // to
-					pack.NewU256FromU64(pack.U64(2000000)), // amount
-					pack.NewU256FromU64(0),                 // nonce
-					pack.NewU256FromU64(pack.U64(300000)),  // gas
-					pack.NewU256FromU64(pack.U64(300)),     // fee
-					payload,                                // memo
+					multichain.Address(addr.String()),     // from
+					recipient,                             // to
+					amount,                                // amount
+					nonce,                                 // nonce
+					pack.NewU256FromU64(pack.U64(300000)), // gas
+					pack.NewU256FromU64(pack.U64(300)),    // fee
+					payload,                               // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -112,6 +116,10 @@ var _ = Describe("Terra", func() {
 					if err == nil {
 						Expect(confs.Uint64()).To(Equal(uint64(1)))
 						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
+						Expect(foundTx.Nonce()).To(Equal(nonce))
+						Expect(foundTx.From()).To(Equal(multichain.Address(addr.String())))
+						Expect(foundTx.To()).To(Equal(recipient))
+						Expect(foundTx.Value()).To(Equal(amount))
 						break
 					}
 
