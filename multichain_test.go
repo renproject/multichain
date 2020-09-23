@@ -360,8 +360,8 @@ var _ = Describe("Multichain", func() {
 				}),
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
-					gasLimit := pack.NewU256FromU64(pack.U64(300000))
-					gasPrice := pack.NewU256FromU64(pack.U64(300))
+					gasLimit := pack.NewU256FromU64(pack.U64(100000))
+					gasPrice := pack.NewU256FromU64(pack.U64(1))
 					payload := pack.NewBytes([]byte("multichain"))
 					return amount, gasLimit, gasPrice, payload
 				},

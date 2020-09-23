@@ -74,7 +74,7 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 
 	fees := Coins{Coin{
 		Denom:  builder.coinDenom,
-		Amount: pack.NewU64(gasPrice.Int().Uint64()),
+		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
 	}}
 
 	txBuilder := auth.NewTxBuilder(

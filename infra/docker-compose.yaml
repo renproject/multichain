@@ -147,3 +147,4 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+      - "${RENVM_TERRA_ADDRESS}"
