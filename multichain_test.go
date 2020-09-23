@@ -454,6 +454,7 @@ var _ = Describe("Multichain", func() {
 					// Get the appropriate nonce for sender.
 					accountInfo, err := accountClient.AccountInfo(ctx, senderAddr)
 					Expect(err).NotTo(HaveOccurred())
+					nonce := accountInfo.Nonce()
 
 					// Build a transaction.
 					amount, gasLimit, gasPrice, payload := accountChain.txParams()
@@ -461,7 +462,7 @@ var _ = Describe("Multichain", func() {
 					accountTx, err := accountChain.txBuilder.BuildTx(
 						multichain.Address(senderAddr),
 						recipientAddr,
-						amount, accountInfo.Nonce(), gasLimit, gasPrice,
+						amount, nonce, gasLimit, gasPrice,
 						payload,
 					)
 					Expect(err).NotTo(HaveOccurred())
@@ -501,6 +502,8 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.Value()).To(Equal(amount))
 							Expect(tx.From()).To(Equal(senderAddr))
 							Expect(tx.To()).To(Equal(recipientAddr))
+							Expect(tx.Nonce()).To(Equal(nonce))
+							Expect(tx.Value()).To(Equal(amount))
 							break
 						}
 
