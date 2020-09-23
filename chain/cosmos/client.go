@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 
 	cliContext "github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -121,25 +123,42 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 
 // Account contains necessary info for sdk.Account
 type Account struct {
-	Address        Address  `json:"address"`
-	AccountNumber  pack.U64 `json:"account_number"`
-	SequenceNumber pack.U64 `json:"sequence_number"`
-	Coins          Coins    `json:"coins"`
+	address        Address
+	accountNumber  pack.U64
+	sequenceNumber pack.U64
+	coins          Coins
 }
 
-// Account query account with address. This method is not a part of the
+// Nonce returns the current nonce of the account. This is the nonce to be used
+// while building a new transaction.
+func (account Account) Nonce() pack.U256 {
+	return pack.NewU256FromU64(account.sequenceNumber)
+}
+
+// Balance returns the native-token balance of the account.
+func (account Account) Balance() pack.U256 {
+	// FIXME
+	return pack.NewU256FromU64(pack.NewU64(0))
+}
+
+// AccountInfo query account with address. This method is not a part of the
 // multichain.AccountClient API, but will be used in the test infrastructure.
-func (client *Client) Account(addr Address) (Account, error) {
+func (client *Client) AccountInfo(_ context.Context, addr address.Address) (account.AccountInfo, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return nil, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
 	accGetter := auth.NewAccountRetriever(client.cliCtx)
-	acc, err := accGetter.GetAccount(addr.AccAddress())
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
 	if err != nil {
 		return Account{}, err
 	}
 
-	return Account{
-		Address:        addr,
-		AccountNumber:  pack.U64(acc.GetAccountNumber()),
-		SequenceNumber: pack.U64(acc.GetSequence()),
-		Coins:          parseCoins(acc.GetCoins()),
+	return &Account{
+		address:        Address(cosmosAddr),
+		accountNumber:  pack.U64(acc.GetAccountNumber()),
+		sequenceNumber: pack.U64(acc.GetSequence()),
+		coins:          parseCoins(acc.GetCoins()),
 	}, nil
 }

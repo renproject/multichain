@@ -14,6 +14,7 @@ import (
 	"github.com/filecoin-project/specs-actors/actors/crypto"
 	"github.com/ipfs/go-cid"
 	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 )
 
@@ -154,14 +155,30 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 
 // Account contains necessary info for sdk.Account
 type Account struct {
-	Balance pack.U256
-	Nonce   pack.U64
+	balance pack.U256
+	nonce   pack.U64
 }
 
-// Account query account with address. This method is not a part of the
+// Nonce returns the current nonce of the account. This is the nonce to be used
+// while building a new transaction.
+func (account Account) Nonce() pack.U256 {
+	return pack.NewU256FromU64(account.nonce)
+}
+
+// Balance returns the native-token balance of the account.
+func (account Account) Balance() pack.U256 {
+	return account.balance
+}
+
+// AccountInfo query account with address. This method is not a part of the
 // multichain.AccountClient API, but will be used in the test infrastructure.
-func (client *Client) Account(ctx context.Context, addr filaddress.Address) (Account, error) {
-	actor, err := client.node.StateGetActor(ctx, addr, types.NewTipSetKey(cid.Undef))
+func (client *Client) AccountInfo(ctx context.Context, addr address.Address) (account.AccountInfo, error) {
+	filAddr, err := filaddress.NewFromString(string(addr))
+	if err != nil {
+		return nil, fmt.Errorf("bad address '%v': %v", addr, err)
+	}
+
+	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
 	if err != nil {
 		return Account{}, fmt.Errorf("searching state for addr: %v", addr)
 	}
@@ -172,8 +189,8 @@ func (client *Client) Account(ctx context.Context, addr filaddress.Address) (Acc
 	}
 	balance := big.NewInt(0).SetBytes(balanceBytes)
 
-	return Account{
-		Balance: pack.NewU256FromInt(balance),
-		Nonce:   pack.NewU64(actor.Nonce),
+	return &Account{
+		balance: pack.NewU256FromInt(balance),
+		nonce:   pack.NewU64(actor.Nonce),
 	}, nil
 }
