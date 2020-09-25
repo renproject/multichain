@@ -23,7 +23,6 @@ import (
 	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
-	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
 
@@ -353,7 +352,7 @@ var _ = Describe("Multichain", func() {
 
 					return client
 				},
-				func(client multichain.AccountClient) account.TxBuilder {
+				func(client multichain.AccountClient) multichain.AccountTxBuilder {
 					return terra.NewTxBuilder(terra.TxBuilderOptions{
 						ChainID:   "testnet",
 						CoinDenom: "uluna",
