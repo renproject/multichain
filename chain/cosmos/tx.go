@@ -1,6 +1,7 @@
 package cosmos
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,40 +20,36 @@ import (
 )
 
 type txBuilder struct {
-	cdc           *codec.Codec
-	coinDenom     pack.String
-	chainID       pack.String
-	accountNumber pack.U64
+	client    *Client
+	coinDenom pack.String
+	chainID   pack.String
 }
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	Cdc           *codec.Codec `json:"cdc"`
-	AccountNumber pack.U64     `json:"account_number"`
-	ChainID       pack.String  `json:"chain_id"`
-	CoinDenom     pack.String  `json:"coin_denom"`
+	ChainID   pack.String `json:"chain_id"`
+	CoinDenom pack.String `json:"coin_denom"`
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Cosmos based transactions.
-func NewTxBuilder(options TxBuilderOptions) account.TxBuilder {
-	if options.Cdc == nil {
-		options.Cdc = simapp.MakeCodec()
+func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
+	if client.cdc == nil {
+		client.cdc = simapp.MakeCodec()
 	}
 
 	return txBuilder{
-		cdc:           options.Cdc,
-		coinDenom:     options.CoinDenom,
-		chainID:       options.ChainID,
-		accountNumber: options.AccountNumber,
+		client:    client,
+		coinDenom: options.CoinDenom,
+		chainID:   options.ChainID,
 	}
 }
 
 // BuildTx consumes a list of MsgSend to build and return a cosmos transaction.
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
-func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (account.Tx, error) {
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {
 		return nil, err
@@ -77,9 +74,14 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
 	}}
 
+	accountNumber, err := builder.client.AccountNumber(ctx, from)
+	if err != nil {
+		return nil, err
+	}
+
 	txBuilder := auth.NewTxBuilder(
-		utils.GetTxEncoder(builder.cdc),
-		builder.accountNumber.Uint64(),
+		utils.GetTxEncoder(builder.client.cdc),
+		accountNumber.Uint64(),
 		nonce.Int().Uint64(),
 		gasLimit.Int().Uint64(),
 		0,
@@ -101,7 +103,7 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 		msgs:    []MsgSend{sendMsg},
 		fee:     parseStdFee(signMsg.Fee),
 		memo:    pack.String(payload.String()),
-		cdc:     builder.cdc,
+		cdc:     builder.client.cdc,
 		signMsg: signMsg,
 	}, nil
 }

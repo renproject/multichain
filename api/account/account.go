@@ -56,7 +56,7 @@ type Tx interface {
 // information, and this should be accepted during the construction of the
 // chain-specific transaction builder.
 type TxBuilder interface {
-	BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
+	BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
 }
 
 // The AccountInfo interface defines functionality that must expose account
