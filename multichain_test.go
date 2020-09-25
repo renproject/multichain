@@ -23,8 +23,10 @@ import (
 	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
+	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
+
 	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
@@ -33,7 +35,6 @@ import (
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/terra-project/core/app"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -304,7 +305,7 @@ var _ = Describe("Multichain", func() {
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
 			initialise          func(pack.String) multichain.AccountClient
-			txBuilder           multichain.AccountTxBuilder
+			txBuilder           func(client multichain.AccountClient) multichain.AccountTxBuilder
 			txParams            func() (pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
@@ -352,12 +353,12 @@ var _ = Describe("Multichain", func() {
 
 					return client
 				},
-				terra.NewTxBuilder(terra.TxBuilderOptions{
-					AccountNumber: pack.NewU64(1),
-					ChainID:       "testnet",
-					CoinDenom:     "uluna",
-					Cdc:           app.MakeCodec(),
-				}),
+				func(client multichain.AccountClient) account.TxBuilder {
+					return terra.NewTxBuilder(terra.TxBuilderOptions{
+						ChainID:   "testnet",
+						CoinDenom: "uluna",
+					}, client.(*terra.Client))
+				},
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
 					gasLimit := pack.NewU256FromU64(pack.U64(100000))
@@ -425,7 +426,9 @@ var _ = Describe("Multichain", func() {
 
 					return client
 				},
-				filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(186893))),
+				func(client multichain.AccountClient) multichain.AccountTxBuilder {
+					return filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(186893)))
+				},
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.NewU64(100000000))
 					gasLimit := pack.NewU256FromU64(pack.NewU64(2189560))
@@ -459,7 +462,9 @@ var _ = Describe("Multichain", func() {
 					// Build a transaction.
 					amount, gasLimit, gasPrice, payload := accountChain.txParams()
 
-					accountTx, err := accountChain.txBuilder.BuildTx(
+					txBuilder := accountChain.txBuilder(accountClient)
+					accountTx, err := txBuilder.BuildTx(
+						ctx,
 						multichain.Address(senderAddr),
 						recipientAddr,
 						amount, nonce, gasLimit, gasPrice,
