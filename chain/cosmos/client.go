@@ -179,3 +179,19 @@ func (client *Client) AccountInfo(_ context.Context, addr address.Address) (acco
 		coins:          parseCoins(acc.GetCoins()),
 	}, nil
 }
+
+// AccountNumber returns the account number for a given address.
+func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return 0, err
+	}
+
+	return pack.U64(acc.GetAccountNumber()), nil
+}
