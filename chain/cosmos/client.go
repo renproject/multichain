@@ -101,21 +101,6 @@ func (client *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pa
 		return &StdTx{}, pack.NewU64(0), fmt.Errorf("parse tx failed: %v", err)
 	}
 
-	// Construct a past context (just before the transaction's height) and query
-	// the sender account to know the nonce (sequence number) with which this
-	// transaction was broadcasted.
-	senderAddr, err := types.AccAddressFromBech32(string(stdTx.From()))
-	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("bad address '%v': %v", stdTx.From(), err)
-	}
-	pastContext := client.cliCtx.WithHeight(res.Height - 1)
-	accGetter := auth.NewAccountRetriever(pastContext)
-	acc, err := accGetter.GetAccount(senderAddr)
-	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("account query failed: %v", err)
-	}
-	stdTx.signMsg.Sequence = acc.GetSequence()
-
 	return &stdTx, pack.NewU64(1), nil
 }
 
