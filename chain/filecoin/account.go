@@ -2,6 +2,7 @@ package filecoin
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	filaddress "github.com/filecoin-project/go-address"
@@ -28,7 +29,7 @@ func NewTxBuilder(gasPremium pack.U256) TxBuilder {
 }
 
 // BuildTx receives transaction fields and constructs a new transaction.
-func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, gasLimit, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
 	filfrom, err := filaddress.NewFromString(string(from))
 	if err != nil {
 		return nil, fmt.Errorf("bad from address '%v': %v", from, err)

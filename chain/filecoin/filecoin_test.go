@@ -72,6 +72,7 @@ var _ = Describe("Filecoin", func() {
 
 			// build the transaction
 			tx, err := filTxBuilder.BuildTx(
+				ctx,
 				multichain.Address(pack.String(senderFilAddr.String())),
 				multichain.Address(pack.String(recipientFilAddr.String())),
 				pack.NewU256FromU64(pack.NewU64(100000000)), // amount

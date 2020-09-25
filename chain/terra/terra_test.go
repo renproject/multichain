@@ -13,7 +13,6 @@ import (
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/terra-project/core/app"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -61,16 +60,15 @@ var _ = Describe("Terra", func() {
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
-					AccountNumber: pack.NewU64(1),
-					ChainID:       "testnet",
-					CoinDenom:     "uluna",
-					Cdc:           app.MakeCodec(),
-				})
+					ChainID:   "testnet",
+					CoinDenom: "uluna",
+				}, client)
 
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
 				amount := pack.NewU256FromU64(pack.U64(2000000))
 				tx, err := txBuilder.BuildTx(
+					ctx,
 					multichain.Address(addr.String()),     // from
 					recipient,                             // to
 					amount,                                // amount
