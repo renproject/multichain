@@ -101,21 +101,6 @@ func (client *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pa
 		return &StdTx{}, pack.NewU64(0), fmt.Errorf("parse tx failed: %v", err)
 	}
 
-	// Construct a past context (just before the transaction's height) and query
-	// the sender account to know the nonce (sequence number) with which this
-	// transaction was broadcasted.
-	senderAddr, err := types.AccAddressFromBech32(string(stdTx.From()))
-	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("bad address '%v': %v", stdTx.From(), err)
-	}
-	pastContext := client.cliCtx.WithHeight(res.Height - 1)
-	accGetter := auth.NewAccountRetriever(pastContext)
-	acc, err := accGetter.GetAccount(senderAddr)
-	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("account query failed: %v", err)
-	}
-	stdTx.signMsg.Sequence = acc.GetSequence()
-
 	return &stdTx, pack.NewU64(1), nil
 }
 
@@ -178,4 +163,20 @@ func (client *Client) AccountInfo(_ context.Context, addr address.Address) (acco
 		sequenceNumber: pack.U64(acc.GetSequence()),
 		coins:          parseCoins(acc.GetCoins()),
 	}, nil
+}
+
+// AccountNumber returns the account number for a given address.
+func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return 0, err
+	}
+
+	return pack.U64(acc.GetAccountNumber()), nil
 }
