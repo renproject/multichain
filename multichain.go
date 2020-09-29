@@ -115,8 +115,9 @@ const (
 	// These assets are define separately because they are mock assets. These
 	// assets should only be used for testing.
 
-	AMOCK = Asset("AMOCK") // Account-based mock asset
-	UMOCK = Asset("UMOCK") // UTXO-based mock asset
+	AMOCK1 = Asset("AMOCK1") // Account-based mock asset
+	AMOCK2 = Asset("AMOCK2") // Account-based mock asset
+	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
 )
 
 // OriginChain returns the chain upon which the asset originates. For example,
@@ -151,8 +152,10 @@ func (asset Asset) OriginChain() Chain {
 	// These assets are define separately because they are mock assets. These
 	// assets should only be used for testing.
 
-	case AMOCK:
-		return AccountMocker
+	case AMOCK1:
+		return AccountMocker1
+	case AMOCK2:
+		return AccountMocker2
 	case UMOCK:
 		return UTXOMocker
 
@@ -171,7 +174,7 @@ func (asset Asset) ChainType() ChainType {
 
 	// These assets are define separately because they are mock assets. These
 	// assets should only be used for testing.
-	case AMOCK:
+	case AMOCK1, AMOCK2:
 		return ChainTypeAccountBased
 	case UMOCK:
 		return ChainTypeUTXOBased
@@ -221,8 +224,9 @@ const (
 	// These chains are define separately because they are mock chains. These
 	// chains should only be used for testing.
 
-	AccountMocker = Chain("AccountMocker")
-	UTXOMocker    = Chain("UTXOMocker")
+	AccountMocker1 = Chain("AccountMocker1")
+	AccountMocker2 = Chain("AccountMocker2")
+	UTXOMocker     = Chain("UTXOMocker")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
@@ -254,7 +258,7 @@ func (chain Chain) ChainType() ChainType {
 
 	// These chains are define separately because they are mock chains. These
 	// chains should only be used for testing.
-	case AccountMocker:
+	case AccountMocker1, AccountMocker2:
 		return ChainTypeAccountBased
 	case UTXOMocker:
 		return ChainTypeUTXOBased
