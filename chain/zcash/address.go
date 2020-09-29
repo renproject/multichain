@@ -14,27 +14,38 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
+// AddressEncodeDecoder implements the address.EncodeDecoder interface
 type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
 
+// AddressEncoder encapsulates the chain specific configurations and implements
+// the address.Encoder interface
 type AddressEncoder struct {
 	params *Params
 }
 
+// AddressDecoder encapsulates the chain specific configurations and implements
+// the address.Decoder interface
 type AddressDecoder struct {
 	params *Params
 }
 
+// NewAddressEncoder constructs a new AddressEncoder with the chain specific
+// configurations
 func NewAddressEncoder(params *Params) AddressEncoder {
 	return AddressEncoder{params: params}
 }
 
+// NewAddressDecoder constructs a new AddressDecoder with the chain specific
+// configurations
 func NewAddressDecoder(params *Params) AddressDecoder {
 	return AddressDecoder{params: params}
 }
 
+// NewAddressEncodeDecoder constructs a new AddressEncodeDecoder with the
+// chain specific configurations
 func NewAddressEncodeDecoder(params *Params) AddressEncodeDecoder {
 	return AddressEncodeDecoder{
 		AddressEncoder: NewAddressEncoder(params),
@@ -42,6 +53,7 @@ func NewAddressEncodeDecoder(params *Params) AddressEncodeDecoder {
 	}
 }
 
+// EncodeAddress implements the address.Encoder interface
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
 	if len(rawAddr) != 26 && len(rawAddr) != 25 {
 		return address.Address(""), fmt.Errorf("address of unknown length")
@@ -72,6 +84,7 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 	}
 }
 
+// DecodeAddress implements the address.Decoder interface
 func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
 	var decoded = base58.Decode(string(addr))
 	if len(decoded) != 26 && len(decoded) != 25 {
@@ -221,34 +234,19 @@ func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }
 
-// decodeAddress decodes a string-representation of an address to an address
+// addressFromRawBytes decodes a string-representation of an address to an address
 // type that implements the zcash.Address interface
-func decodeAddress(addr string) (Address, error) {
-	var decoded = base58.Decode(addr)
-	if len(decoded) != 26 && len(decoded) != 25 {
-		return nil, base58.ErrInvalidFormat
-	}
-
-	var cksum [4]byte
-	copy(cksum[:], decoded[len(decoded)-4:])
-	if checksum(decoded[:len(decoded)-4]) != cksum {
-		return nil, base58.ErrChecksum
-	}
-
-	if len(decoded)-6 != ripemd160.Size && len(decoded)-5 != ripemd160.Size {
-		return nil, errors.New("incorrect payload len")
-	}
-
+func addressFromRawBytes(addrBytes []byte) (Address, error) {
 	var addrType uint8
 	var params *Params
 	var err error
 	var hash [20]byte
-	if len(decoded) == 26 {
-		addrType, params, err = parsePrefix(decoded[:2])
-		copy(hash[:], decoded[2:22])
+	if len(addrBytes) == 26 {
+		addrType, params, err = parsePrefix(addrBytes[:2])
+		copy(hash[:], addrBytes[2:22])
 	} else {
-		addrType, params, err = parsePrefix(decoded[:1])
-		copy(hash[:], decoded[1:21])
+		addrType, params, err = parsePrefix(addrBytes[:1])
+		copy(hash[:], addrBytes[1:21])
 	}
 	if err != nil {
 		return nil, err

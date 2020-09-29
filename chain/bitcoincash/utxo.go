@@ -73,6 +73,9 @@ func NewTxBuilder(params *chaincfg.Params) utxo.TxBuilder {
 func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipient) (utxo.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
+	// Address encoder-decoder
+	addrEncodeDecoder := NewAddressEncodeDecoder(txBuilder.params)
+
 	// Inputs
 	for _, input := range inputs {
 		hash := chainhash.Hash{}
@@ -83,7 +86,11 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 
 	// Outputs
 	for _, recipient := range recipients {
-		addr, err := decodeAddress(string(recipient.To), txBuilder.params)
+		addrBytes, err := addrEncodeDecoder.DecodeAddress(recipient.To)
+		if err != nil {
+			return &Tx{}, err
+		}
+		addr, err := addressFromRawBytes(addrBytes, txBuilder.params)
 		if err != nil {
 			return &Tx{}, err
 		}

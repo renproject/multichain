@@ -59,23 +59,12 @@ type TxBuilder interface {
 	BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
 }
 
-// The AccountInfo interface defines functionality that must expose account
-// specific information for the underlying chain.
-type AccountInfo interface {
-	// Nonce is the current nonce of this account, which must be used to build a
-	// new transaction.
-	Nonce() pack.U256
-
-	// Balance is the native token balance of this account.
-	Balance() pack.U256
-}
-
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
-	// Account queries the chain for an address. It returns the address'
-	// information, which contains the nonce and balance fields.
-	AccountInfo(context.Context, address.Address) (AccountInfo, error)
+	// AccountNonce is the current nonce of this account, which must be used to
+	// build a new transaction.
+	AccountNonce(context.Context, address.Address) (pack.U256, error)
 
 	// Tx returns the transaction uniquely identified by the given transaction
 	// hash. It also returns the number of confirmations for the transaction. If
