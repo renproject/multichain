@@ -111,6 +111,12 @@ const (
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
+
+	// These assets are define separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	AMOCK = Asset("AMOCK") // Account-based mock asset
+	UMOCK = Asset("UMOCK") // UTXO-based mock asset
 )
 
 // OriginChain returns the chain upon which the asset originates. For example,
@@ -141,6 +147,15 @@ func (asset Asset) OriginChain() Chain {
 		return Solana
 	case ZEC:
 		return Zcash
+
+	// These assets are define separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	case AMOCK:
+		return AccountMocker
+	case UMOCK:
+		return UTXOMocker
+
 	default:
 		return Chain("")
 	}
@@ -153,6 +168,14 @@ func (asset Asset) ChainType() ChainType {
 		return ChainTypeUTXOBased
 	case BNB, ETH, FIL:
 		return ChainTypeAccountBased
+
+	// These assets are define separately because they are mock assets. These
+	// assets should only be used for testing.
+	case AMOCK:
+		return ChainTypeAccountBased
+	case UMOCK:
+		return ChainTypeUTXOBased
+
 	default:
 		return ChainType("")
 	}
@@ -194,6 +217,12 @@ const (
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
+
+	// These chains are define separately because they are mock chains. These
+	// chains should only be used for testing.
+
+	AccountMocker = Chain("AccountMocker")
+	UTXOMocker    = Chain("UTXOMocker")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
@@ -222,6 +251,14 @@ func (chain Chain) ChainType() ChainType {
 		return ChainTypeUTXOBased
 	case BinanceSmartChain, Ethereum, Filecoin:
 		return ChainTypeAccountBased
+
+	// These chains are define separately because they are mock chains. These
+	// chains should only be used for testing.
+	case AccountMocker:
+		return ChainTypeAccountBased
+	case UTXOMocker:
+		return ChainTypeUTXOBased
+
 	default:
 		return ChainType("")
 	}
@@ -274,13 +311,27 @@ func (chainType *ChainType) Unmarshal(buf []byte, rem int) ([]byte, int, error) 
 type Network string
 
 const (
-	// NetworkLocalnet represents a locally deployed network for chains
+	// NetworkLocalnet represents a local network for chains. It is usually only
+	// accessible from the device running the network, and is not accessible
+	// over the Internet.  Chain rules are often slightly different to allow for
+	// faster block times and easier access to testing funds. This is also
+	// sometimes referred to as "regnet" or "regression network". It should only
+	// be used for local testing.
 	NetworkLocalnet = Network("localnet")
 
-	// NetworkTestnet represents the test network for chains
+	// NetworkDevnet represents the development network for chains. This network
+	// is typically a deployed version of the localnet. Chain rules are often
+	// slightly different to allow for faster block times and easier access to
+	// testing funds.
+	NetworkDevnet = Network("devnet")
+
+	// NetworkTestnet represents the test network for chains. This network is
+	// typically a publicly accessible network that has the same, or very
+	// similar, chain rules compared to mainnet. Assets on this type of network
+	// are usually not considered to have value.
 	NetworkTestnet = Network("testnet")
 
-	// NetworkMainnet represents the main network for chains
+	// NetworkMainnet represents the main network for chains.
 	NetworkMainnet = Network("mainnet")
 )
 
