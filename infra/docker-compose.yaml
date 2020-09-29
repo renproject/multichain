@@ -50,6 +50,18 @@ services:
       - "./root/run.sh"
       - "${BITCOINCASH_ADDRESS}"
 
+  # 
+  # Dash
+  # 
+  dash:
+    build:
+      context: ./dash
+    ports:
+      - "0.0.0.0:21443:21443"
+    entrypoint:
+      - "./root/run.sh"
+      - "${DASH_ADDRESS}"
+
   #
   # DigiByte
   #
