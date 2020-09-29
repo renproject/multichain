@@ -426,12 +426,12 @@ var _ = Describe("Multichain", func() {
 					return client
 				},
 				func(client multichain.AccountClient) multichain.AccountTxBuilder {
-					return filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(186893)))
+					return filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(300000)))
 				},
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.NewU64(100000000))
 					gasLimit := pack.NewU256FromU64(pack.NewU64(2189560))
-					gasPrice := pack.NewU256FromU64(pack.NewU64(186893))
+					gasPrice := pack.NewU256FromU64(pack.NewU64(300000))
 					payload := pack.Bytes(nil)
 					return amount, gasLimit, gasPrice, payload
 				},
@@ -505,7 +505,6 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.Value()).To(Equal(amount))
 							Expect(tx.From()).To(Equal(senderAddr))
 							Expect(tx.To()).To(Equal(recipientAddr))
-							Expect(tx.Nonce()).To(Equal(nonce))
 							Expect(tx.Value()).To(Equal(amount))
 							break
 						}
