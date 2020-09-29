@@ -3,7 +3,6 @@ package filecoin
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 
 	filaddress "github.com/filecoin-project/go-address"
@@ -104,7 +103,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 		return nil, pack.NewU64(0), fmt.Errorf("searching state for txid %v: not found", msgID)
 	}
 	if messageLookup.Receipt.ExitCode.IsError() {
-		return nil, pack.NewU64(0), fmt.Errorf("transaction execution error: %v", messageLookup.Receipt.ExitCode.String())
+		return nil, pack.NewU64(0), fmt.Errorf("executing transaction: %v", messageLookup.Receipt.ExitCode.String())
 	}
 
 	// get the most recent tipset and its height
@@ -153,44 +152,18 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	}
 }
 
-// Account contains necessary info for sdk.Account
-type Account struct {
-	balance pack.U256
-	nonce   pack.U64
-}
-
-// Nonce returns the current nonce of the account. This is the nonce to be used
-// while building a new transaction.
-func (account Account) Nonce() pack.U256 {
-	return pack.NewU256FromU64(account.nonce)
-}
-
-// Balance returns the native-token balance of the account.
-func (account Account) Balance() pack.U256 {
-	return account.balance
-}
-
-// AccountInfo query account with address. This method is not a part of the
-// multichain.AccountClient API, but will be used in the test infrastructure.
-func (client *Client) AccountInfo(ctx context.Context, addr address.Address) (account.AccountInfo, error) {
+// AccountNonce returns the current nonce of the account. This is the nonce to
+// be used while building a new transaction.
+func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (pack.U256, error) {
 	filAddr, err := filaddress.NewFromString(string(addr))
 	if err != nil {
-		return nil, fmt.Errorf("bad address '%v': %v", addr, err)
+		return pack.U256{}, fmt.Errorf("bad address '%v': %v", addr, err)
 	}
 
 	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
 	if err != nil {
-		return Account{}, fmt.Errorf("searching state for addr: %v", addr)
+		return pack.U256{}, fmt.Errorf("searching state for addr: %v", addr)
 	}
 
-	balanceBytes, err := actor.Balance.Bytes()
-	if err != nil {
-		return Account{}, fmt.Errorf("extracting balance bytes: %v", err)
-	}
-	balance := big.NewInt(0).SetBytes(balanceBytes)
-
-	return &Account{
-		balance: pack.NewU256FromInt(balance),
-		nonce:   pack.NewU64(actor.Nonce),
-	}, nil
+	return pack.NewU256FromU64(pack.NewU64(actor.Nonce)), nil
 }

@@ -3,15 +3,25 @@ package dogecoin
 import "github.com/renproject/multichain/chain/bitcoin"
 
 type (
-	Tx            = bitcoin.Tx
-	TxBuilder     = bitcoin.TxBuilder
-	Client        = bitcoin.Client
+	// Tx re-exports bitcoin.Tx.
+	Tx = bitcoin.Tx
+
+	// TxBuilder re-exports bitcoin.TxBuilder.
+	TxBuilder = bitcoin.TxBuilder
+
+	// Client re-exports bitcoin.Client.
+	Client = bitcoin.Client
+
+	// ClientOptions re-exports bitcoin.ClientOptions.
 	ClientOptions = bitcoin.ClientOptions
 )
 
 var (
+	// NewTxBuilder re-exports bitcoin.NewTxBuilder.
 	NewTxBuilder = bitcoin.NewTxBuilder
-	NewClient    = bitcoin.NewClient
+
+	// NewClient re-exports bitcoin.NewClient.
+	NewClient = bitcoin.NewClient
 )
 
 // DefaultClientOptions returns ClientOptions with the default settings. These

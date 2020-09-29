@@ -454,9 +454,8 @@ var _ = Describe("Multichain", func() {
 					accountClient := accountChain.initialise(accountChain.rpcURL)
 
 					// Get the appropriate nonce for sender.
-					accountInfo, err := accountClient.AccountInfo(ctx, senderAddr)
+					nonce, err := accountClient.AccountNonce(ctx, senderAddr)
 					Expect(err).NotTo(HaveOccurred())
-					nonce := accountInfo.Nonce()
 
 					// Build a transaction.
 					amount, gasLimit, gasPrice, payload := accountChain.txParams()

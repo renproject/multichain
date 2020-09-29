@@ -7,7 +7,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
-	"github.com/renproject/pack"
 )
 
 // AddressEncodeDecoder implements the address.EncodeDecoder interface
@@ -42,7 +41,7 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 	// Validate that the base58 address is in fact in correct format.
 	encodedAddr := base58.Encode([]byte(rawAddr))
 	if _, err := btcutil.DecodeAddress(encodedAddr, &chaincfg.RegressionNetParams); err != nil {
-		return address.Address(""), fmt.Errorf("address validation error: %v", err)
+		return address.Address(""), err
 	}
 
 	return address.Address(encodedAddr), nil
@@ -65,17 +64,17 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	// Decode the checksummed base58 format address.
 	decoded, ver, err := base58.CheckDecode(string(addr))
 	if err != nil {
-		return nil, fmt.Errorf("base58 decoding error: %v", err)
+		return nil, fmt.Errorf("checking: %v", err)
 	}
 	if len(decoded) != 20 {
-		return nil, fmt.Errorf("incorrect size of decoded address, wanted: 20, have: %v", len(decoded))
+		return nil, fmt.Errorf("expected len 20, got len %v", len(decoded))
 	}
 
 	// Validate the address format.
 	switch ver {
 	case decoder.params.PubKeyHashAddrID, decoder.params.ScriptHashAddrID:
-		return address.RawAddress(pack.NewBytes(base58.Decode(string(addr)))), nil
+		return address.RawAddress(base58.Decode(string(addr))), nil
 	default:
-		return nil, fmt.Errorf("unknown address type")
+		return nil, fmt.Errorf("unexpected address prefix")
 	}
 }

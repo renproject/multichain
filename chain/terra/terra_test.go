@@ -54,9 +54,8 @@ var _ = Describe("Terra", func() {
 
 				// instantiate a new client
 				client := terra.NewClient(terra.DefaultClientOptions())
-				accountInfo, err := client.AccountInfo(ctx, multichain.Address(addr.String()))
+				nonce, err := client.AccountNonce(ctx, multichain.Address(addr.String()))
 				Expect(err).NotTo(HaveOccurred())
-				nonce := accountInfo.Nonce()
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{

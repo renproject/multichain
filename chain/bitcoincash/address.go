@@ -27,11 +27,14 @@ var (
 	}()
 )
 
+// AddressEncodeDecoder implements the address.EncodeDecoder interface
 type AddressEncodeDecoder struct {
 	AddressEncoder
 	AddressDecoder
 }
 
+// NewAddressEncodeDecoder constructs a new AddressEncodeDecoder with the
+// chain specific configurations
 func NewAddressEncodeDecoder(params *chaincfg.Params) AddressEncodeDecoder {
 	return AddressEncodeDecoder{
 		AddressEncoder: NewAddressEncoder(params),
@@ -39,22 +42,31 @@ func NewAddressEncodeDecoder(params *chaincfg.Params) AddressEncodeDecoder {
 	}
 }
 
+// AddressEncoder encapsulates the chain specific configurations and implements
+// the address.Encoder interface
 type AddressEncoder struct {
 	params *chaincfg.Params
 }
 
+// NewAddressEncoder constructs a new AddressEncoder with the chain specific
+// configurations
 func NewAddressEncoder(params *chaincfg.Params) AddressEncoder {
 	return AddressEncoder{params: params}
 }
 
+// AddressDecoder encapsulates the chain specific configurations and implements
+// the address.Decoder interface
 type AddressDecoder struct {
 	params *chaincfg.Params
 }
 
+// NewAddressDecoder constructs a new AddressDecoder with the chain specific
+// configurations
 func NewAddressDecoder(params *chaincfg.Params) AddressDecoder {
 	return AddressDecoder{params: params}
 }
 
+// EncodeAddress implements the address.Encoder interface
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
 	rawAddrBytes := []byte(rawAddr)
 	var encodedAddr string
@@ -75,12 +87,13 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 	}
 
 	if err != nil {
-		return address.Address(""), fmt.Errorf("encode address: %v", err)
+		return address.Address(""), fmt.Errorf("encoding: %v", err)
 	}
 
-	return address.Address(pack.String(encodedAddr)), nil
+	return address.Address(encodedAddr), nil
 }
 
+// DecodeAddress implements the address.Decoder interface
 func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
 	// Legacy address decoding
 	if legacyAddr, err := btcutil.DecodeAddress(string(addr), decoder.params); err == nil {
@@ -112,7 +125,7 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	case ripemd160.Size: // P2PKH or P2SH
 		switch addrBytes[0] {
 		case 0, 8: // P2PKH or P2SH
-			return address.RawAddress(pack.NewBytes(addrBytes)), nil
+			return address.RawAddress(addrBytes), nil
 		default:
 			return nil, btcutil.ErrUnknownAddressType
 		}
@@ -135,10 +148,10 @@ func decodeLegacyAddress(addr address.Address, params *chaincfg.Params) (address
 	// Decode the checksummed base58 format address.
 	decoded, ver, err := base58.CheckDecode(string(addr))
 	if err != nil {
-		return nil, fmt.Errorf("base58 decoding error: %v", err)
+		return nil, fmt.Errorf("checking: %v", err)
 	}
 	if len(decoded) != 20 {
-		return nil, fmt.Errorf("incorrect size of decoded address, wanted: 20, have: %v", len(decoded))
+		return nil, fmt.Errorf("expected len 20, got len %v", len(decoded))
 	}
 
 	// Validate the address format.
@@ -146,7 +159,7 @@ func decodeLegacyAddress(addr address.Address, params *chaincfg.Params) (address
 	case params.PubKeyHashAddrID, params.ScriptHashAddrID:
 		return address.RawAddress(pack.NewBytes(base58.Decode(string(addr)))), nil
 	default:
-		return nil, fmt.Errorf("unknown address type")
+		return nil, fmt.Errorf("unexpected address prefix")
 	}
 }
 
@@ -302,34 +315,9 @@ func encodeAddress(version byte, hash []byte, params *chaincfg.Params) (string, 
 	return EncodeToString(AppendChecksum(AddressPrefix(params), data)), nil
 }
 
-// decodeAddress implements the address.Decoder interface
-func decodeAddress(addr string, params *chaincfg.Params) (Address, error) {
-	// Legacy address decoding
-	if address, err := btcutil.DecodeAddress(addr, params); err == nil {
-		switch address.(type) {
-		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
-			return AddressLegacy{Address: address}, nil
-		case *btcutil.AddressWitnessPubKeyHash, *btcutil.AddressWitnessScriptHash:
-			return nil, fmt.Errorf("unsuported segwit bitcoin address type %T", address)
-		default:
-			return nil, fmt.Errorf("unsuported legacy bitcoin address type %T", address)
-		}
-	}
-
-	if addrParts := strings.Split(addr, ":"); len(addrParts) != 1 {
-		addr = addrParts[1]
-	}
-
-	decoded := DecodeString(addr)
-	if !VerifyChecksum(AddressPrefix(params), decoded) {
-		return nil, btcutil.ErrChecksumMismatch
-	}
-
-	addrBytes, err := bech32.ConvertBits(decoded[:len(decoded)-8], 5, 8, false)
-	if err != nil {
-		return nil, err
-	}
-
+// addressFromRawBytes consumes raw bytes representation of a bitcoincash
+// address and returns a type that implements the bitcoincash.Address interface.
+func addressFromRawBytes(addrBytes []byte, params *chaincfg.Params) (Address, error) {
 	switch len(addrBytes) - 1 {
 	case ripemd160.Size: // P2PKH or P2SH
 		switch addrBytes[0] {

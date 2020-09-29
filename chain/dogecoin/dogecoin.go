@@ -16,6 +16,7 @@ func init() {
 	}
 }
 
+// MainNetParams returns the chain configuration for mainnet.
 var MainNetParams = chaincfg.Params{
 	Name: "mainnet",
 	Net:  0xc0c0c0c0,
@@ -35,6 +36,7 @@ var MainNetParams = chaincfg.Params{
 	Bech32HRPSegwit: "doge",
 }
 
+// TestNetParams returns the chain configuration for testnet.
 var TestNetParams = chaincfg.Params{
 	Name: "testnet",
 	Net:  0xfcc1b7dc,
@@ -54,6 +56,7 @@ var TestNetParams = chaincfg.Params{
 	Bech32HRPSegwit: "doget",
 }
 
+// RegressionNetParams returns the chain configuration for regression net.
 var RegressionNetParams = chaincfg.Params{
 	Name: "regtest",
 
