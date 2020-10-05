@@ -108,6 +108,7 @@ const (
 	ETH  = Asset("ETH")  // Ether
 	FIL  = Asset("FIL")  // Filecoin
 	FTM  = Asset("FTM")  // Fantom
+	ICX  = Asset("ICX")  // Icon
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
@@ -142,6 +143,8 @@ func (asset Asset) OriginChain() Chain {
 		return Filecoin
 	case FTM:
 		return Fantom
+	case ICX:
+		return Icon
 	case LUNA:
 		return Terra
 	case SOL:
@@ -169,7 +172,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH, FIL:
+	case BNB, ETH, FIL, ICX:
 		return ChainTypeAccountBased
 
 	// These assets are define separately because they are mock assets. These
@@ -217,6 +220,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Icon              = Chain("Icon")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -253,7 +257,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Filecoin:
+	case BinanceSmartChain, Ethereum, Filecoin, Icon:
 		return ChainTypeAccountBased
 
 	// These chains are define separately because they are mock chains. These

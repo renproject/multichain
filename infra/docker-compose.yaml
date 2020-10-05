@@ -110,7 +110,18 @@ services:
       - "0.0.0.0:1234:1234"
     entrypoint:
       - "/root/run.sh"
-
+  
+  #
+  # Icon
+  #
+  icon:
+    build:
+      context: ./icon
+    ports:
+      - "0.0.0.0:9000:9000"
+    entrypoint:
+      - "/usr/local/bin/entry.sh"
+  
   #
   # Solana
   #

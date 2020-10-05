@@ -1,0 +1,49 @@
+{
+    "hostAddress": "127.0.0.1",
+    "port": 9000,
+    "scoreRootPath": "./.score",
+    "stateDbRootPath": "./.statedb",
+    "builtinScoreOwner": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
+    "log": {
+        "logger": "tbears",
+        "level": "info",
+        "filePath": "./tbears.log",
+        "colorLog": true,
+        "outputType": "file",
+        "rotate": {
+            "type": "bytes",
+            "maxBytes": 10485760,
+            "backupCount": 10
+        }
+    },
+    "service": {
+        "fee": true,
+        "audit": false,
+        "deployerWhiteList": false
+    },
+    "genesis": {
+        "nid": "0x3",
+        "accounts": [
+            {
+                "name": "genesis",
+                "address": "hx0000000000000000000000000000000000000000",
+                "balance": "0x2961fff8ca4a62327800000"
+            },
+            {
+                "name": "fee_treasury",
+                "address": "hx1000000000000000000000000000000000000000",
+                "balance": "0x0"
+            },
+            {
+                "name": "test1",
+                "address": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
+                "balance": "0x2961fff8ca4a62327800000"
+            }
+        ]
+    },
+    "blockConfirmInterval": 2,
+    "blockConfirmEmpty": true,
+    "mainPRepCount": 4,
+    "iissCalculatePeriod": 30,
+    "termPeriod": 30 
+}
