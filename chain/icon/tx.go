@@ -257,21 +257,6 @@ func (tx *Tx) Serialize() (pack.Bytes, error) {
 
 type TxBuilder struct{}
 
-// type Tx struct {
-// 	txHash    pack.Bytes
-// 	Version   HexUint16
-// 	from      address.Address
-// 	to        address.Address
-// 	value     *HexInt
-// 	StepLimit HexInt
-// 	TimeStamp HexInt64
-// 	NID       *HexInt
-// 	nonce     *HexInt
-// 	Signature Signature
-// 	Data      RawMessage
-// 	DataType  *string
-// }
-
 // BuildTx consumes a list of MsgSend to build and return a transaction.
 // This transaction is unsigned, and must be signed before submitting to the chain.
 func (txBuilder TxBuilder) BuildTx(from address.Address, to address.Address, value *HexInt, nonce *HexInt, Version HexUint16, txHash pack.Bytes, StepLimit HexInt, TimeStamp HexInt64, NID *HexInt) (*Tx, error) {

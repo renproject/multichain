@@ -2,34 +2,83 @@ package icon
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 	"time"
 
+	"github.com/gorilla/websocket"
+	"github.com/icon-project/goloop/common"
+	"github.com/icon-project/goloop/common/errors"
+	"github.com/icon-project/goloop/server/jsonrpc"
+	"github.com/renproject/multichain/chain/icon/intconv"
+	"github.com/renproject/multichain/chain/icon/transaction"
 	"github.com/renproject/pack"
 )
 
-const (
-	// DefaultClientTimeout used by the Client.
-	DefaultClientTimeout = time.Minute
-	// DefaultClientTimeoutRetry used by the Client.
-	DefaultClientTimeoutRetry = time.Second
-	// DefaultClientHost used by the Client. This should only be used for local
-	// deployments of the multichain.
-	DefaultClientHost = "http://0.0.0.0:9000"
-	// DefaultBroadcastMode configures the behaviour of a icon client while it
-	// interacts with the icon node. Allowed broadcast modes can be async, sync
-	// and block. "async" returns immediately after broadcasting, "sync" returns
-	// after the transaction has been checked and "block" waits until the
-	// transaction is committed to the chain.
-	DefaultBroadcastMode = "sync"
-)
-
-type Client struct{}
-
-func (client Client) Tx(ctx context.Context, hash pack.Bytes) (Tx, pack.U64, error) {
-	var uInt uint64 = 1<<64 - 1
-	return Tx{}, pack.U64(uInt), nil
+// Client interacts with an instance of ICON network using the REST
+// interface exposed by a client node.
+type Client struct {
+	*JsonRpcClient
+	Debug *JsonRpcClient
+	conns map[string]*websocket.Conn
 }
 
+// NewClient returns a new Client.
+func NewClient(endpoint string) *Client {
+	client := new(http.Client)
+	apiClient := NewJsonRpcClient(client, endpoint)
+	var debugClient *JsonRpcClient
+	if ep := guessDebugEndpoint(endpoint); len(ep) > 0 {
+		debugClient = NewJsonRpcClient(client, ep)
+	}
+
+	return &Client{
+		JsonRpcClient: apiClient,
+		Debug:         debugClient,
+		conns:         make(map[string]*websocket.Conn),
+	}
+}
+
+// Tx query transaction with txHash
+func (client Client) Tx(ctx context.Context, hash pack.Bytes) (Tx, pack.U64, error) {
+	t := &Transaction{}
+	_, err := client.Do("icx_getTransactionByHash", hash, t)
+	if err != nil {
+		return nil, err
+	}
+	return t, pack.NewU64(1), nil
+}
+
+// SubmitTx to ICON network.
 func (client Client) SubmitTx(ctx context.Context, tx Tx) error {
-	return nil
+	Tx.Timestamp = jsonrpc.HexInt(intconv.FormatInt(time.Now().UnixNano() / int64(time.Microsecond)))
+	js, err := json.Marshal(Tx)
+	if err != nil {
+		return nil, err
+	}
+
+	bs, err := transaction.SerializeJSON(js, nil, txSerializeExcludes)
+	if err != nil {
+		return nil, err
+	}
+	bs = append([]byte("icx_sendTransaction."), bs...)
+
+	var result jsonrpc.HexBytes
+	if _, err = client.Do("icx_sendTransaction", Tx, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// EstimateStep cost for a transaction
+func (client *Client) EstimateStep(param Tx) (*common.HexInt, error) {
+	if client.Debug == nil {
+		return nil, errors.InvalidStateError.New("UnavailableDebugEndPoint")
+	}
+	param.Timestamp = jsonrpc.HexInt(intconv.FormatInt(time.Now().UnixNano() / int64(time.Microsecond)))
+	var result common.HexInt
+	if _, err := client.Debug.Do("debug_estimateStep", param, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
