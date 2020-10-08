@@ -25,8 +25,8 @@ type GasEstimator struct {
 // NewGasEstimator returns a simple gas estimator that fetches the ideal gas
 // fee cap and gas premium for a filecoin transaction to be included in a block
 // with minimal delay.
-func NewGasEstimator(client *Client, gasLimit int64) GasEstimator {
-	return GasEstimator{
+func NewGasEstimator(client *Client, gasLimit int64) *GasEstimator {
+	return &GasEstimator{
 		client:   client,
 		gasLimit: gasLimit,
 	}

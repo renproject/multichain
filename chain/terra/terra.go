@@ -20,6 +20,9 @@ type (
 var (
 	// DefaultClientOptions re-exports default cosmos-compatible client options
 	DefaultClientOptions = cosmos.DefaultClientOptions
+
+	// NewGasEstimator re-exports cosmos.NewGasEstimator
+	NewGasEstimator = cosmos.NewGasEstimator
 )
 
 // NewClient returns returns a new Client with terra codec
