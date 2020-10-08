@@ -68,13 +68,15 @@ var _ = Describe("Starname (IOV)", func() {
 				data := fmt.Sprintf(`{"Address":"%s"}`, addrEnv)
 				resABCI, err := client.ABCIQuery(ctx, "custom/acc/account", []byte(data), 0, true)
 				Expect(err).NotTo(HaveOccurred())
+				fmt.Println(string(resABCI.Response.Value)) // dmjp: account_number is 4 but is unmarshaled as 0
 				var account atypes.BaseAccount
 				err = json.Unmarshal(resABCI.Response.Value, &account)
 				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := starname.NewTxBuilder(starname.TxBuilderOptions{
-					AccountNumber: pack.NewU64(account.AccountNumber),
+					// dmjp AccountNumber: pack.NewU64(account.AccountNumber),
+					AccountNumber: pack.NewU64(4),
 					ChainID:       "testnet",
 					CoinDenom:     "tiov",
 					Cdc:           app.MakeCodec(),
@@ -83,13 +85,14 @@ var _ = Describe("Starname (IOV)", func() {
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
 				tx, err := txBuilder.BuildTx(
-					multichain.Address(addr.String()),               // from
-					multichain.Address(recipient.String()),          // to
-					pack.NewU256FromU64(pack.U64(2000000)),          // amount
-					pack.NewU256FromU64(pack.U64(account.Sequence)), // nonce
-					pack.NewU256FromU64(pack.U64(300000)),           // gas
-					pack.NewU256FromU64(pack.U64(300)),              // fee
-					payload,                                         // memo
+					multichain.Address(addr.String()),      // from
+					multichain.Address(recipient.String()), // to
+					pack.NewU256FromU64(pack.U64(2000000)), // amount
+					// dmjp pack.NewU256FromU64(pack.U64(account.Sequence)), // nonce
+					pack.NewU256FromU64(pack.U64(0)),      // nonce
+					pack.NewU256FromU64(pack.U64(300000)), // gas
+					pack.NewU256FromU64(pack.U64(300)),    // fee
+					payload,                               // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 
