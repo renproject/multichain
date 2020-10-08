@@ -303,8 +303,7 @@ var _ = Describe("Multichain", func() {
 			privKeyToAddr       func(pk id.PrivKey) multichain.Address
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
-			initialise          func(pack.String) multichain.AccountClient
-			txBuilder           func(client multichain.AccountClient) multichain.AccountTxBuilder
+			initialise          func(pack.String) (multichain.AccountClient, multichain.AccountTxBuilder)
 			txParams            func() (pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
@@ -344,19 +343,17 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return recipient
 				},
-				func(rpcURL pack.String) multichain.AccountClient {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client := terra.NewClient(
 						terra.DefaultClientOptions().
 							WithHost(rpcURL),
 					)
-
-					return client
-				},
-				func(client multichain.AccountClient) multichain.AccountTxBuilder {
-					return terra.NewTxBuilder(terra.TxBuilderOptions{
+					txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
 						ChainID:   "testnet",
 						CoinDenom: "uluna",
-					}, client.(*terra.Client))
+					}, client)
+
+					return client, txBuilder
 				},
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
@@ -413,20 +410,22 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(pack.String(addr.String()))
 				},
-				func(rpcURL pack.String) multichain.AccountClient {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					// dirty hack to fetch auth token
-					authToken := fetchAuthToken()
 					client, err := filecoin.NewClient(
 						filecoin.DefaultClientOptions().
 							WithRPCURL(rpcURL).
-							WithAuthToken(authToken),
+							WithAuthToken(fetchAuthToken()),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					return client
-				},
-				func(client multichain.AccountClient) multichain.AccountTxBuilder {
-					return filecoin.NewTxBuilder(pack.NewU256FromU64(pack.NewU64(300000)))
+					gasEstimator := filecoin.NewGasEstimator(client, 2189560)
+					_, gasPremium, err := gasEstimator.EstimateGasPrice(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+
+					txBuilder := filecoin.NewTxBuilder(gasPremium)
+
+					return client, txBuilder
 				},
 				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.NewU64(100000000))
@@ -451,7 +450,7 @@ var _ = Describe("Multichain", func() {
 
 					// Initialise the account chain's client, and possibly get a nonce for
 					// the sender.
-					accountClient := accountChain.initialise(accountChain.rpcURL)
+					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL)
 
 					// Get the appropriate nonce for sender.
 					nonce, err := accountClient.AccountNonce(ctx, senderAddr)
@@ -460,7 +459,6 @@ var _ = Describe("Multichain", func() {
 					// Build a transaction.
 					amount, gasLimit, gasPrice, payload := accountChain.txParams()
 
-					txBuilder := accountChain.txBuilder(accountClient)
 					accountTx, err := txBuilder.BuildTx(
 						ctx,
 						multichain.Address(senderAddr),
