@@ -6,7 +6,7 @@ echo "IOV_ADDRESS=$ADDRESS"
 
 # Register client key
 iovnscli keys add validator --keyring-backend=test
-echo $(iovnscli keys show validator)
+echo $(iovnscli keys show validator --keyring-backend=test)
 
 # Initialize testnet
 iovnsd init testnet --chain-id testnet
