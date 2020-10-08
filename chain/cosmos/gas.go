@@ -25,6 +25,6 @@ func NewGasEstimator(gasPerByte pack.U256) gas.Estimator {
 }
 
 // EstimateGasPrice returns gas required per byte for Cosmos-compatible chains.
-func (gasEstimator *GasEstimator) EstimateGasPrice(ctx context.Context) (pack.U256, error) {
-	return gasEstimator.gasPerByte, nil
+func (gasEstimator *GasEstimator) EstimateGasPrice(ctx context.Context) (pack.U256, pack.U256, error) {
+	return gasEstimator.gasPerByte, pack.NewU256([32]byte{}), nil
 }
