@@ -39,10 +39,6 @@ func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address
 		return nil, fmt.Errorf("bad to address '%v': %v", to, err)
 	}
 	methodNum := abi.MethodNum(0)
-	if len(payload) > 0 {
-		methodNum = abi.MethodNum(payload[0])
-		payload = payload[1:]
-	}
 	return &Tx{
 		msg: types.Message{
 			Version:    types.MessageVersion,
