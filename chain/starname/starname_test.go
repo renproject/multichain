@@ -3,13 +3,14 @@ package starname_test
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"os"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	atypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/iov-one/iovns/app"
 	"github.com/renproject/multichain"
-	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/renproject/multichain/chain/starname"
 	"github.com/renproject/pack"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -55,12 +56,25 @@ var _ = Describe("Starname (IOV)", func() {
 				pkRecipient := secp256k1.GenPrivKey()
 				recipient := types.AccAddress(pkRecipient.PubKey().Address())
 
+				// avoid a port collision with terra
+				opts := starname.DefaultClientOptions()
+				opts.Host = "http://0.0.0.0:46657"
+				opts.BroadcastMode = "block"
+
 				// instantiate a new client
-				client := starname.NewClient(cosmos.DefaultClientOptions())
+				client := starname.NewClient(opts)
+
+				// get the nonce and account number
+				data := fmt.Sprintf(`{"Address":"%s"}`, addrEnv)
+				resABCI, err := client.ABCIQuery(ctx, "custom/acc/account", []byte(data), 0, true)
+				Expect(err).NotTo(HaveOccurred())
+				var account atypes.BaseAccount
+				err = json.Unmarshal(resABCI.Response.Value, &account)
+				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := starname.NewTxBuilder(starname.TxBuilderOptions{
-					AccountNumber: pack.NewU64(1),
+					AccountNumber: pack.NewU64(account.AccountNumber),
 					ChainID:       "testnet",
 					CoinDenom:     "tiov",
 					Cdc:           app.MakeCodec(),
@@ -69,13 +83,13 @@ var _ = Describe("Starname (IOV)", func() {
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
 				tx, err := txBuilder.BuildTx(
-					multichain.Address(addr.String()),      // from
-					multichain.Address(recipient.String()), // to
-					pack.NewU256FromU64(pack.U64(2000000)), // amount
-					pack.NewU256FromU64(0),                 // nonce
-					pack.NewU256FromU64(pack.U64(300000)),  // gas
-					pack.NewU256FromU64(pack.U64(300)),     // fee
-					payload,                                // memo
+					multichain.Address(addr.String()),               // from
+					multichain.Address(recipient.String()),          // to
+					pack.NewU256FromU64(pack.U64(2000000)),          // amount
+					pack.NewU256FromU64(pack.U64(account.Sequence)), // nonce
+					pack.NewU256FromU64(pack.U64(300000)),           // gas
+					pack.NewU256FromU64(pack.U64(300)),              // fee
+					payload,                                         // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -100,21 +114,14 @@ var _ = Describe("Starname (IOV)", func() {
 				err = client.SubmitTx(ctx, tx)
 				Expect(err).NotTo(HaveOccurred())
 
-				for {
-					// Loop until the transaction has at least a few
-					// confirmations. This implies that the transaction is
-					// definitely valid, and the test has passed. We were
-					// successfully able to use the multichain to construct and
-					// submit a Starname (IOV) transaction!
-					foundTx, confs, err := client.Tx(ctx, txHash)
-					if err == nil {
-						Expect(confs.Uint64()).To(Equal(uint64(1)))
-						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
-						break
-					}
-
-					// wait and retry querying for the transaction
-					time.Sleep(2 * time.Second)
+				// We don't need to loop due to instant finality and broadcast
+				// mode "block".  If err == nil then we were successfully able to
+				// use the multichain to construct and submit a Starname (IOV)
+				// transaction!
+				foundTx, confs, err := client.Tx(ctx, txHash)
+				if err == nil {
+					Expect(confs.Uint64()).To(Equal(uint64(1)))
+					Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
 				}
 			})
 		})

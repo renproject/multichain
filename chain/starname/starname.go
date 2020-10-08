@@ -2,7 +2,6 @@ package starname
 
 import (
 	"github.com/iov-one/iovns/app"
-	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/cosmos"
 )
 
@@ -23,13 +22,13 @@ var (
 )
 
 // NewClient returns returns a new Client with Starname (iovns) codec
-func NewClient(opts ClientOptions) account.Client {
+func NewClient(opts ClientOptions) cosmos.CompositeClient {
 	return cosmos.NewClient(opts, app.MakeCodec())
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Terra transactions.
-func NewTxBuilder(opts TxBuilderOptions) account.TxBuilder {
+func NewTxBuilder(opts TxBuilderOptions) cosmos.TxBuilder {
 	return cosmos.NewTxBuilder(opts)
 }

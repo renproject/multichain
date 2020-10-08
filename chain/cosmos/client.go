@@ -13,7 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	atypes "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/bytes"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 const (
@@ -52,7 +55,7 @@ func DefaultClientOptions() ClientOptions {
 	}
 }
 
-// WithHost sets the URL of the Bitcoin node.
+// WithHost sets the URL of the cosmos node.
 func (opts ClientOptions) WithHost(host pack.String) ClientOptions {
 	opts.Host = host
 	return opts
@@ -66,7 +69,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) account.Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec) CompositeClient {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -117,4 +120,19 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	}
 
 	return nil
+}
+
+// ABCI query to the Cosmos based network.
+func (client *Client) ABCIQuery(ctx context.Context, path string, data bytes.HexBytes, height int64, prove bool) (*ctypes.ResultABCIQuery, error) {
+	res, err := client.cliCtx.QueryABCI(atypes.RequestQuery{
+		Path:   path,
+		Data:   data,
+		Height: height,
+		Prove:  prove,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &ctypes.ResultABCIQuery{Response: res}, err
 }
