@@ -588,27 +588,27 @@ var _ = Describe("Multichain", func() {
 				dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams),
 				multichain.Dogecoin,
 			},
-			{
-				"ZCASH_PK",
-				func(pkh []byte) (btcutil.Address, error) {
-					addr, err := zcash.NewAddressPubKeyHash(pkh, &zcash.RegressionNetParams)
-					return addr, err
-				},
-				func(script []byte) (btcutil.Address, error) {
-					addr, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
-					return addr, err
-				},
-				pack.String("http://0.0.0.0:18232"),
-				func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
-					client := zcash.NewClient(zcash.DefaultClientOptions())
-					outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
-					Expect(err).NotTo(HaveOccurred())
-					return client, outputs, client.Confirmations
-				},
-				zcash.NewTxBuilder(&zcash.RegressionNetParams, 1000000),
-				multichain.Zcash,
-			},
 			/*
+				{
+					"ZCASH_PK",
+					func(pkh []byte) (btcutil.Address, error) {
+						addr, err := zcash.NewAddressPubKeyHash(pkh, &zcash.RegressionNetParams)
+						return addr, err
+					},
+					func(script []byte) (btcutil.Address, error) {
+						addr, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
+						return addr, err
+					},
+					pack.String("http://0.0.0.0:18232"),
+					func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
+						client := zcash.NewClient(zcash.DefaultClientOptions())
+						outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
+						Expect(err).NotTo(HaveOccurred())
+						return client, outputs, client.Confirmations
+					},
+					zcash.NewTxBuilder(&zcash.RegressionNetParams, 1000000),
+					multichain.Zcash,
+				},
 				{
 					"DIGIBYTE_PK",
 					func(pkh []byte) (btcutil.Address, error) {
