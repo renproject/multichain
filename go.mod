@@ -12,8 +12,7 @@ require (
 	github.com/filecoin-project/go-address v0.0.4
 	github.com/filecoin-project/go-jsonrpc v0.1.2-0.20200822201400-474f4fdccc52
 	github.com/filecoin-project/go-state-types v0.0.0-20200928172055-2df22083d8ab
-	github.com/filecoin-project/lotus v0.8.1
-	github.com/filecoin-project/specs-actors v0.9.12
+	github.com/filecoin-project/lotus v0.9.0
 	github.com/ipfs/go-cid v0.0.7
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/multiformats/go-varint v0.0.6
