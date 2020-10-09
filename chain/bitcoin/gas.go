@@ -27,6 +27,6 @@ func NewGasEstimator(satsPerByte pack.U256) GasEstimator {
 // to confirm transactions with an estimated maximum delay of one block. It is
 // the responsibility of the caller to know the number of bytes in their
 // transaction.
-func (gasEstimator GasEstimator) EstimateGasPrice(_ context.Context) (pack.U256, error) {
-	return gasEstimator.satsPerByte, nil
+func (gasEstimator GasEstimator) EstimateGasPrice(_ context.Context) (pack.U256, pack.U256, error) {
+	return gasEstimator.satsPerByte, pack.NewU256([32]byte{}), nil
 }

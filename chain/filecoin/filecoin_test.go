@@ -32,7 +32,7 @@ var _ = Describe("Filecoin", func() {
 			client, err := filecoin.NewClient(
 				filecoin.DefaultClientOptions().
 					WithRPCURL("ws://127.0.0.1:1234/rpc/v0").
-					WithAuthToken("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.673MLa4AmbhNeC1Hj2Bn6c4t_ci68I0amkqAEHea8ik"),
+					WithAuthToken(fetchAuthToken()),
 			)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -66,20 +66,30 @@ var _ = Describe("Filecoin", func() {
 			recipientFilAddr, err := filaddress.NewSecp256k1Address(recipientPubKeyCompressed)
 			Expect(err).NotTo(HaveOccurred())
 
+			// get good gas estimates
+			gasLimit := uint64(2200000)
+			gasEstimator := filecoin.NewGasEstimator(client, int64(gasLimit))
+			gasFeeCap, gasPremium, err := gasEstimator.EstimateGasPrice(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			// construct the transaction builder
-			gasPremium := pack.NewU256FromU64(pack.NewU64(149514))
 			filTxBuilder := filecoin.NewTxBuilder(gasPremium)
 
 			// build the transaction
+			sender := multichain.Address(pack.String(senderFilAddr.String()))
+			amount := pack.NewU256FromU64(pack.NewU64(100000000))
+			nonce, err := client.AccountNonce(ctx, sender)
+			Expect(err).ToNot(HaveOccurred())
+
 			tx, err := filTxBuilder.BuildTx(
 				ctx,
-				multichain.Address(pack.String(senderFilAddr.String())),
+				sender,
 				multichain.Address(pack.String(recipientFilAddr.String())),
-				pack.NewU256FromU64(pack.NewU64(100000000)), // amount
-				pack.NewU256FromU64(pack.NewU64(0)),         // nonce
-				pack.NewU256FromU64(pack.NewU64(495335)),    // gasFeeCap
-				pack.NewU256FromU64(pack.NewU64(149838)),    // gasPrice
-				pack.Bytes(nil),                             // payload
+				amount, // amount
+				nonce,  // nonce
+				pack.NewU256FromU64(pack.NewU64(gasLimit)), // gasLimit
+				gasFeeCap,       // gasFeeCap
+				pack.Bytes(nil), // payload
 			)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -106,15 +116,22 @@ var _ = Describe("Filecoin", func() {
 			err = client.SubmitTx(ctx, tx)
 			Expect(err).ToNot(HaveOccurred())
 
+			// Wait slightly before we query the chain's node.
+			time.Sleep(time.Second)
+
 			// wait for the transaction to be included in a block
 			for {
-				time.Sleep(2 * time.Second)
-				fetchedTx, confs, err := client.Tx(ctx, txHash)
-				if fetchedTx != nil {
-					Expect(err).ToNot(HaveOccurred())
-					Expect(confs).To(BeNumerically(">=", 0))
+				// Loop until the transaction has at least a few confirmations.
+				tx, confs, err := client.Tx(ctx, txHash)
+				if err == nil {
+					Expect(confs.Uint64()).To(BeNumerically(">", 0))
+					Expect(tx.From()).To(Equal(sender))
+					Expect(tx.Value()).To(Equal(amount))
 					break
 				}
+
+				// wait and retry querying for the transaction
+				time.Sleep(5 * time.Second)
 			}
 		})
 	})
