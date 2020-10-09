@@ -82,4 +82,4 @@ jobs:
             export PATH=$PATH:$(go env GOPATH)/bin
             source ./infra/.env
             cd $GITHUB_WORKSPACE
-            CI=true go test
+            CI=true go test -timeout 1500s
