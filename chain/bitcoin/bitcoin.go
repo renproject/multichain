@@ -88,6 +88,8 @@ type Client interface {
 	UnspentOutputs(ctx context.Context, minConf, maxConf int64, address address.Address) ([]utxo.Output, error)
 	// Confirmations of a transaction in the Bitcoin network.
 	Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error)
+	// EstimateSmartFee
+	EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error)
 }
 
 type client struct {
@@ -237,6 +239,24 @@ func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int
 		confirmations = 0
 	}
 	return confirmations, nil
+}
+
+// EstimateSmartFee fetches the estimated bitcoin network fees to be paid (in
+// BTC per kilobyte) needed for a transaction to be confirmed within `numBlocks`
+// blocks. An error will be returned if the bitcoin node hasn't observed enough
+// blocks to make an estimate for the provided target `numBlocks`.
+func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
+	resp := btcjson.EstimateSmartFeeResult{}
+
+	if err := client.send(ctx, &resp, "estimatesmartfee", numBlocks); err != nil {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", err)
+	}
+
+	if resp.Errors != nil && len(resp.Errors) > 0 {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", resp.Errors[0])
+	}
+
+	return *resp.FeeRate, nil
 }
 
 func (client *client) send(ctx context.Context, resp interface{}, method string, params ...interface{}) error {
