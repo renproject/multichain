@@ -40,7 +40,7 @@ func NewAddressEncoder(params *chaincfg.Params) AddressEncoder {
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
 	// Validate that the base58 address is in fact in correct format.
 	encodedAddr := base58.Encode([]byte(rawAddr))
-	if _, err := btcutil.DecodeAddress(encodedAddr, &chaincfg.RegressionNetParams); err != nil {
+	if _, err := btcutil.DecodeAddress(encodedAddr, encoder.params); err != nil {
 		return address.Address(""), err
 	}
 
