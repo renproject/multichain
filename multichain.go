@@ -112,7 +112,7 @@ const (
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
 
 	AMOCK1 = Asset("AMOCK1") // Account-based mock asset
@@ -149,7 +149,7 @@ func (asset Asset) OriginChain() Chain {
 	case ZEC:
 		return Zcash
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
 	case AMOCK1:
@@ -172,8 +172,9 @@ func (asset Asset) ChainType() ChainType {
 	case BNB, ETH, FIL, LUNA:
 		return ChainTypeAccountBased
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
+
 	case AMOCK1, AMOCK2:
 		return ChainTypeAccountBased
 	case UMOCK:
@@ -221,7 +222,7 @@ const (
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
 
-	// These chains are define separately because they are mock chains. These
+	// These chains are defined separately because they are mock chains. These
 	// chains should only be used for testing.
 
 	AccountMocker1 = Chain("AccountMocker1")
@@ -256,8 +257,9 @@ func (chain Chain) ChainType() ChainType {
 	case BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
 
-	// These chains are define separately because they are mock chains. These
+	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.
+
 	case AccountMocker1, AccountMocker2:
 		return ChainTypeAccountBased
 	case UTXOMocker:
@@ -278,6 +280,44 @@ func (chain Chain) IsAccountBased() bool {
 // returns false.
 func (chain Chain) IsUTXOBased() bool {
 	return chain.ChainType() == ChainTypeUTXOBased
+}
+
+// NativeAsset returns the underlying native asset for a chain. For example, the
+// root asset of Bitcoin chain is BTC.
+func (chain Chain) NativeAsset() Asset {
+	switch chain {
+	case BinanceSmartChain:
+		return BNB
+	case BitcoinCash:
+		return BCH
+	case Bitcoin:
+		return BTC
+	case DigiByte:
+		return DGB
+	case Dogecoin:
+		return DOGE
+	case Ethereum:
+		return ETH
+	case Filecoin:
+		return FIL
+	case Terra:
+		return LUNA
+	case Zcash:
+		return ZEC
+
+	// These chains are handled separately because they are mock chains. These
+	// chains should only be used for testing.
+
+	case AccountMocker1:
+		return AMOCK1
+	case AccountMocker2:
+		return AMOCK2
+	case UTXOMocker:
+		return UMOCK
+
+	default:
+		return Asset("")
+	}
 }
 
 // ChainType represents the type of chain (whether account-based or utxo-based)
