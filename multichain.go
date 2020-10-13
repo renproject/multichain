@@ -282,9 +282,9 @@ func (chain Chain) IsUTXOBased() bool {
 	return chain.ChainType() == ChainTypeUTXOBased
 }
 
-// RootAsset returns the underlying native asset for a chain. For example, the
+// NativeAsset returns the underlying native asset for a chain. For example, the
 // root asset of Bitcoin chain is BTC.
-func (chain Chain) RootAsset() Asset {
+func (chain Chain) NativeAsset() Asset {
 	switch chain {
 	case BinanceSmartChain:
 		return BNB
