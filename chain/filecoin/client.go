@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"net/http"
 
+	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
+	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/lotus/api"
 	filclient "github.com/filecoin-project/lotus/api/client"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/specs-actors/actors/crypto"
 	"github.com/ipfs/go-cid"
 	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 )
 
@@ -48,15 +50,15 @@ func DefaultClientOptions() ClientOptions {
 
 // WithRPCURL returns a modified version of the options with the given API
 // rpc-url
-func (opts ClientOptions) WithRPCURL(rpcURL string) ClientOptions {
-	opts.RPCURL = rpcURL
+func (opts ClientOptions) WithRPCURL(rpcURL pack.String) ClientOptions {
+	opts.RPCURL = string(rpcURL)
 	return opts
 }
 
 // WithAuthToken returns a modified version of the options with the given
 // authentication token.
-func (opts ClientOptions) WithAuthToken(authToken string) ClientOptions {
-	opts.AuthToken = authToken
+func (opts ClientOptions) WithAuthToken(authToken pack.String) ClientOptions {
+	opts.AuthToken = string(authToken)
 	return opts
 }
 
@@ -99,6 +101,9 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	}
 	if messageLookup == nil {
 		return nil, pack.NewU64(0), fmt.Errorf("searching state for txid %v: not found", msgID)
+	}
+	if messageLookup.Receipt.ExitCode.IsError() {
+		return nil, pack.NewU64(0), fmt.Errorf("executing transaction: %v", messageLookup.Receipt.ExitCode.String())
 	}
 
 	// get the most recent tipset and its height
@@ -145,4 +150,20 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	default:
 		return fmt.Errorf("expected type %T, got type %T", new(Tx), tx)
 	}
+}
+
+// AccountNonce returns the current nonce of the account. This is the nonce to
+// be used while building a new transaction.
+func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (pack.U256, error) {
+	filAddr, err := filaddress.NewFromString(string(addr))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("bad address '%v': %v", addr, err)
+	}
+
+	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("searching state for addr: %v", addr)
+	}
+
+	return pack.NewU256FromU64(pack.NewU64(actor.Nonce)), nil
 }

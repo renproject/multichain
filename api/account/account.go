@@ -56,12 +56,16 @@ type Tx interface {
 // information, and this should be accepted during the construction of the
 // chain-specific transaction builder.
 type TxBuilder interface {
-	BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
+	BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (Tx, error)
 }
 
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
+	// AccountNonce is the current nonce of this account, which must be used to
+	// build a new transaction.
+	AccountNonce(context.Context, address.Address) (pack.U256, error)
+
 	// Tx returns the transaction uniquely identified by the given transaction
 	// hash. It also returns the number of confirmations for the transaction. If
 	// the transaction cannot be found before the context is done, or the

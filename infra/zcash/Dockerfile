@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 
 # Install zcashd.
 RUN apt-get update                                                                             && \

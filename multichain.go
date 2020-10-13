@@ -169,7 +169,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH, FIL:
+	case BNB, ETH, FIL, LUNA:
 		return ChainTypeAccountBased
 
 	// These assets are define separately because they are mock assets. These
@@ -253,7 +253,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Filecoin:
+	case BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are define separately because they are mock chains. These

@@ -1,6 +1,7 @@
 package cosmos
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,45 +14,42 @@ import (
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 type txBuilder struct {
-	cdc           *codec.Codec
-	coinDenom     pack.String
-	chainID       pack.String
-	accountNumber pack.U64
+	client    *Client
+	coinDenom pack.String
+	chainID   pack.String
 }
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	Cdc           *codec.Codec `json:"cdc"`
-	AccountNumber pack.U64     `json:"account_number"`
-	ChainID       pack.String  `json:"chain_id"`
-	CoinDenom     pack.String  `json:"coin_denom"`
+	ChainID   pack.String `json:"chain_id"`
+	CoinDenom pack.String `json:"coin_denom"`
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Cosmos based transactions.
-func NewTxBuilder(options TxBuilderOptions) account.TxBuilder {
-	if options.Cdc == nil {
-		options.Cdc = simapp.MakeCodec()
+func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
+	if client.cdc == nil {
+		client.cdc = simapp.MakeCodec()
 	}
 
 	return txBuilder{
-		cdc:           options.Cdc,
-		coinDenom:     options.CoinDenom,
-		chainID:       options.ChainID,
-		accountNumber: options.AccountNumber,
+		client:    client,
+		coinDenom: options.CoinDenom,
+		chainID:   options.ChainID,
 	}
 }
 
 // BuildTx consumes a list of MsgSend to build and return a cosmos transaction.
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
-func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice pack.U256, payload pack.Bytes) (account.Tx, error) {
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {
 		return nil, err
@@ -73,12 +71,17 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 
 	fees := Coins{Coin{
 		Denom:  builder.coinDenom,
-		Amount: pack.NewU64(gasPrice.Int().Uint64()),
+		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
 	}}
 
+	accountNumber, err := builder.client.AccountNumber(ctx, from)
+	if err != nil {
+		return nil, err
+	}
+
 	txBuilder := auth.NewTxBuilder(
-		utils.GetTxEncoder(builder.cdc),
-		builder.accountNumber.Uint64(),
+		utils.GetTxEncoder(builder.client.cdc),
+		accountNumber.Uint64(),
 		nonce.Int().Uint64(),
 		gasLimit.Int().Uint64(),
 		0,
@@ -100,7 +103,7 @@ func (builder txBuilder) BuildTx(from, to address.Address, value, nonce, gasLimi
 		msgs:    []MsgSend{sendMsg},
 		fee:     parseStdFee(signMsg.Fee),
 		memo:    pack.String(payload.String()),
-		cdc:     builder.cdc,
+		cdc:     builder.client.cdc,
 		signMsg: signMsg,
 	}, nil
 }
@@ -262,11 +265,12 @@ func (tx StdTx) Hash() pack.Bytes {
 
 // Sighashes that need to be signed before this transaction can be submitted.
 func (tx StdTx) Sighashes() ([]pack.Bytes32, error) {
-	if len(tx.signMsg.Bytes()) != 32 {
+	sighashBytes := crypto.Sha256(tx.signMsg.Bytes())
+	if len(sighashBytes) != 32 {
 		return nil, fmt.Errorf("expected 32 bytes, got %v bytes", len(tx.signMsg.Bytes()))
 	}
 	sighash := pack.Bytes32{}
-	copy(sighash[:], tx.signMsg.Bytes())
+	copy(sighash[:], sighashBytes)
 	return []pack.Bytes32{sighash}, nil
 }
 
@@ -278,7 +282,9 @@ func (tx *StdTx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		var cpPubKey secp256k1.PubKeySecp256k1
 		copy(cpPubKey[:], pubKey[:secp256k1.PubKeySecp256k1Size])
 		stdSignatures = append(stdSignatures, auth.StdSignature{
-			Signature: sig[:],
+			// Cosmos uses 64-bytes signature
+			// https://github.com/tendermint/tendermint/blob/v0.33.8/crypto/secp256k1/secp256k1_nocgo.go#L60-L70
+			Signature: sig[:64],
 			PubKey:    cpPubKey,
 		})
 	}

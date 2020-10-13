@@ -6,13 +6,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/renproject/id"
 	"github.com/renproject/multichain"
-	"github.com/renproject/multichain/chain/cosmos"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/terra-project/core/app"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,55 +34,58 @@ var _ = Describe("Terra", func() {
 					panic("TERRA_PK is undefined")
 				}
 
-				addrEnv := os.Getenv("TERRA_ADDRESS")
-				if addrEnv == "" {
-					panic("TERRA_ADDRESS is undefined")
-				}
-
 				pkBz, err := hex.DecodeString(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
 				var pk secp256k1.PrivKeySecp256k1
 				copy(pk[:], pkBz)
 
-				addr := terra.Address(pk.PubKey().Address())
+				var privKey id.PrivKey
+				err = surge.FromBinary(&privKey, pkBz)
+				Expect(err).NotTo(HaveOccurred())
 
-				decoder := terra.NewAddressDecoder("terra")
-				_, err = decoder.DecodeAddress(multichain.Address(pack.NewString(addrEnv)))
-				Expect(err).ToNot(HaveOccurred())
+				addr := terra.Address(pk.PubKey().Address())
 
 				// random recipient
 				pkRecipient := secp256k1.GenPrivKey()
-				recipient := types.AccAddress(pkRecipient.PubKey().Address())
+				addrEncoder := terra.NewAddressEncoder("terra")
+				recipient, err := addrEncoder.EncodeAddress(address.RawAddress(pack.Bytes(pkRecipient.PubKey().Address())))
+				Expect(err).NotTo(HaveOccurred())
 
 				// instantiate a new client
-				client := terra.NewClient(cosmos.DefaultClientOptions())
+				client := terra.NewClient(terra.DefaultClientOptions())
+				nonce, err := client.AccountNonce(ctx, multichain.Address(addr.String()))
+				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
-					AccountNumber: pack.NewU64(1),
-					ChainID:       "testnet",
-					CoinDenom:     "uluna",
-					Cdc:           app.MakeCodec(),
-				})
+					ChainID:   "testnet",
+					CoinDenom: "uluna",
+				}, client)
 
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))
+				amount := pack.NewU256FromU64(pack.U64(2000000))
 				tx, err := txBuilder.BuildTx(
-					multichain.Address(addr.String()),      // from
-					multichain.Address(recipient.String()), // to
-					pack.NewU256FromU64(pack.U64(2000000)), // amount
-					pack.NewU256FromU64(0),                 // nonce
-					pack.NewU256FromU64(pack.U64(300000)),  // gas
-					pack.NewU256FromU64(pack.U64(300)),     // fee
-					payload,                                // memo
+					ctx,
+					multichain.Address(addr.String()),     // from
+					recipient,                             // to
+					amount,                                // amount
+					nonce,                                 // nonce
+					pack.NewU256FromU64(pack.U64(200000)), // gas
+					pack.NewU256FromU64(pack.U64(1)),      // gas price
+					payload,                               // memo
 				)
 				Expect(err).NotTo(HaveOccurred())
 
 				// get the transaction bytes and sign it
 				sighashes, err := tx.Sighashes()
 				Expect(err).NotTo(HaveOccurred())
-				sigBytes, err := pk.Sign(sighashes[0][:])
+				Expect(len(sighashes)).To(Equal(1))
+				hash := id.Hash(sighashes[0])
+				sig, err := privKey.Sign(&hash)
+				Expect(err).NotTo(HaveOccurred())
+				sigBytes, err := surge.ToBinary(sig)
 				Expect(err).NotTo(HaveOccurred())
 				sig65 := pack.Bytes65{}
 				copy(sig65[:], sigBytes)
@@ -110,6 +113,10 @@ var _ = Describe("Terra", func() {
 					if err == nil {
 						Expect(confs.Uint64()).To(Equal(uint64(1)))
 						Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
+						Expect(foundTx.Nonce()).To(Equal(nonce))
+						Expect(foundTx.From()).To(Equal(multichain.Address(addr.String())))
+						Expect(foundTx.To()).To(Equal(recipient))
+						Expect(foundTx.Value()).To(Equal(amount))
 						break
 					}
 

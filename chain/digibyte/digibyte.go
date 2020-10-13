@@ -146,6 +146,7 @@ var MainNetParams = chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
+// TestnetParams returns the chain configuration for testnet
 var TestnetParams = chaincfg.Params{
 	Name: "testnet",
 
@@ -180,6 +181,7 @@ var TestnetParams = chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
+// RegressionNetParams returns the chain configuration for regression net
 var RegressionNetParams = chaincfg.Params{
 	Name: "regtest",
 

@@ -21,5 +21,5 @@ type Estimator interface {
 	// next block. In Ethereum, it would be the recommended GWEI-per-gas
 	// required to get a transaction into one of the next few blocks (because
 	// blocks happen a lot faster).
-	EstimateGasPrice(context.Context) (pack.U256, error)
+	EstimateGasPrice(context.Context) (pack.U256, pack.U256, error)
 }

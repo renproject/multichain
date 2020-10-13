@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 
 	cliContext "github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -63,10 +65,11 @@ func (opts ClientOptions) WithHost(host pack.String) ClientOptions {
 type Client struct {
 	opts   ClientOptions
 	cliCtx cliContext.CLIContext
+	cdc    *codec.Codec
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) account.Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -77,6 +80,7 @@ func NewClient(opts ClientOptions, cdc *codec.Codec) account.Client {
 	return &Client{
 		opts:   opts,
 		cliCtx: cliCtx,
+		cdc:    cdc,
 	}
 }
 
@@ -117,4 +121,37 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	}
 
 	return nil
+}
+
+// AccountNonce returns the current nonce of the account. This is the nonce to
+// be used while building a new transaction.
+func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pack.U256, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return pack.U256{}, err
+	}
+
+	return pack.NewU256FromU64(pack.NewU64(acc.GetSequence())), nil
+}
+
+// AccountNumber returns the account number for a given address.
+func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return 0, err
+	}
+
+	return pack.U64(acc.GetAccountNumber()), nil
 }

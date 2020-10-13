@@ -37,6 +37,7 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${BITCOIN_ADDRESS}"
+      - "${BITCOIN_PK}"
 
   #
   # Bitcoin Cash

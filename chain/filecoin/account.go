@@ -2,12 +2,13 @@ package filecoin
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	filaddress "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/specs-actors/actors/abi"
-	"github.com/filecoin-project/specs-actors/actors/abi/big"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
@@ -28,7 +29,7 @@ func NewTxBuilder(gasPremium pack.U256) TxBuilder {
 }
 
 // BuildTx receives transaction fields and constructs a new transaction.
-func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, gasLimit, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
 	filfrom, err := filaddress.NewFromString(string(from))
 	if err != nil {
 		return nil, fmt.Errorf("bad from address '%v': %v", from, err)
@@ -38,10 +39,6 @@ func (txBuilder TxBuilder) BuildTx(from, to address.Address, value, nonce, gasLi
 		return nil, fmt.Errorf("bad to address '%v': %v", to, err)
 	}
 	methodNum := abi.MethodNum(0)
-	if len(payload) > 0 {
-		methodNum = abi.MethodNum(payload[0])
-		payload = payload[1:]
-	}
 	return &Tx{
 		msg: types.Message{
 			Version:    types.MessageVersion,
@@ -101,16 +98,7 @@ func (tx Tx) Nonce() pack.U256 {
 // Generally, this payload is used to send notes between external accounts,
 // or invoke business logic on a contract.
 func (tx Tx) Payload() contract.CallData {
-	if tx.msg.Method == 0 {
-		if len(tx.msg.Params) == 0 {
-			return contract.CallData([]byte{})
-		}
-		return contract.CallData(append([]byte{0}, tx.msg.Params...))
-	}
-	if len(tx.msg.Params) == 0 {
-		return contract.CallData([]byte{byte(tx.msg.Method)})
-	}
-	return contract.CallData(append([]byte{byte(tx.msg.Method)}, tx.msg.Params...))
+	return contract.CallData(tx.msg.Params)
 }
 
 // Sighashes returns the digests that must be signed before the transaction

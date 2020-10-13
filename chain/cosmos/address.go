@@ -30,13 +30,15 @@ type AddressEncodeDecoder struct {
 // NewAddressEncodeDecoder creates a new address encoder-decoder
 func NewAddressEncodeDecoder(hrp string) AddressEncodeDecoder {
 	return AddressEncodeDecoder{
-		AddressEncoder: AddressEncoder{},
+		AddressEncoder: NewAddressEncoder(hrp),
 		AddressDecoder: NewAddressDecoder(hrp),
 	}
 }
 
 // AddressEncoder implements the address.Encoder interface
-type AddressEncoder struct{}
+type AddressEncoder struct {
+	hrp string
+}
 
 // AddressDecoder implements the address.Decoder interface
 type AddressDecoder struct {
@@ -49,8 +51,8 @@ func NewAddressDecoder(hrp string) AddressDecoder {
 }
 
 // NewAddressEncoder creates a new address encoder
-func NewAddressEncoder() AddressEncoder {
-	return AddressEncoder{}
+func NewAddressEncoder(hrp string) AddressEncoder {
+	return AddressEncoder{hrp: hrp}
 }
 
 // DecodeAddress consumes a human-readable representation of a cosmos
@@ -67,6 +69,7 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 // EncodeAddress consumes raw bytes and encodes them to a human-readable
 // address format.
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	sdk.GetConfig().SetBech32PrefixForAccount(encoder.hrp, encoder.hrp+"pub")
 	bech32Addr := sdk.AccAddress(rawAddr)
 	return address.Address(bech32Addr.String()), nil
 }
