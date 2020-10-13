@@ -280,6 +280,43 @@ func (chain Chain) IsUTXOBased() bool {
 	return chain.ChainType() == ChainTypeUTXOBased
 }
 
+// RootAsset returns the underlying native asset for a chain. For example, the
+// root asset of Bitcoin chain is BTC.
+func (chain Chain) RootAsset() Asset {
+	switch chain {
+	case BinanceSmartChain:
+		return BNB
+	case BitcoinCash:
+		return BCH
+	case Bitcoin:
+		return BTC
+	case DigiByte:
+		return DGB
+	case Dogecoin:
+		return DOGE
+	case Ethereum:
+		return ETH
+	case Filecoin:
+		return FIL
+	case Terra:
+		return LUNA
+	case Zcash:
+		return ZEC
+
+	// These assets are define separately because they are mock assets. These
+	// assets should only be used for testing.
+	case AccountMocker1:
+		return AMOCK1
+	case AccountMocker2:
+		return AMOCK2
+	case UTXOMocker:
+		return UMOCK
+
+	default:
+		return Asset("")
+	}
+}
+
 // ChainType represents the type of chain (whether account-based or utxo-based)
 type ChainType string
 
