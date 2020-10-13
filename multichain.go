@@ -112,7 +112,7 @@ const (
 	LUNA = Asset("LUNA") // Luna
 	ZEC  = Asset("ZEC")  // Zcash
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
 
 	AMOCK1 = Asset("AMOCK1") // Account-based mock asset
@@ -149,7 +149,7 @@ func (asset Asset) OriginChain() Chain {
 	case ZEC:
 		return Zcash
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
 	case AMOCK1:
@@ -172,8 +172,9 @@ func (asset Asset) ChainType() ChainType {
 	case BNB, ETH, FIL, LUNA:
 		return ChainTypeAccountBased
 
-	// These assets are define separately because they are mock assets. These
+	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
+
 	case AMOCK1, AMOCK2:
 		return ChainTypeAccountBased
 	case UMOCK:
@@ -221,7 +222,7 @@ const (
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
 
-	// These chains are define separately because they are mock chains. These
+	// These chains are defined separately because they are mock chains. These
 	// chains should only be used for testing.
 
 	AccountMocker1 = Chain("AccountMocker1")
@@ -256,8 +257,9 @@ func (chain Chain) ChainType() ChainType {
 	case BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
 
-	// These chains are define separately because they are mock chains. These
+	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.
+
 	case AccountMocker1, AccountMocker2:
 		return ChainTypeAccountBased
 	case UTXOMocker:
@@ -303,8 +305,9 @@ func (chain Chain) RootAsset() Asset {
 	case Zcash:
 		return ZEC
 
-	// These assets are define separately because they are mock assets. These
-	// assets should only be used for testing.
+	// These chains are handled separately because they are mock chains. These
+	// chains should only be used for testing.
+
 	case AccountMocker1:
 		return AMOCK1
 	case AccountMocker2:
