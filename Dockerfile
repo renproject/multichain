@@ -22,3 +22,8 @@ RUN mkdir -p $(go env GOPATH) && \
 	git checkout a62d00da59d1b0fb && \
 	make && \
 	go install
+
+ENV GO111MODULE=on
+ENV GOPROXY=direct
+ENV GOSUMDB=off
+ENV GOPRIVATE=github.com/renproject/darknode
