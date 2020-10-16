@@ -24,7 +24,6 @@ var _ = Describe("Gas", func() {
 			// instantiate the client
 			client, err := filecoin.NewClient(
 				filecoin.DefaultClientOptions().
-					WithRPCURL("ws://127.0.0.1:1234/rpc/v0").
 					WithAuthToken(fetchAuthToken()),
 			)
 			Expect(err).ToNot(HaveOccurred())

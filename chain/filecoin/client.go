@@ -21,9 +21,9 @@ const (
 	// AuthorizationKey is the header key used for authorization
 	AuthorizationKey = "Authorization"
 
-	// DefaultClientRPCURL is the RPC websocket URL used by default, to
-	// interact with the filecoin lotus node.
-	DefaultClientRPCURL = "ws://127.0.0.1:1234/rpc/v0"
+	// DefaultClientRPCURL is the RPC URL used by default, to interact with the
+	// filecoin lotus node.
+	DefaultClientRPCURL = "http://127.0.0.1:1234/rpc/v0"
 
 	// DefaultClientAuthToken is the auth token used to instantiate the lotus
 	// client. A valid lotus auth token is required to write messages to the

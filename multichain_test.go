@@ -400,7 +400,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(pack.String(addr.String()))
 				},
-				"ws://127.0.0.1:1234/rpc/v0",
+				"http://127.0.0.1:1234/rpc/v0",
 				func() multichain.Address {
 					pk := id.NewPrivKey()
 					pubKey := pk.PubKey()
