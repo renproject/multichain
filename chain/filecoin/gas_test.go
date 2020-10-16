@@ -32,7 +32,7 @@ var _ = Describe("Gas", func() {
 			gasEstimator := filecoin.NewGasEstimator(client, 2000000)
 
 			// estimate gas price
-			_, _, err = gasEstimator.EstimateGasPrice(ctx)
+			_, _, err = gasEstimator.EstimateGas(ctx)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})

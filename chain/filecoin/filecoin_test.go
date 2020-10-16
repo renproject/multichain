@@ -68,11 +68,11 @@ var _ = Describe("Filecoin", func() {
 			// get good gas estimates
 			gasLimit := uint64(2200000)
 			gasEstimator := filecoin.NewGasEstimator(client, int64(gasLimit))
-			gasFeeCap, gasPremium, err := gasEstimator.EstimateGasPrice(ctx)
+			gasPremium, gasFeeCap, err := gasEstimator.EstimateGas(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			// construct the transaction builder
-			filTxBuilder := filecoin.NewTxBuilder(gasPremium)
+			filTxBuilder := filecoin.NewTxBuilder()
 
 			// build the transaction
 			sender := multichain.Address(pack.String(senderFilAddr.String()))
@@ -87,7 +87,8 @@ var _ = Describe("Filecoin", func() {
 				amount, // amount
 				nonce,  // nonce
 				pack.NewU256FromU64(pack.NewU64(gasLimit)), // gasLimit
-				gasFeeCap,       // gasFeeCap
+				gasPremium,
+				gasFeeCap,
 				pack.Bytes(nil), // payload
 			)
 			Expect(err).ToNot(HaveOccurred())

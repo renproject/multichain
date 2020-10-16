@@ -21,8 +21,11 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
 
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
       - name: Install dependency packages
         run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config

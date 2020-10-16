@@ -30,20 +30,20 @@ func NewGasEstimator(client Client, numBlocks int64) GasEstimator {
 	}
 }
 
-// EstimateGasPrice returns the number of SATs-per-byte that is needed in order
-// to confirm transactions with an estimated maximum delay of `numBlocks` block.
-// It is the responsibility of the caller to know the number of bytes in their
-// transaction. This method calls the `estimatesmartfee` RPC call to the node,
-// which based on a conservative (considering longer history) strategy returns
-// the estimated BTC per kilobyte of data in the transaction. An error will be
-// returned if the bitcoin node hasn't observed enough blocks to make an
-// estimate for the provided target `numBlocks`.
-func (gasEstimator GasEstimator) EstimateGasPrice(ctx context.Context) (pack.U256, pack.U256, error) {
+// EstimateGas returns the number of SATs-per-byte (for both price and cap) that
+// is needed in order to confirm transactions with an estimated maximum delay of
+// `numBlocks` block. It is the responsibility of the caller to know the number
+// of bytes in their transaction. This method calls the `estimatesmartfee` RPC
+// call to the node, which based on a conservative (considering longer history)
+// strategy returns the estimated BTC per kilobyte of data in the transaction.
+// An error will be returned if the bitcoin node hasn't observed enough blocks
+// to make an estimate for the provided target `numBlocks`.
+func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
 	feeRate, err := gasEstimator.client.EstimateSmartFee(ctx, gasEstimator.numBlocks)
 	if err != nil {
 		return pack.NewU256([32]byte{}), pack.NewU256([32]byte{}), err
 	}
 
 	satsPerByte := uint64(feeRate * btcToSatoshis / kilobyteToByte)
-	return pack.NewU256FromU64(pack.NewU64(satsPerByte)), pack.NewU256([32]byte{}), nil
+	return pack.NewU256FromU64(pack.NewU64(satsPerByte)), pack.NewU256FromU64(pack.NewU64(satsPerByte)), nil
 }
