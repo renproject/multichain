@@ -72,8 +72,9 @@ var _ = Describe("Terra", func() {
 					recipient,                             // to
 					amount,                                // amount
 					nonce,                                 // nonce
-					pack.NewU256FromU64(pack.U64(200000)), // gas
+					pack.NewU256FromU64(pack.U64(200000)), // gas limit
 					pack.NewU256FromU64(pack.U64(1)),      // gas price
+					pack.NewU256FromU64(pack.U64(1)),      // gas cap
 					payload,                               // memo
 				)
 				Expect(err).NotTo(HaveOccurred())

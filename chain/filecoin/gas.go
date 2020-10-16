@@ -32,11 +32,10 @@ func NewGasEstimator(client *Client, gasLimit int64) *GasEstimator {
 	}
 }
 
-// EstimateGasPrice returns gas fee cap and gas premium values being accepted
-// in the filecoin chain at present. These numbers may vary as the chain's
-// congestion level increases. It is safe to say that by using the fetched
-// values, a transaction will be included in a block with minimal delay.
-func (gasEstimator *GasEstimator) EstimateGasPrice(ctx context.Context) (pack.U256, pack.U256, error) {
+// EstimateGas returns an estimate of the current gas price (also known as gas
+// premium) and gas cap. These numbers change with congestion. These estimates
+// are often a little bit off, and this should be considered when using them.
+func (gasEstimator *GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
 	// Create a dummy "Send" message.
 	msgIn := types.Message{
 		Version:    types.MessageVersion,
@@ -68,5 +67,5 @@ func (gasEstimator *GasEstimator) EstimateGasPrice(ctx context.Context) (pack.U2
 	gasFeeCap := big.NewInt(0).SetBytes(gasFeeCapBytes)
 	gasPremium := big.NewInt(0).SetBytes(gasPremiumBytes)
 
-	return pack.NewU256FromInt(gasFeeCap), pack.NewU256FromInt(gasPremium), nil
+	return pack.NewU256FromInt(gasPremium), pack.NewU256FromInt(gasFeeCap), nil
 }

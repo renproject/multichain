@@ -19,17 +19,17 @@ var _ = Describe("Gas", func() {
 
 			// estimate fee to include tx within 1 block.
 			gasEstimator1 := bitcoin.NewGasEstimator(client, 1)
-			gasPrice1, _, err := gasEstimator1.EstimateGasPrice(ctx)
+			gasPrice1, _, err := gasEstimator1.EstimateGas(ctx)
 			Expect(err).NotTo(HaveOccurred())
 
 			// estimate fee to include tx within 10 blocks.
 			gasEstimator2 := bitcoin.NewGasEstimator(client, 10)
-			gasPrice2, _, err := gasEstimator2.EstimateGasPrice(ctx)
+			gasPrice2, _, err := gasEstimator2.EstimateGas(ctx)
 			Expect(err).NotTo(HaveOccurred())
 
 			// estimate fee to include tx within 100 blocks.
 			gasEstimator3 := bitcoin.NewGasEstimator(client, 100)
-			gasPrice3, _, err := gasEstimator3.EstimateGasPrice(ctx)
+			gasPrice3, _, err := gasEstimator3.EstimateGas(ctx)
 			Expect(err).NotTo(HaveOccurred())
 
 			// expect fees in this order at the very least.

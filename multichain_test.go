@@ -419,11 +419,7 @@ var _ = Describe("Multichain", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					gasEstimator := filecoin.NewGasEstimator(client, 2189560)
-					_, gasPremium, err := gasEstimator.EstimateGasPrice(context.Background())
-					Expect(err).NotTo(HaveOccurred())
-
-					txBuilder := filecoin.NewTxBuilder(gasPremium)
+					txBuilder := filecoin.NewTxBuilder()
 
 					return client, txBuilder
 				},
@@ -463,7 +459,7 @@ var _ = Describe("Multichain", func() {
 						ctx,
 						multichain.Address(senderAddr),
 						recipientAddr,
-						amount, nonce, gasLimit, gasPrice,
+						amount, nonce, gasLimit, gasPrice, gasPrice,
 						payload,
 					)
 					Expect(err).NotTo(HaveOccurred())
