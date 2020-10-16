@@ -304,7 +304,7 @@ var _ = Describe("Multichain", func() {
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
 			initialise          func(pack.String) (multichain.AccountClient, multichain.AccountTxBuilder)
-			txParams            func() (pack.U256, pack.U256, pack.U256, pack.Bytes)
+			txParams            func(multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
 			{
@@ -355,12 +355,13 @@ var _ = Describe("Multichain", func() {
 
 					return client, txBuilder
 				},
-				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
+				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
 					gasLimit := pack.NewU256FromU64(pack.U64(100000))
 					gasPrice := pack.NewU256FromU64(pack.U64(1))
+					gasCap := pack.NewU256FromInt(gasPrice.Int())
 					payload := pack.NewBytes([]byte("multichain"))
-					return amount, gasLimit, gasPrice, payload
+					return amount, gasLimit, gasPrice, gasCap, payload
 				},
 				multichain.Terra,
 			},
@@ -423,12 +424,18 @@ var _ = Describe("Multichain", func() {
 
 					return client, txBuilder
 				},
-				func() (pack.U256, pack.U256, pack.U256, pack.Bytes) {
+				func(client multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.NewU64(100000000))
 					gasLimit := pack.NewU256FromU64(pack.NewU64(2189560))
-					gasPrice := pack.NewU256FromU64(pack.NewU64(300000))
+
+					// Fetch gas price and gas cap using the gas estimator.
+					filecoinClient := client.(*filecoin.Client)
+					gasPrice, gasCap, err := filecoin.NewGasEstimator(filecoinClient, gasLimit.Int().Int64()).
+						EstimateGas(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+
 					payload := pack.Bytes(nil)
-					return amount, gasLimit, gasPrice, payload
+					return amount, gasLimit, gasPrice, gasCap, payload
 				},
 				multichain.Filecoin,
 			},
@@ -453,13 +460,13 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					// Build a transaction.
-					amount, gasLimit, gasPrice, payload := accountChain.txParams()
+					amount, gasLimit, gasPrice, gasCap, payload := accountChain.txParams(accountClient)
 
 					accountTx, err := txBuilder.BuildTx(
 						ctx,
 						multichain.Address(senderAddr),
 						recipientAddr,
-						amount, nonce, gasLimit, gasPrice, gasPrice,
+						amount, nonce, gasLimit, gasPrice, gasCap,
 						payload,
 					)
 					Expect(err).NotTo(HaveOccurred())
