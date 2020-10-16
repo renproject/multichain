@@ -20,16 +20,15 @@ import (
 // broadcasted to the filecoin network. The TxBuilder is configured using a
 // gas price and gas limit.
 type TxBuilder struct {
-	gasPremium pack.U256
 }
 
 // NewTxBuilder creates a new transaction builder.
-func NewTxBuilder(gasPremium pack.U256) TxBuilder {
-	return TxBuilder{gasPremium}
+func NewTxBuilder() TxBuilder {
+	return TxBuilder{}
 }
 
 // BuildTx receives transaction fields and constructs a new transaction.
-func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
 	filfrom, err := filaddress.NewFromString(string(from))
 	if err != nil {
 		return nil, fmt.Errorf("bad from address '%v': %v", from, err)
@@ -46,9 +45,9 @@ func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address
 			To:         filto,
 			Value:      big.Int{Int: value.Int()},
 			Nonce:      nonce.Int().Uint64(),
-			GasFeeCap:  big.Int{Int: gasFeeCap.Int()},
+			GasFeeCap:  big.Int{Int: gasCap.Int()},
 			GasLimit:   gasLimit.Int().Int64(),
-			GasPremium: big.Int{Int: txBuilder.gasPremium.Int()},
+			GasPremium: big.Int{Int: gasPrice.Int()},
 			Method:     methodNum,
 			Params:     payload,
 		},
