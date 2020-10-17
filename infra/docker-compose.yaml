@@ -125,17 +125,17 @@ services:
     entrypoint:
       - "./root/run.sh"
 
-  #
-  # Zcash
-  #
-  zcash:
+  ##
+  ## Starname (IOV)
+  ##
+  starname:
     build:
-      context: ./zcash
+      context: ./starname
     ports:
-      - "0.0.0.0:18232:18232"
+      - "0.0.0.0:46657:46657"
     entrypoint:
       - "./root/run.sh"
-      - "${ZCASH_ADDRESS}"
+      - "${IOV_ADDRESS}"
 
   ##
   ## Terra
@@ -148,3 +148,15 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+
+  #
+  # Zcash
+  #
+  zcash:
+    build:
+      context: ./zcash
+    ports:
+      - "0.0.0.0:18232:18232"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ZCASH_ADDRESS}"
