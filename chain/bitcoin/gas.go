@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"context"
+	"math"
 
 	"github.com/renproject/pack"
 )
@@ -44,6 +45,6 @@ func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pa
 		return pack.NewU256([32]byte{}), pack.NewU256([32]byte{}), err
 	}
 
-	satsPerByte := uint64(feeRate * btcToSatoshis / kilobyteToByte)
-	return pack.NewU256FromU64(pack.NewU64(satsPerByte)), pack.NewU256FromU64(pack.NewU64(satsPerByte)), nil
+	satsPerByte := uint64(math.Ceil(feeRate * btcToSatoshis / kilobyteToByte))
+	return pack.NewU256FromUint64(satsPerByte), pack.NewU256FromUint64(satsPerByte), nil
 }
