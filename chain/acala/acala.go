@@ -8,14 +8,13 @@ import (
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client"
 	"github.com/centrifuge/go-substrate-rpc-client/scale"
 	"github.com/centrifuge/go-substrate-rpc-client/types"
-	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
 	"go.uber.org/zap"
 )
 
 const (
-	DefaultClientRPCURL = "http://127.0.0.1:9944"
+	DefaultClientRPCURL = "ws://127.0.0.1:9944"
 )
 
 type ClientOptions struct {
@@ -72,10 +71,8 @@ func decodeEventData(meta *types.Metadata, data *types.StorageDataRaw) (eventBur
 
 func (client *Client) BurnEvent(
 	ctx context.Context,
-	asset multichain.Asset,
-	nonce pack.Bytes32,
 	blockheight pack.U64,
-) (pack.U256, pack.String, pack.U64, error) {
+) (pack.U256, address.Address, pack.U64, error) {
 	// get metadata
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
@@ -135,5 +132,5 @@ func (client *Client) BurnEvent(
 		panic(err)
 	}
 
-	return pack.NewU256FromU128(pack.NewU128FromInt(burnEvent.Amount.Int)), pack.String(to), pack.NewU64(confs), nil
+	return pack.NewU256FromInt(burnEvent.Amount.Int), address.Address(pack.String(to)), pack.NewU64(confs), nil
 }
