@@ -87,7 +87,7 @@ func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, 
 		0,
 		false,
 		builder.chainID.String(),
-		payload.String(),
+		string(payload),
 		fees.Coins(),
 		types.DecCoins{},
 	)
