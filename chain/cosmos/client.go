@@ -155,3 +155,26 @@ func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pa
 
 	return pack.U64(acc.GetAccountNumber()), nil
 }
+
+// AccountBalance returns the account balancee for a given address.
+func (client *Client) AccountBalance(_ context.Context, addr address.Address, denom string) (pack.U256, error) {
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return pack.U256{}, err
+	}
+
+	balance := acc.GetCoins().AmountOf(denom).BigInt()
+
+	// If the balance exceeds `MaxU256`, return an error.
+	if pack.MaxU256.Int().Cmp(balance) == -1 {
+		return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
+	}
+
+	return pack.NewU256FromInt(balance), nil
+}
