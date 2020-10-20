@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 
 RUN apt-get update && apt-get install --yes --fix-missing software-properties-common curl git clang
 RUN apt-get install --yes --fix-missing --no-install-recommends build-essential
@@ -6,8 +6,6 @@ RUN apt-get install --yes --fix-missing --no-install-recommends build-essential
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN rustup default nightly
-RUN rustup update
 
 # Clone repository
 RUN git clone https://github.com/AcalaNetwork/Acala.git
@@ -21,7 +19,10 @@ RUN git pull
 RUN git config --global submodule.recurse true
 
 # Build
-RUN make init
+RUN rustup default nightly-2020-09-27
+RUN rustup target add wasm32-unknown-unknown --toolchain nightly-2020-09-27
+RUN make submodule
+RUN make build-full
 RUN make build
 
 WORKDIR /
