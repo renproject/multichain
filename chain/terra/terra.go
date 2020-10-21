@@ -30,7 +30,7 @@ var (
 
 // NewClient returns returns a new Client with Terra codec.
 func NewClient(opts ClientOptions) *Client {
-	return cosmos.NewClient(opts, app.MakeCodec())
+	return cosmos.NewClient(opts, app.MakeCodec(), "terra")
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
