@@ -66,10 +66,11 @@ type Client struct {
 	opts   ClientOptions
 	cliCtx cliContext.CLIContext
 	cdc    *codec.Codec
+	hrp    string
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
+func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
 	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
 	if err != nil {
 		panic(err)
@@ -81,6 +82,7 @@ func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
 		opts:   opts,
 		cliCtx: cliCtx,
 		cdc:    cdc,
+		hrp:    hrp,
 	}
 }
 
@@ -126,6 +128,8 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 // AccountNonce returns the current nonce of the account. This is the nonce to
 // be used while building a new transaction.
 func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pack.U256, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
@@ -142,6 +146,8 @@ func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pac
 
 // AccountNumber returns the account number for a given address.
 func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)

@@ -50,6 +50,8 @@ func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
 func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+	types.GetConfig().SetBech32PrefixForAccount(builder.client.hrp, builder.client.hrp+"pub")
+
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {
 		return nil, err
