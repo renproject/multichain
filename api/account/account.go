@@ -62,6 +62,9 @@ type TxBuilder interface {
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
+	// AccountBalance returns the current balance of the given account.
+	AccountBalance(context.Context, address.Address) (pack.U256, error)
+
 	// AccountNonce is the current nonce of this account, which must be used to
 	// build a new transaction.
 	AccountNonce(context.Context, address.Address) (pack.U256, error)

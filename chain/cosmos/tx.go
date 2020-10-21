@@ -19,16 +19,32 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
-type txBuilder struct {
-	client    *Client
-	coinDenom pack.String
-	chainID   pack.String
-}
+const (
+	// DefaultChainID used by the Client.
+	DefaultChainID = pack.String("testnet")
+)
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	ChainID   pack.String `json:"chain_id"`
-	CoinDenom pack.String `json:"coin_denom"`
+	ChainID pack.String
+}
+
+// DefaultTxBuilderOptions returns TxBuilderOptions with the default settings.
+func DefaultTxBuilderOptions() TxBuilderOptions {
+	return TxBuilderOptions{
+		ChainID: DefaultChainID,
+	}
+}
+
+// WithChainID sets the chain ID used by the transaction builder.
+func (opts TxBuilderOptions) WithChainID(chainID pack.String) TxBuilderOptions {
+	opts.ChainID = chainID
+	return opts
+}
+
+type txBuilder struct {
+	client  *Client
+	chainID pack.String
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
@@ -40,9 +56,8 @@ func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 	}
 
 	return txBuilder{
-		client:    client,
-		coinDenom: options.CoinDenom,
-		chainID:   options.ChainID,
+		client:  client,
+		chainID: options.ChainID,
 	}
 }
 
@@ -63,14 +78,16 @@ func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, 
 	sendMsg := MsgSend{
 		FromAddress: Address(fromAddr),
 		ToAddress:   Address(toAddr),
-		Amount: []Coin{Coin{
-			Denom:  builder.coinDenom,
-			Amount: pack.NewU64(value.Int().Uint64()),
-		}},
+		Amount: []Coin{
+			{
+				Denom:  builder.client.opts.CoinDenom,
+				Amount: pack.NewU64(value.Int().Uint64()),
+			},
+		},
 	}
 
 	fees := Coins{Coin{
-		Denom:  builder.coinDenom,
+		Denom:  builder.client.opts.CoinDenom,
 		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
 	}}
 

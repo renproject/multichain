@@ -346,12 +346,14 @@ var _ = Describe("Multichain", func() {
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client := terra.NewClient(
 						terra.DefaultClientOptions().
-							WithHost(rpcURL),
+							WithHost(rpcURL).
+							WithCoinDenom("uluna"),
 					)
-					txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
-						ChainID:   "testnet",
-						CoinDenom: "uluna",
-					}, client)
+					txBuilder := terra.NewTxBuilder(
+						terra.DefaultTxBuilderOptions().
+							WithChainID("testnet"),
+						client,
+					)
 
 					return client, txBuilder
 				},
