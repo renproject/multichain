@@ -9,18 +9,17 @@ import (
 	"github.com/renproject/pack"
 )
 
-func (client *Client) Mint(ctx context.Context, pHash, nHash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes, error) {
+func (client *Client) Mint(ctx context.Context, minterKey signature.KeyringPair, phash, nhash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes, error) {
+	opts := types.SerDeOptions{NoPalletIndices: true}
+	types.SetSerDeOptions(opts)
+
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("get metadata: %v", err)
 	}
 
-	alice, err := types.NewAddressFromHexAccountID("0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d")
-	if err != nil {
-		return pack.Bytes{}, fmt.Errorf("decode address: %v", err)
-	}
-
-	c, err := types.NewCall(meta, "RenVmBridge.mint", alice, pHash, types.NewUCompactFromUInt(amount), nHash, sig)
+	alice := types.NewAddressFromAccountID(minterKey.PublicKey)
+	c, err := types.NewCall(meta, "RenVmBridge.mint", alice, phash, types.NewUCompactFromUInt(amount), nhash, sig)
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("construct call: %v", err)
 	}
@@ -33,7 +32,10 @@ func (client *Client) Mint(ctx context.Context, pHash, nHash pack.Bytes32, sig p
 	return pack.NewBytes(hash[:]), nil
 }
 
-func (client *Client) Burn(ctx context.Context, recipient pack.Bytes, amount uint64) (pack.Bytes, error) {
+func (client *Client) Burn(ctx context.Context, burnerKey signature.KeyringPair, recipient [20]byte, amount uint64) (pack.Bytes, error) {
+	opts := types.SerDeOptions{NoPalletIndices: false}
+	types.SetSerDeOptions(opts)
+
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("get metadata: %v", err)
@@ -56,7 +58,7 @@ func (client *Client) Burn(ctx context.Context, recipient pack.Bytes, amount uin
 		return pack.Bytes{}, fmt.Errorf("get runtime version: %v", err)
 	}
 
-	key, err := types.CreateStorageKey(meta, "System", "Account", signature.TestKeyringPairAlice.PublicKey, nil)
+	key, err := types.CreateStorageKey(meta, "System", "Account", burnerKey.PublicKey, nil)
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("create storage key: %v", err)
 	}
@@ -70,15 +72,16 @@ func (client *Client) Burn(ctx context.Context, recipient pack.Bytes, amount uin
 	nonce := uint32(accountInfo.Nonce)
 
 	o := types.SignatureOptions{
-		BlockHash:   genesisHash,
-		Era:         types.ExtrinsicEra{IsMortalEra: false},
-		GenesisHash: genesisHash,
-		Nonce:       types.NewUCompactFromUInt(uint64(nonce)),
-		SpecVersion: rv.SpecVersion,
-		Tip:         types.NewUCompactFromUInt(0),
+		BlockHash:          genesisHash,
+		Era:                types.ExtrinsicEra{IsMortalEra: false},
+		GenesisHash:        genesisHash,
+		Nonce:              types.NewUCompactFromUInt(uint64(nonce)),
+		SpecVersion:        rv.SpecVersion,
+		Tip:                types.NewUCompactFromUInt(0),
+		TransactionVersion: rv.TransactionVersion,
 	}
 
-	err = ext.Sign(signature.TestKeyringPairAlice, o)
+	err = ext.Sign(burnerKey, o)
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("sign extrinsic: %v", err)
 	}

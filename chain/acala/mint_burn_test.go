@@ -2,25 +2,28 @@ package acala_test
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"math/rand"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/centrifuge/go-substrate-rpc-client/types"
+	"github.com/centrifuge/go-substrate-rpc-client/signature"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/acala"
 	"github.com/renproject/multichain/chain/bitcoin"
+	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 )
 
 var _ = Describe("Mint Burn", func() {
 	client, err := acala.NewClient(acala.DefaultClientOptions())
 	Expect(err).NotTo(HaveOccurred())
-
-	opts := types.SerDeOptions{NoPalletIndices: true}
-	types.SetSerDeOptions(opts)
 
 	Context("when minting over renbridge", func() {
 		It("should succeed", func() {
@@ -28,12 +31,12 @@ var _ = Describe("Mint Burn", func() {
 			defer cancel()
 
 			// Ignore recipient
-			pHash, nHash, sig, amount, _ := getMintParams()
+			alice, phash, nhash, sig, amount, _ := constructMintParams()
 
-			txhash, err := client.Mint(ctx, pHash, nHash, sig, amount)
+			txhash, err := client.Mint(ctx, alice, phash, nhash, sig, amount)
 			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("txhash = %v\n", txhash)
+			fmt.Printf("mint tx = %v\n", hex.EncodeToString(txhash))
 		})
 	})
 
@@ -43,12 +46,12 @@ var _ = Describe("Mint Burn", func() {
 			defer cancel()
 
 			// Ignore phash, nhash, sig
-			_, _, _, amount, recipient := getMintParams()
+			alice, _, _, _, amount, recipient := constructMintParams()
 
-			txhash, err := client.Burn(ctx, recipient, amount)
+			txhash, err := client.Burn(ctx, alice, recipient, amount)
 			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("txhash = %v\n", txhash)
+			fmt.Printf("burn tx = %v\n", hex.EncodeToString(txhash))
 		})
 	})
 
@@ -69,30 +72,64 @@ var _ = Describe("Mint Burn", func() {
 	})
 })
 
-func getMintParams() (pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, pack.Bytes) {
-	pHashHex := "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
-	nHashHex := "0x1f1a01537e418859cd99eb15099dcdcb98483ad723cd20ccaa5a2677b755572b"
-	sigHex := "0x60930a2c1c933c30bb7f88d6183e81a71394d81ead26d68a3b12d6b4efdc3ef563f91a945375b71d78accb5860e8154bc01681577db544e2e53611aa14613a9c1b"
-	amount := uint64(95000)
-	recipient := multichain.Address(pack.String("miMi2VET41YV1j6SDNTeZoPBbmH8B4nEx6"))
-
-	pHashBytes, err := types.HexDecodeString(pHashHex)
+func constructMintParams() (signature.KeyringPair, pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, [20]byte) {
+	// Get RenVM priv key.
+	renVmPrivKeyBytes, err := hex.DecodeString("c44700049a72c02bbacbec25551190427315f046c1f656f23884949da3fbdc3a")
 	Expect(err).NotTo(HaveOccurred())
-	nHashBytes, err := types.HexDecodeString(nHashHex)
-	Expect(err).NotTo(HaveOccurred())
-	sigBytes, err := types.HexDecodeString(sigHex)
+	renVmPrivKey := id.PrivKey{}
+	err = surge.FromBinary(&renVmPrivKey, renVmPrivKeyBytes)
 	Expect(err).NotTo(HaveOccurred())
 
+	// Get random pHash and nHash.
+	phashBytes := make([]byte, 32)
+	nhashBytes := make([]byte, 32)
+	_, err = rand.Read(phashBytes)
+	Expect(err).NotTo(HaveOccurred())
+	_, err = rand.Read(nhashBytes)
+	Expect(err).NotTo(HaveOccurred())
+
+	// Amount to be minted.
+	amount := uint64(25000)
+
+	// Selector for this cross-chain mint.
+	token, err := hex.DecodeString("0000000000000000000000000a9add98c076448cbcfacf5e457da12ddbef4a8f")
+	Expect(err).NotTo(HaveOccurred())
+	token32 := [32]byte{}
+	copy(token32[:], token[:])
+
+	// Initialise message args
+	sighash32 := [32]byte{}
+	phash32 := [32]byte{}
+	nhash32 := [32]byte{}
+	to := [32]byte{}
+	rawAddr, err := hex.DecodeString("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d") // Alice.
+	Expect(err).NotTo(HaveOccurred())
+
+	// Get message sighash.
+	copy(to[:], rawAddr)
+	copy(phash32[:], phashBytes)
+	copy(nhash32[:], nhashBytes)
+	copy(sighash32[:], crypto.Keccak256(ethereum.Encode(
+		pack.Bytes32(phash32),
+		pack.NewU256FromUint64(amount),
+		pack.Bytes32(token32),
+		pack.Bytes32(to),
+		pack.Bytes32(nhash32),
+	)))
+
+	// Sign the sighash.
+	hash := id.Hash(sighash32)
+	sig65, err := renVmPrivKey.Sign(&hash)
+	Expect(err).NotTo(HaveOccurred())
+	sig65[64] = sig65[64] + 27
+
+	// Get the address of the burn recipient.
+	recipientAddr := multichain.Address(pack.String("miMi2VET41YV1j6SDNTeZoPBbmH8B4nEx6"))
 	btcEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
-	rawAddr, err := btcEncodeDecoder.DecodeAddress(recipient)
+	rawRecipientAddr, err := btcEncodeDecoder.DecodeAddress(recipientAddr)
 	Expect(err).NotTo(HaveOccurred())
+	recipient := [20]byte{}
+	copy(recipient[:], rawRecipientAddr)
 
-	var pHash [32]byte
-	var nHash [32]byte
-	var sig [65]byte
-	copy(pHash[:], pHashBytes)
-	copy(nHash[:], nHashBytes)
-	copy(sig[:], sigBytes)
-
-	return pack.Bytes32(pHash), pack.Bytes32(nHash), pack.Bytes65(sig), amount, pack.Bytes(rawAddr)
+	return signature.TestKeyringPairAlice, pack.Bytes32(phash32), pack.Bytes32(nhash32), pack.Bytes65(sig65), amount, recipient
 }
