@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/renproject/pack"
@@ -18,16 +19,18 @@ const (
 // important that all nodes in the network have reached consensus on the
 // SATs-per-byte.
 type GasEstimator struct {
-	client    Client
-	numBlocks int64
+	client      Client
+	numBlocks   int64
+	fallbackGas pack.U256
 }
 
 // NewGasEstimator returns a simple gas estimator that always returns the given
 // number of SATs-per-byte.
-func NewGasEstimator(client Client, numBlocks int64) GasEstimator {
+func NewGasEstimator(client Client, numBlocks int64, fallbackGas pack.U256) GasEstimator {
 	return GasEstimator{
-		client:    client,
-		numBlocks: numBlocks,
+		client:      client,
+		numBlocks:   numBlocks,
+		fallbackGas: fallbackGas,
 	}
 }
 
@@ -42,7 +45,11 @@ func NewGasEstimator(client Client, numBlocks int64) GasEstimator {
 func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
 	feeRate, err := gasEstimator.client.EstimateSmartFee(ctx, gasEstimator.numBlocks)
 	if err != nil {
-		return pack.NewU256([32]byte{}), pack.NewU256([32]byte{}), err
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, err
+	}
+
+	if feeRate <= 0.0 {
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("invalid fee rate: %v", feeRate)
 	}
 
 	satsPerByte := uint64(math.Ceil(feeRate * btcToSatoshis / kilobyteToByte))

@@ -90,6 +90,8 @@ type Client interface {
 	Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error)
 	// EstimateSmartFee
 	EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error)
+	// EstimateFeeLegacy
+	EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error)
 }
 
 type client struct {
@@ -257,6 +259,23 @@ func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (fl
 	}
 
 	return *resp.FeeRate, nil
+}
+
+func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error) {
+	var resp float64
+
+	switch numBlocks {
+	case int64(0):
+		if err := client.send(ctx, &resp, "estimatefee"); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	default:
+		if err := client.send(ctx, &resp, "estimatefee", numBlocks); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	}
+
+	return resp, nil
 }
 
 func (client *client) send(ctx context.Context, resp interface{}, method string, params ...interface{}) error {
