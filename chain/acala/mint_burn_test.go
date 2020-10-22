@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,36 +23,48 @@ import (
 )
 
 var _ = Describe("Mint Burn", func() {
+	r := rand.New(rand.NewSource(GinkgoRandomSeed()))
+
 	client, err := acala.NewClient(acala.DefaultClientOptions())
 	Expect(err).NotTo(HaveOccurred())
 
-	Context("when minting over renbridge", func() {
+	FContext("when minting over renbridge", func() {
 		It("should succeed", func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			// Ignore recipient and burn amount.
+			alice, phash, nhash, sig, mintAmount, _, _ := constructMintParams(r)
 
-			// Ignore recipient
-			alice, phash, nhash, sig, amount, _ := constructMintParams()
-
-			txhash, err := client.Mint(ctx, alice, phash, nhash, sig, amount)
+			balanceBefore, err := client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("mint tx = %v\n", hex.EncodeToString(txhash))
+			_, err = client.Mint(alice, phash, nhash, sig, mintAmount)
+			Expect(err).NotTo(HaveOccurred())
+
+			time.Sleep(5 * time.Second)
+
+			balanceAfter, err := client.Balance(alice)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(balanceBefore.Add(pack.NewU256FromUint64(mintAmount))).To(Equal(balanceAfter))
 		})
 	})
 
-	Context("when burning over renbridge", func() {
+	FContext("when burning over renbridge", func() {
 		It("should succeed", func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			// Ignore phash, nhash, sig and mint amount.
+			alice, _, _, _, _, burnAmount, recipient := constructMintParams(r)
 
-			// Ignore phash, nhash, sig
-			alice, _, _, _, amount, recipient := constructMintParams()
-
-			txhash, err := client.Burn(ctx, alice, recipient, amount)
+			balanceBefore, err := client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("burn tx = %v\n", hex.EncodeToString(txhash))
+			_, err = client.Burn(alice, recipient, burnAmount)
+			Expect(err).NotTo(HaveOccurred())
+
+			time.Sleep(5 * time.Second)
+
+			balanceAfter, err := client.Balance(alice)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(balanceBefore.Sub(pack.NewU256FromUint64(burnAmount))).To(Equal(balanceAfter))
 		})
 	})
 
@@ -72,7 +85,7 @@ var _ = Describe("Mint Burn", func() {
 	})
 })
 
-func constructMintParams() (signature.KeyringPair, pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, [20]byte) {
+func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, uint64, [20]byte) {
 	// Get RenVM priv key.
 	renVmPrivKeyBytes, err := hex.DecodeString("c44700049a72c02bbacbec25551190427315f046c1f656f23884949da3fbdc3a")
 	Expect(err).NotTo(HaveOccurred())
@@ -83,13 +96,14 @@ func constructMintParams() (signature.KeyringPair, pack.Bytes32, pack.Bytes32, p
 	// Get random pHash and nHash.
 	phashBytes := make([]byte, 32)
 	nhashBytes := make([]byte, 32)
-	_, err = rand.Read(phashBytes)
+	_, err = r.Read(phashBytes)
 	Expect(err).NotTo(HaveOccurred())
-	_, err = rand.Read(nhashBytes)
+	_, err = r.Read(nhashBytes)
 	Expect(err).NotTo(HaveOccurred())
 
-	// Amount to be minted.
-	amount := uint64(25000)
+	// Amount to be minted/burnt.
+	mintAmount := uint64(100000)
+	burnAmount := uint64(25000)
 
 	// Selector for this cross-chain mint.
 	token, err := hex.DecodeString("0000000000000000000000000a9add98c076448cbcfacf5e457da12ddbef4a8f")
@@ -111,7 +125,7 @@ func constructMintParams() (signature.KeyringPair, pack.Bytes32, pack.Bytes32, p
 	copy(nhash32[:], nhashBytes)
 	copy(sighash32[:], crypto.Keccak256(ethereum.Encode(
 		pack.Bytes32(phash32),
-		pack.NewU256FromUint64(amount),
+		pack.NewU256FromUint64(mintAmount),
 		pack.Bytes32(token32),
 		pack.Bytes32(to),
 		pack.Bytes32(nhash32),
@@ -131,5 +145,5 @@ func constructMintParams() (signature.KeyringPair, pack.Bytes32, pack.Bytes32, p
 	recipient := [20]byte{}
 	copy(recipient[:], rawRecipientAddr)
 
-	return signature.TestKeyringPairAlice, pack.Bytes32(phash32), pack.Bytes32(nhash32), pack.Bytes65(sig65), amount, recipient
+	return signature.TestKeyringPairAlice, pack.Bytes32(phash32), pack.Bytes32(nhash32), pack.Bytes65(sig65), mintAmount, burnAmount, recipient
 }

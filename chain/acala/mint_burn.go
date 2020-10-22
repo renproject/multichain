@@ -1,15 +1,15 @@
 package acala
 
 import (
-	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/centrifuge/go-substrate-rpc-client/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/types"
 	"github.com/renproject/pack"
 )
 
-func (client *Client) Mint(ctx context.Context, minterKey signature.KeyringPair, phash, nhash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes, error) {
+func (client *Client) Mint(minterKey signature.KeyringPair, phash, nhash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes, error) {
 	opts := types.SerDeOptions{NoPalletIndices: true}
 	types.SetSerDeOptions(opts)
 
@@ -32,7 +32,7 @@ func (client *Client) Mint(ctx context.Context, minterKey signature.KeyringPair,
 	return pack.NewBytes(hash[:]), nil
 }
 
-func (client *Client) Burn(ctx context.Context, burnerKey signature.KeyringPair, recipient [20]byte, amount uint64) (pack.Bytes, error) {
+func (client *Client) Burn(burnerKey signature.KeyringPair, recipient [20]byte, amount uint64) (pack.Bytes, error) {
 	opts := types.SerDeOptions{NoPalletIndices: false}
 	types.SetSerDeOptions(opts)
 
@@ -92,4 +92,31 @@ func (client *Client) Burn(ctx context.Context, burnerKey signature.KeyringPair,
 	}
 
 	return pack.NewBytes(hash[:]), nil
+}
+
+type TokenAccount struct {
+	Free     types.U128
+	Reserved types.U128
+	Frozen   types.U128
+}
+
+func (client *Client) Balance(user signature.KeyringPair) (pack.U256, error) {
+	meta, err := client.api.RPC.State.GetMetadataLatest()
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("get metadata: %v", err)
+	}
+
+	key, err := types.CreateStorageKey(meta, "Tokens", "Accounts", user.PublicKey, []byte{0, 5})
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("create storage key: %v", err)
+	}
+
+	var data TokenAccount
+	ok, err := client.api.RPC.State.GetStorageLatest(key, &data)
+	if err != nil || !ok {
+		return pack.U256{}, fmt.Errorf("get storage: %v", err)
+	}
+
+	balance := big.NewInt(0).SetBytes(data.Free.Bytes())
+	return pack.NewU256FromInt(balance), nil
 }
