@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/renproject/multichain/api/account"
@@ -100,7 +102,17 @@ type Client struct {
 
 // NewClient returns a new Client.
 func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
-	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
+	httpClient, err := rpchttp.NewWithClient(
+		string(opts.Host),
+		"websocket",
+		&http.Client{
+			Timeout: opts.Timeout,
+
+			// We override the transport layer with a custom implementation as
+			// there is an issue with the Cosmos SDK that causes it to
+			// incorrectly parse URLs.
+			Transport: newTransport(string(opts.Host), &http.Transport{}),
+		})
 	if err != nil {
 		panic(err)
 	}
@@ -212,4 +224,30 @@ func (client *Client) AccountBalance(_ context.Context, addr address.Address) (p
 	}
 
 	return pack.NewU256FromInt(balance), nil
+}
+
+type transport struct {
+	remote string
+	proxy  http.RoundTripper
+}
+
+// newTransport returns a custom implementation of http.RoundTripper that
+// overrides the request URL prior to sending the request.
+func newTransport(remote string, proxy http.RoundTripper) *transport {
+	return &transport{
+		remote: remote,
+		proxy:  proxy,
+	}
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	u, err := url.Parse(t.remote)
+	if err != nil {
+		return nil, err
+	}
+	req.URL = u
+	req.Host = u.Host
+
+	// Proxy request.
+	return t.proxy.RoundTrip(req)
 }
