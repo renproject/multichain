@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Make sure submodule.recurse is set to true to make life with submodule easier.
 RUN git fetch
-RUN git pull
+RUN git pull origin master
 RUN git config --global submodule.recurse true
 
 # Build

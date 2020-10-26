@@ -1,7 +1,6 @@
 package acala_test
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -22,70 +21,68 @@ import (
 	"github.com/renproject/surge"
 )
 
-var _ = Describe("Mint Burn", func() {
+var _ = FDescribe("Mint Burn", func() {
 	r := rand.New(rand.NewSource(GinkgoRandomSeed()))
+
+	blockhash := pack.Bytes32{}
+	balanceBefore, balanceAfter := pack.U256{}, pack.U256{}
 
 	client, err := acala.NewClient(acala.DefaultClientOptions())
 	Expect(err).NotTo(HaveOccurred())
 
-	FContext("when minting over renbridge", func() {
-		It("should succeed", func() {
-			// Ignore recipient and burn amount.
-			alice, phash, nhash, sig, mintAmount, _, _ := constructMintParams(r)
+	alice, phash, nhash, sig, mintAmount, burnAmount, recipient := constructMintParams(r)
 
-			balanceBefore, err := client.Balance(alice)
-			Expect(err).NotTo(HaveOccurred())
+	Context("when minting over renbridge", func() {
+		It("should succeed", func() {
+			balanceBefore, err = client.Balance(alice)
+			if err != nil {
+				// This means there are no tokens allocated for that address.
+				Expect(err).To(Equal(fmt.Errorf("get storage: <nil>")))
+				balanceBefore = pack.NewU256FromUint64(uint64(0))
+			}
 
 			_, err = client.Mint(alice, phash, nhash, sig, mintAmount)
 			Expect(err).NotTo(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
 
-			balanceAfter, err := client.Balance(alice)
+			balanceAfter, err = client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(balanceBefore.Add(pack.NewU256FromUint64(mintAmount))).To(Equal(balanceAfter))
 		})
 	})
 
-	FContext("when burning over renbridge", func() {
+	Context("when burning over renbridge", func() {
 		It("should succeed", func() {
-			// Ignore phash, nhash, sig and mint amount.
-			alice, _, _, _, _, burnAmount, recipient := constructMintParams(r)
-
-			balanceBefore, err := client.Balance(alice)
+			balanceBefore, err = client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = client.Burn(alice, recipient, burnAmount)
+			blockhash, err = client.Burn(alice, recipient, burnAmount)
 			Expect(err).NotTo(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
 
-			balanceAfter, err := client.Balance(alice)
+			balanceAfter, err = client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(balanceBefore.Sub(pack.NewU256FromUint64(burnAmount))).To(Equal(balanceAfter))
 		})
 	})
 
-	Context("when reading burn info", func() {
+	Context("when reading burn log", func() {
 		It("should succeed", func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			// FIXME: set this appropriately
-			blockheight := pack.U64(uint64(1))
-			amount, recipient, confs, err := client.BurnEvent(ctx, blockheight)
+			amount, recipient, confs, err := client.BurnEvent(blockhash)
 			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("amount = %v\n", amount)
-			fmt.Printf("recipient = %v\n", recipient)
-			fmt.Printf("confs = %v\n", confs)
+			Expect(amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
+			Expect(recipient).To(Equal(recipient))
+			Expect(confs).To(BeNumerically(">", 0))
 		})
 	})
 })
 
-func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, uint64, [20]byte) {
+func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pack.Bytes32, pack.Bytes65, uint64, uint64, pack.Bytes) {
 	// Get RenVM priv key.
 	renVmPrivKeyBytes, err := hex.DecodeString("c44700049a72c02bbacbec25551190427315f046c1f656f23884949da3fbdc3a")
 	Expect(err).NotTo(HaveOccurred())
@@ -140,10 +137,8 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 	// Get the address of the burn recipient.
 	recipientAddr := multichain.Address(pack.String("miMi2VET41YV1j6SDNTeZoPBbmH8B4nEx6"))
 	btcEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
-	rawRecipientAddr, err := btcEncodeDecoder.DecodeAddress(recipientAddr)
+	recipientRawAddr, err := btcEncodeDecoder.DecodeAddress(recipientAddr)
 	Expect(err).NotTo(HaveOccurred())
-	recipient := [20]byte{}
-	copy(recipient[:], rawRecipientAddr)
 
-	return signature.TestKeyringPairAlice, pack.Bytes32(phash32), pack.Bytes32(nhash32), pack.Bytes65(sig65), mintAmount, burnAmount, recipient
+	return signature.TestKeyringPairAlice, pack.Bytes32(phash32), pack.Bytes32(nhash32), pack.Bytes65(sig65), mintAmount, burnAmount, pack.Bytes(recipientRawAddr)
 }

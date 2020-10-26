@@ -1,12 +1,9 @@
 package acala
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client"
-	"github.com/centrifuge/go-substrate-rpc-client/scale"
 	"github.com/centrifuge/go-substrate-rpc-client/types"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
@@ -55,82 +52,59 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	}, nil
 }
 
-func decodeEventData(meta *types.Metadata, data *types.StorageDataRaw) (eventBurnt, error) {
-	eventRecords := types.EventRecordsRaw(*data)
-
-	events := EventsWithBurn{}
-	if err := ParseEvents(&eventRecords, meta, &events); err != nil {
-		return eventBurnt{}, err
-	}
-	if len(events.RenToken_Burnt) != 1 {
-		return eventBurnt{}, fmt.Errorf("expected burn events: %v, got: %v", 1, len(events.RenToken_Burnt))
-	}
-
-	return events.RenToken_Burnt[0], nil
-}
-
-func (client *Client) BurnEvent(
-	ctx context.Context,
-	blockheight pack.U64,
-) (pack.U256, address.Address, pack.U64, error) {
-	// get metadata
+func (client *Client) BurnEvent(blockhash pack.Bytes32) (pack.U256, address.RawAddress, pack.U64, error) {
+	// Get chain metadata.
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get metadata: %v", err)
 	}
 
-	// subscribe to system events via storage
+	// This key is used to read the state storage at the block of interest.
 	key, err := types.CreateStorageKey(meta, "System", "Events", nil, nil)
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("create storage key: %v", err)
 	}
 
-	// get the block's hash
-	blockhash, err := client.api.RPC.Chain.GetBlockHash(blockheight.Uint64())
+	// Get the block in which the burn event was logged.
+	block, err := client.api.RPC.Chain.GetBlock(types.Hash(blockhash))
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get block: %v", err)
 	}
 
+	// Get the latest block header. This will be used to calculate number of block
+	// confirmations of the burn log of interest.
 	header, err := client.api.RPC.Chain.GetHeaderLatest()
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get header: %v", err)
 	}
 
-	// retrieve raw bytes for the stored data
-	data, err := client.api.RPC.State.GetStorageRaw(key, blockhash)
+	// Retrieve raw bytes from storage at the block and storage key of interest.
+	data, err := client.api.RPC.State.GetStorageRaw(key, types.Hash(blockhash))
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get storage: %v", err)
 	}
 
-	// decode event data to a burn event
+	// Decode the event data to get the burn log.
 	burnEvent, err := decodeEventData(meta, data)
 	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+		return pack.U256{}, nil, pack.U64(uint64(0)), err
 	}
 
-	// calculate block confirmations for the event
-	confs := uint64(header.Number) - blockheight.Uint64() + 1
+	// Calculate block confirmations for the event.
+	confs := header.Number - block.Block.Header.Number + 1
 
-	// get and encode destination address
-	dest := types.NewAddressFromAccountID(burnEvent.Dest[:])
-	buf := new(bytes.Buffer)
-	encoder := scale.NewEncoder(buf)
-	if err := dest.Encode(*encoder); err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
-	}
-	addrEncodeDecoder := NewAddressEncodeDecoder()
-	to, err := addrEncodeDecoder.EncodeAddress(address.RawAddress(pack.NewBytes(buf.Bytes())))
-	if err != nil {
-		// FIXME: return err instead of panicking
-		panic(err)
+	return pack.NewU256FromInt(burnEvent.Amount.Int), address.RawAddress(burnEvent.Dest[:]), pack.NewU64(uint64(confs)), nil
+}
+
+func decodeEventData(meta *types.Metadata, data *types.StorageDataRaw) (eventBurnt, error) {
+	events := RenVmBridgeEvents{}
+	if err := types.EventRecordsRaw(*data).DecodeEventRecords(meta, &events); err != nil {
+		return eventBurnt{}, fmt.Errorf("decode event data: %v", err)
 	}
 
-	return pack.NewU256FromInt(burnEvent.Amount.Int), address.Address(pack.String(to)), pack.NewU64(confs), nil
+	if len(events.RenVmBridge_Burnt) != 1 {
+		return eventBurnt{}, fmt.Errorf("expected burn events: %v, got: %v", 1, len(events.RenVmBridge_Burnt))
+	}
+
+	return events.RenVmBridge_Burnt[0], nil
 }
