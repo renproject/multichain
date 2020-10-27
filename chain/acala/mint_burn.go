@@ -33,41 +33,41 @@ func (client *Client) Mint(minterKey signature.KeyringPair, phash, nhash pack.By
 	return pack.NewBytes32(hash), nil
 }
 
-func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes, amount uint64) (pack.Bytes32, error) {
+func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes, amount uint64) (pack.Bytes32, pack.Bytes, error) {
 	opts := types.SerDeOptions{NoPalletIndices: false}
 	types.SetSerDeOptions(opts)
 
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("get metadata: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("get metadata: %v", err)
 	}
 
 	c, err := types.NewCall(meta, "RenVmBridge.burn", types.Bytes(recipient), types.NewUCompactFromUInt(amount))
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("construct call: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("construct call: %v", err)
 	}
 
 	ext := types.NewExtrinsic(c)
 
 	genesisHash, err := client.api.RPC.Chain.GetBlockHash(0)
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("get blockhash: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("get blockhash: %v", err)
 	}
 
 	rv, err := client.api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("get runtime version: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("get runtime version: %v", err)
 	}
 
 	key, err := types.CreateStorageKey(meta, "System", "Account", burnerKey.PublicKey, nil)
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("create storage key: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("create storage key: %v", err)
 	}
 
 	var accountInfo types.AccountInfo
 	ok, err := client.api.RPC.State.GetStorageLatest(key, &accountInfo)
 	if err != nil || !ok {
-		return pack.Bytes32{}, fmt.Errorf("get storage: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("get storage: %v", err)
 	}
 
 	nonce := uint32(accountInfo.Nonce)
@@ -84,12 +84,12 @@ func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes
 
 	err = ext.Sign(burnerKey, o)
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("sign extrinsic: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("sign extrinsic: %v", err)
 	}
 
 	sub, err := client.api.RPC.Author.SubmitAndWatchExtrinsic(ext)
 	if err != nil {
-		return pack.Bytes32{}, fmt.Errorf("submit extrinsic: %v", err)
+		return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("submit extrinsic: %v", err)
 	}
 	defer sub.Unsubscribe()
 
@@ -98,10 +98,10 @@ func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes
 		select {
 		case status := <-sub.Chan():
 			if status.IsInBlock {
-				return pack.NewBytes32(status.AsInBlock), nil
+				return pack.NewBytes32(status.AsInBlock), pack.Bytes(ext.Signature.Signature.AsSr25519[:]), nil
 			}
 		case <-timeout:
-			return pack.Bytes32{}, fmt.Errorf("timeout on tx confirmation")
+			return pack.Bytes32{}, pack.Bytes{}, fmt.Errorf("timeout on tx confirmation")
 		}
 	}
 }

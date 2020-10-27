@@ -1,14 +1,28 @@
 package acala
 
 import (
+	"context"
 	"fmt"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client"
 	"github.com/centrifuge/go-substrate-rpc-client/types"
 	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 	"go.uber.org/zap"
 )
+
+type BurnLogInput struct {
+	Blockhash pack.Bytes32
+	ExtSign   pack.Bytes
+}
+
+type BurnLogOutput struct {
+	Amount    pack.U256
+	Recipient address.RawAddress
+	Confs     pack.U64
+}
 
 const (
 	DefaultClientRPCURL = "ws://127.0.0.1:9944"
@@ -52,59 +66,91 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	}, nil
 }
 
-func (client *Client) BurnEvent(blockhash pack.Bytes32) (pack.U256, address.RawAddress, pack.U64, error) {
+func (client *Client) ContractCall(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
+	// Deserialise the calldata bytes.
+	input := BurnLogInput{}
+	if err := surge.FromBinary(&input, calldata); err != nil {
+		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v\n", err)
+	}
+
 	// Get chain metadata.
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get metadata: %v", err)
+		return pack.Bytes{}, fmt.Errorf("get metadata: %v", err)
 	}
 
 	// This key is used to read the state storage at the block of interest.
 	key, err := types.CreateStorageKey(meta, "System", "Events", nil, nil)
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("create storage key: %v", err)
+		return pack.Bytes{}, fmt.Errorf("create storage key: %v", err)
 	}
 
 	// Get the block in which the burn event was logged.
-	block, err := client.api.RPC.Chain.GetBlock(types.Hash(blockhash))
+	block, err := client.api.RPC.Chain.GetBlock(types.Hash(input.Blockhash))
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get block: %v", err)
+		return pack.Bytes{}, fmt.Errorf("get block: %v", err)
 	}
 
 	// Get the latest block header. This will be used to calculate number of block
 	// confirmations of the burn log of interest.
 	header, err := client.api.RPC.Chain.GetHeaderLatest()
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get header: %v", err)
+		return pack.Bytes{}, fmt.Errorf("get header: %v", err)
 	}
 
 	// Retrieve raw bytes from storage at the block and storage key of interest.
-	data, err := client.api.RPC.State.GetStorageRaw(key, types.Hash(blockhash))
+	data, err := client.api.RPC.State.GetStorageRaw(key, types.Hash(input.Blockhash))
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), fmt.Errorf("get storage: %v", err)
+		return pack.Bytes{}, fmt.Errorf("get storage: %v", err)
+	}
+
+	// Fetch the extrinsic's index in the block.
+	extID := -1
+	for i, ext := range block.Block.Extrinsics {
+		if input.ExtSign.Equal(pack.Bytes(ext.Signature.Signature.AsSr25519[:])) {
+			extID = i
+			break
+		}
+	}
+	if extID == -1 {
+		return pack.Bytes{}, fmt.Errorf("extrinsic not found in block")
 	}
 
 	// Decode the event data to get the burn log.
-	burnEvent, err := decodeEventData(meta, data)
+	burnEvent, err := decodeEventData(meta, data, uint32(extID))
 	if err != nil {
-		return pack.U256{}, nil, pack.U64(uint64(0)), err
+		return pack.Bytes{}, err
 	}
 
 	// Calculate block confirmations for the event.
 	confs := header.Number - block.Block.Header.Number + 1
 
-	return pack.NewU256FromInt(burnEvent.Amount.Int), address.RawAddress(burnEvent.Dest[:]), pack.NewU64(uint64(confs)), nil
+	burnLogOutput := BurnLogOutput{
+		Amount:    pack.NewU256FromInt(burnEvent.Amount.Int),
+		Recipient: address.RawAddress(burnEvent.Dest[:]),
+		Confs:     pack.NewU64(uint64(confs)),
+	}
+
+	out, err := surge.ToBinary(burnLogOutput)
+	if err != nil {
+		return pack.Bytes{}, fmt.Errorf("serialise output: %v", err)
+	}
+
+	return pack.Bytes(out), nil
 }
 
-func decodeEventData(meta *types.Metadata, data *types.StorageDataRaw) (eventBurnt, error) {
+func decodeEventData(meta *types.Metadata, data *types.StorageDataRaw, id uint32) (eventBurnt, error) {
 	events := RenVmBridgeEvents{}
 	if err := types.EventRecordsRaw(*data).DecodeEventRecords(meta, &events); err != nil {
 		return eventBurnt{}, fmt.Errorf("decode event data: %v", err)
 	}
 
-	if len(events.RenVmBridge_Burnt) != 1 {
-		return eventBurnt{}, fmt.Errorf("expected burn events: %v, got: %v", 1, len(events.RenVmBridge_Burnt))
+	// Match the event to the appropriate extrinsic index.
+	for _, event := range events.RenVmBridge_Burnt {
+		if event.Phase.AsApplyExtrinsic == id {
+			return event, nil
+		}
 	}
 
-	return events.RenVmBridge_Burnt[0], nil
+	return eventBurnt{}, fmt.Errorf("burn event not found")
 }

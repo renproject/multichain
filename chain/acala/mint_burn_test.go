@@ -1,6 +1,7 @@
 package acala_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -14,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/multichain/chain/acala"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/ethereum"
@@ -24,7 +26,7 @@ import (
 var _ = FDescribe("Mint Burn", func() {
 	r := rand.New(rand.NewSource(GinkgoRandomSeed()))
 
-	blockhash := pack.Bytes32{}
+	blockhash, extSign := pack.Bytes32{}, pack.Bytes{}
 	balanceBefore, balanceAfter := pack.U256{}, pack.U256{}
 
 	client, err := acala.NewClient(acala.DefaultClientOptions())
@@ -58,7 +60,7 @@ var _ = FDescribe("Mint Burn", func() {
 			balanceBefore, err = client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
-			blockhash, err = client.Burn(alice, recipient, burnAmount)
+			blockhash, extSign, err = client.Burn(alice, recipient, burnAmount)
 			Expect(err).NotTo(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
@@ -72,12 +74,24 @@ var _ = FDescribe("Mint Burn", func() {
 
 	Context("when reading burn log", func() {
 		It("should succeed", func() {
-			amount, recipient, confs, err := client.BurnEvent(blockhash)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			input := acala.BurnLogInput{
+				Blockhash: blockhash,
+				ExtSign:   extSign,
+			}
+			calldata, err := surge.ToBinary(input)
+			Expect(err).NotTo(HaveOccurred())
+			outputBytes, err := client.ContractCall(ctx, multichain.Address(""), contract.CallData(calldata))
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
-			Expect(recipient).To(Equal(recipient))
-			Expect(confs).To(BeNumerically(">", 0))
+			output := acala.BurnLogOutput{}
+			Expect(surge.FromBinary(&output, outputBytes)).To(Succeed())
+
+			Expect(output.Amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
+			Expect(output.Recipient).To(Equal(multichain.RawAddress(recipient)))
+			Expect(output.Confs).To(BeNumerically(">", 0))
 		})
 	})
 })
