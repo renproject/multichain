@@ -23,10 +23,10 @@ import (
 	"github.com/renproject/surge"
 )
 
-var _ = FDescribe("Mint Burn", func() {
+var _ = Describe("Mint Burn", func() {
 	r := rand.New(rand.NewSource(GinkgoRandomSeed()))
 
-	blockhash, extSign := pack.Bytes32{}, pack.Bytes{}
+	blockhash, blocknumber, extSign := pack.Bytes32{}, pack.U32(0), pack.Bytes{}
 	balanceBefore, balanceAfter := pack.U256{}, pack.U256{}
 
 	client, err := acala.NewClient(acala.DefaultClientOptions())
@@ -60,7 +60,7 @@ var _ = FDescribe("Mint Burn", func() {
 			balanceBefore, err = client.Balance(alice)
 			Expect(err).NotTo(HaveOccurred())
 
-			blockhash, extSign, err = client.Burn(alice, recipient, burnAmount)
+			blockhash, blocknumber, extSign, err = client.Burn(alice, recipient, burnAmount)
 			Expect(err).NotTo(HaveOccurred())
 
 			time.Sleep(5 * time.Second)
@@ -72,26 +72,40 @@ var _ = FDescribe("Mint Burn", func() {
 		})
 	})
 
-	Context("when reading burn log", func() {
-		It("should succeed", func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+	Context("when reading burn info", func() {
+		Context("when reading from storage", func() {
+			It("should succeed", func() {
+				// FIXME: once the Acala block number issue is addressed, we will not
+				// need to add 21600.
+				output, err := client.BurnEvent(blocknumber.Add(pack.U32(uint32(21600))))
+				Expect(err).NotTo(HaveOccurred())
 
-			input := acala.BurnLogInput{
-				Blockhash: blockhash,
-				ExtSign:   extSign,
-			}
-			calldata, err := surge.ToBinary(input)
-			Expect(err).NotTo(HaveOccurred())
-			outputBytes, err := client.ContractCall(ctx, multichain.Address(""), contract.CallData(calldata))
-			Expect(err).NotTo(HaveOccurred())
+				Expect(output.Amount.Uint64()).To(Equal(burnAmount))
+				Expect([]byte(output.Recipient)).To(Equal([]byte(recipient)))
+			})
+		})
 
-			output := acala.BurnLogOutput{}
-			Expect(surge.FromBinary(&output, outputBytes)).To(Succeed())
+		Context("when reading from system events", func() {
+			It("should succeed", func() {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
 
-			Expect(output.Amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
-			Expect(output.Recipient).To(Equal(multichain.RawAddress(recipient)))
-			Expect(output.Confs).To(BeNumerically(">", 0))
+				input := acala.BurnLogInput{
+					Blockhash: blockhash,
+					ExtSign:   extSign,
+				}
+				calldata, err := surge.ToBinary(input)
+				Expect(err).NotTo(HaveOccurred())
+				outputBytes, err := client.ContractCall(ctx, multichain.Address(""), contract.CallData(calldata))
+				Expect(err).NotTo(HaveOccurred())
+
+				output := acala.BurnLogOutput{}
+				Expect(surge.FromBinary(&output, outputBytes)).To(Succeed())
+
+				Expect(output.Amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
+				Expect(output.Recipient).To(Equal(multichain.RawAddress(recipient)))
+				Expect(output.Confs).To(BeNumerically(">", 0))
+			})
 		})
 	})
 })
@@ -114,7 +128,7 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 
 	// Amount to be minted/burnt.
 	mintAmount := uint64(100000)
-	burnAmount := uint64(25000)
+	burnAmount := uint64(31000)
 
 	// Selector for this cross-chain mint.
 	token, err := hex.DecodeString("0000000000000000000000000a9add98c076448cbcfacf5e457da12ddbef4a8f")
