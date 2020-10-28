@@ -1,7 +1,6 @@
 package acala
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -98,11 +97,11 @@ func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes
 		select {
 		case status := <-sub.Chan():
 			if status.IsInBlock {
-				block, err := client.api.RPC.Chain.GetBlock(status.AsInBlock)
+				nonce, err := client.Nonce()
 				if err != nil {
-					return pack.Bytes32{}, pack.U32(0), pack.Bytes{}, fmt.Errorf("get block: %v", err)
+					return pack.Bytes32{}, pack.U32(0), pack.Bytes{}, fmt.Errorf("get nonce: %v", err)
 				}
-				return pack.NewBytes32(status.AsInBlock), pack.NewU32(uint32(block.Block.Header.Number)), pack.Bytes(ext.Signature.Signature.AsSr25519[:]), nil
+				return pack.NewBytes32(status.AsInBlock), nonce.Sub(pack.U32(1)), pack.Bytes(ext.Signature.Signature.AsSr25519[:]), nil
 			}
 		case <-timeout:
 			return pack.Bytes32{}, pack.U32(0), pack.Bytes{}, fmt.Errorf("timeout on tx confirmation")
@@ -114,15 +113,6 @@ type TokenAccount struct {
 	Free     types.U128
 	Reserved types.U128
 	Frozen   types.U128
-}
-
-type BurnEventLogs struct {
-	Logs []BurnEventLog
-}
-
-type BurnEventLog struct {
-	Recipient types.Bytes
-	Amount    types.U128
 }
 
 func (client *Client) Balance(user signature.KeyringPair) (pack.U256, error) {
@@ -145,29 +135,22 @@ func (client *Client) Balance(user signature.KeyringPair) (pack.U256, error) {
 	return pack.NewU256FromInt(data.Free.Int), nil
 }
 
-func (client *Client) BurnEvent(blocknumber pack.U32) (BurnEventLog, error) {
+func (client *Client) Nonce() (pack.U32, error) {
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		return BurnEventLog{}, fmt.Errorf("get metadata: %v", err)
+		return pack.U32(0), fmt.Errorf("get metadata: %v", err)
 	}
 
-	blocknumberBytes := make([]byte, 4)
-	binary.LittleEndian.PutUint32(blocknumberBytes, uint32(blocknumber))
-
-	key, err := types.CreateStorageKey(meta, "Template", "BurnEvents", blocknumberBytes, nil)
+	key, err := types.CreateStorageKey(meta, "Template", "NextBurnEventId", nil, nil)
 	if err != nil {
-		return BurnEventLog{}, fmt.Errorf("create storage key: %v", err)
+		return pack.U32(0), fmt.Errorf("create storage key: %v", err)
 	}
 
-	var data BurnEventLogs
+	var data types.U32
 	ok, err := client.api.RPC.State.GetStorageLatest(key, &data)
 	if err != nil || !ok {
-		return BurnEventLog{}, fmt.Errorf("get storage: %v", err)
+		return pack.U32(0), fmt.Errorf("get storage: %v", err)
 	}
 
-	if len(data.Logs) != 1 {
-		return BurnEventLog{}, fmt.Errorf("expected %v burn events, got %v", 1, len(data.Logs))
-	}
-
-	return data.Logs[0], nil
+	return pack.U32(data), nil
 }

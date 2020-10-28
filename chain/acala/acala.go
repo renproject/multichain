@@ -13,17 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type BurnLogInput struct {
-	Blockhash pack.Bytes32
-	ExtSign   pack.Bytes
-}
-
-type BurnLogOutput struct {
-	Amount    pack.U256
-	Recipient address.RawAddress
-	Confs     pack.U64
-}
-
 const (
 	DefaultClientRPCURL = "ws://127.0.0.1:9944"
 )
@@ -66,7 +55,18 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	}, nil
 }
 
-func (client *Client) ContractCall(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
+type BurnLogInput struct {
+	Blockhash pack.Bytes32
+	ExtSign   pack.Bytes
+}
+
+type BurnLogOutput struct {
+	Amount    pack.U256
+	Recipient address.RawAddress
+	Confs     pack.U64
+}
+
+func (client *Client) ContractCallSystemEvents(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
 	// Deserialise the calldata bytes.
 	input := BurnLogInput{}
 	if err := surge.FromBinary(&input, calldata); err != nil {
