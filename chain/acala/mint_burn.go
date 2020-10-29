@@ -9,6 +9,10 @@ import (
 	"github.com/renproject/pack"
 )
 
+func (client *Client) To() (pack.String, pack.Bytes) {
+	return pack.String(signature.TestKeyringPairAlice.Address), pack.Bytes(signature.TestKeyringPairAlice.PublicKey)
+}
+
 func (client *Client) Mint(minterKey signature.KeyringPair, phash, nhash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes32, error) {
 	opts := types.SerDeOptions{NoPalletIndices: true}
 	types.SetSerDeOptions(opts)

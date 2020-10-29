@@ -66,7 +66,7 @@ type BurnLogOutput struct {
 	Confs     pack.U64
 }
 
-func (client *Client) ContractCallSystemEvents(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
+func (client *Client) CallContractSystemEvents(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
 	// Deserialise the calldata bytes.
 	input := BurnLogInput{}
 	if err := surge.FromBinary(&input, calldata); err != nil {

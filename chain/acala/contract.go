@@ -12,25 +12,25 @@ import (
 	"github.com/renproject/surge"
 )
 
-type BurnContractCallInput struct {
-	Blockhash pack.Bytes32
-	Nonce     pack.U32
+type BurnCallContractInput struct {
+	Nonce pack.U32
 }
 
-type BurnContractCallOutput struct {
+type BurnCallContractOutput struct {
 	Amount    pack.U256
 	Recipient address.RawAddress
 	Confs     pack.U64
 }
 
 type BurnEventData struct {
-	Recipient types.Bytes
-	Amount    types.U128
+	BlockNumber types.U32
+	Recipient   types.Bytes
+	Amount      types.U128
 }
 
-func (client *Client) ContractCall(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
+func (client *Client) CallContract(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
 	// Deserialise the calldata bytes.
-	input := BurnContractCallInput{}
+	input := BurnCallContractInput{}
 	if err := surge.FromBinary(&input, calldata); err != nil {
 		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v\n", err)
 	}
@@ -39,12 +39,6 @@ func (client *Client) ContractCall(_ context.Context, _ address.Address, calldat
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
 		return pack.Bytes{}, fmt.Errorf("get metadata: %v", err)
-	}
-
-	// Get the block in which the burn event was logged.
-	block, err := client.api.RPC.Chain.GetBlock(types.Hash(input.Blockhash))
-	if err != nil {
-		return pack.Bytes{}, fmt.Errorf("get block: %v", err)
 	}
 
 	nonceBytes := make([]byte, 4)
@@ -58,7 +52,7 @@ func (client *Client) ContractCall(_ context.Context, _ address.Address, calldat
 
 	// Retrieve and decode bytes from storage at the block and storage key.
 	burnEventData := BurnEventData{}
-	ok, err := client.api.RPC.State.GetStorage(key, &burnEventData, types.Hash(input.Blockhash))
+	ok, err := client.api.RPC.State.GetStorageLatest(key, &burnEventData)
 	if err != nil || !ok {
 		return pack.Bytes{}, fmt.Errorf("get storage: %v", err)
 	}
@@ -71,9 +65,9 @@ func (client *Client) ContractCall(_ context.Context, _ address.Address, calldat
 	}
 
 	// Calculate block confirmations for the event.
-	confs := header.Number - block.Block.Header.Number + 1
+	confs := types.U32(header.Number) - burnEventData.BlockNumber + 1
 
-	burnLogOutput := BurnContractCallOutput{
+	burnLogOutput := BurnCallContractOutput{
 		Amount:    pack.NewU256FromInt(burnEventData.Amount.Int),
 		Recipient: address.RawAddress(burnEventData.Recipient),
 		Confs:     pack.NewU64(uint64(confs)),

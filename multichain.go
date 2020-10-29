@@ -254,7 +254,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Filecoin, Terra:
+	case Acala, BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These

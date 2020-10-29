@@ -78,16 +78,13 @@ var _ = Describe("Mint Burn", func() {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 
-				input := acala.BurnContractCallInput{
-					Blockhash: blockhash,
-					Nonce:     nonce,
-				}
+				input := acala.BurnCallContractInput{Nonce: nonce}
 				calldata, err := surge.ToBinary(input)
 				Expect(err).NotTo(HaveOccurred())
-				outputBytes, err := client.ContractCall(ctx, multichain.Address(""), contract.CallData(calldata))
+				outputBytes, err := client.CallContract(ctx, multichain.Address(""), contract.CallData(calldata))
 				Expect(err).NotTo(HaveOccurred())
 
-				output := acala.BurnContractCallOutput{}
+				output := acala.BurnCallContractOutput{}
 				Expect(surge.FromBinary(&output, outputBytes)).To(Succeed())
 
 				Expect(output.Amount).To(Equal(pack.NewU256FromUint64(burnAmount)))
@@ -107,7 +104,7 @@ var _ = Describe("Mint Burn", func() {
 				}
 				calldata, err := surge.ToBinary(input)
 				Expect(err).NotTo(HaveOccurred())
-				outputBytes, err := client.ContractCallSystemEvents(ctx, multichain.Address(""), contract.CallData(calldata))
+				outputBytes, err := client.CallContractSystemEvents(ctx, multichain.Address(""), contract.CallData(calldata))
 				Expect(err).NotTo(HaveOccurred())
 
 				output := acala.BurnLogOutput{}
@@ -154,7 +151,8 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 	phash32 := [32]byte{}
 	nhash32 := [32]byte{}
 	to := [32]byte{}
-	rawAddr, err := hex.DecodeString("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d") // Alice.
+	addrEncodeDecoder := acala.NewAddressEncodeDecoder(acala.DefaultSubstrateWildcard)
+	rawAddr, err := addrEncodeDecoder.DecodeAddress(multichain.Address(signature.TestKeyringPairAlice.Address))
 	Expect(err).NotTo(HaveOccurred())
 
 	// Get message sighash.
