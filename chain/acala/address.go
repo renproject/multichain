@@ -11,7 +11,13 @@ import (
 
 const (
 	// The default address type byte used for a substrate chain.
-	DefaultSubstrateWildcard = byte(42)
+	DefaultAddressType = byte(42)
+	// The address type used for testnet.
+	TestnetAddressType = byte(42)
+	// The address type used for canary network.
+	CanaryNetworkAddressType = byte(8)
+	// The address type used for mainnet.
+	MainnetAddressType = byte(10)
 )
 
 var (

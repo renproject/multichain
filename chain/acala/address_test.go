@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("Address", func() {
-	addrEncodeDecoder := acala.NewAddressEncodeDecoder(acala.DefaultSubstrateWildcard)
+	addrEncodeDecoder := acala.NewAddressEncodeDecoder(acala.DefaultAddressType)
 
 	Context("when encoding raw address", func() {
 		It("should match the human-readable address", func() {

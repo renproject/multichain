@@ -151,7 +151,7 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 	phash32 := [32]byte{}
 	nhash32 := [32]byte{}
 	to := [32]byte{}
-	addrEncodeDecoder := acala.NewAddressEncodeDecoder(acala.DefaultSubstrateWildcard)
+	addrEncodeDecoder := acala.NewAddressEncodeDecoder(acala.DefaultAddressType)
 	rawAddr, err := addrEncodeDecoder.DecodeAddress(multichain.Address(signature.TestKeyringPairAlice.Address))
 	Expect(err).NotTo(HaveOccurred())
 
