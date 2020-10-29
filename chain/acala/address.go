@@ -4,26 +4,39 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain"
 
 	"golang.org/x/crypto/blake2b"
 )
 
 const (
 	// The default address type byte used for a substrate chain.
-	DefaultAddressType = byte(42)
+	AddressTypeDefault = byte(42)
 	// The address type used for testnet.
-	TestnetAddressType = byte(42)
+	AddressTypeTestnet = byte(42)
 	// The address type used for canary network.
-	CanaryNetworkAddressType = byte(8)
+	AddressTypeCanaryNetwork = byte(8)
 	// The address type used for mainnet.
-	MainnetAddressType = byte(10)
+	AddressTypeMainnet = byte(10)
 )
 
 var (
 	// Prefix used before hashing the address bytes for calculating checksum
 	Prefix = []byte("SS58PRE")
 )
+
+func GetAddressType(network multichain.Network) byte {
+	switch network {
+	case multichain.NetworkLocalnet, multichain.NetworkDevnet:
+		return AddressTypeDefault
+	case multichain.NetworkTestnet:
+		return AddressTypeTestnet
+	case multichain.NetworkMainnet:
+		return AddressTypeMainnet
+	default:
+		return AddressTypeDefault
+	}
+}
 
 // AddressDecoder implements the address.Decoder interface.
 type AddressDecoder struct {
@@ -52,25 +65,25 @@ func NewAddressEncodeDecoder(addressType byte) AddressEncodeDecoder {
 // DecodeAddress the string using the Bitcoin base58 alphabet. The substrate
 // address is decoded and only the 32-byte public key is returned as the raw
 // address.
-func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
+func (decoder AddressDecoder) DecodeAddress(addr multichain.Address) (multichain.RawAddress, error) {
 	data := base58.Decode(string(addr))
 	if len(data) != 35 {
-		return address.RawAddress([]byte{}), fmt.Errorf("expected 35 bytes, got %v bytes", len(data))
+		return multichain.RawAddress([]byte{}), fmt.Errorf("expected 35 bytes, got %v bytes", len(data))
 	}
-	return address.RawAddress(data[1:33]), nil
+	return multichain.RawAddress(data[1:33]), nil
 }
 
 // EncodeAddress the raw bytes using the Bitcoin base58 alphabet. We expect a
 // 32-byte substrate public key as the address in its raw bytes representation.
 // A checksum encoded key is then encoded in the base58 format.
-func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+func (encoder AddressEncoder) EncodeAddress(rawAddr multichain.RawAddress) (multichain.Address, error) {
 	if len(rawAddr) != 32 {
-		return address.Address(""), fmt.Errorf("expected 32 bytes, got %v bytes", len(rawAddr))
+		return multichain.Address(""), fmt.Errorf("expected 32 bytes, got %v bytes", len(rawAddr))
 	}
 	checksummedAddr := append([]byte{encoder.addressType}, rawAddr...)
 	checksum := blake2b.Sum512(append(Prefix, checksummedAddr...))
 
 	checksummedAddr = append(checksummedAddr, checksum[0:2]...)
 
-	return address.Address(base58.Encode(checksummedAddr)), nil
+	return multichain.Address(base58.Encode(checksummedAddr)), nil
 }
