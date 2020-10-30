@@ -20,6 +20,7 @@ type BurnCallContractOutput struct {
 	Amount    pack.U256
 	Recipient address.RawAddress
 	Confs     pack.U64
+	Payload   pack.Bytes
 }
 
 type BurnEventData struct {
@@ -64,6 +65,11 @@ func (client *Client) CallContract(_ context.Context, _ address.Address, calldat
 		return pack.Bytes{}, fmt.Errorf("get header: %v", err)
 	}
 
+	blockhash, err := client.api.RPC.Chain.GetBlockHash(uint64(burnEventData.BlockNumber))
+	if err != nil {
+		return pack.Bytes{}, fmt.Errorf("get blockhash: %v", err)
+	}
+
 	// Calculate block confirmations for the event.
 	confs := types.U32(header.Number) - burnEventData.BlockNumber + 1
 
@@ -71,6 +77,7 @@ func (client *Client) CallContract(_ context.Context, _ address.Address, calldat
 		Amount:    pack.NewU256FromInt(burnEventData.Amount.Int),
 		Recipient: address.RawAddress(burnEventData.Recipient),
 		Confs:     pack.NewU64(uint64(confs)),
+		Payload:   pack.Bytes(blockhash[:]),
 	}
 
 	out, err := surge.ToBinary(burnLogOutput)
