@@ -29,6 +29,7 @@ import (
 	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
+	"github.com/renproject/multichain/chain/litecoin"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
@@ -592,6 +593,26 @@ var _ = Describe("Multichain", func() {
 				},
 				dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams),
 				multichain.Dogecoin,
+			},
+			{
+				"LITECOIN_PK",
+				func(pkh []byte) (btcutil.Address, error) {
+					addr, err := btcutil.NewAddressPubKeyHash(pkh, &litecoin.RegressionNetParams)
+					return addr, err
+				},
+				func(script []byte) (btcutil.Address, error) {
+					addr, err := btcutil.NewAddressScriptHash(script, &litecoin.RegressionNetParams)
+					return addr, err
+				},
+				pack.NewString("http://0.0.0.0:19443"),
+				func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
+					client := litecoin.NewClient(litecoin.DefaultClientOptions())
+					outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
+					Expect(err).NotTo(HaveOccurred())
+					return client, outputs, client.Confirmations
+				},
+				litecoin.NewTxBuilder(&litecoin.RegressionNetParams),
+				multichain.Litecoin,
 			},
 			{
 				"ZCASH_PK",
