@@ -141,10 +141,9 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 	burnAmount := uint64(r.Intn(30000) + 20000)
 
 	// Selector for this cross-chain mint.
-	token, err := hex.DecodeString("0000000000000000000000000a9add98c076448cbcfacf5e457da12ddbef4a8f")
-	Expect(err).NotTo(HaveOccurred())
-	token32 := [32]byte{}
-	copy(token32[:], token[:])
+	selector := []byte("BTC/toAcala")
+	shash32 := [32]byte{}
+	copy(shash32[:], crypto.Keccak256(selector))
 
 	// Initialise message args
 	sighash32 := [32]byte{}
@@ -162,7 +161,7 @@ func constructMintParams(r *rand.Rand) (signature.KeyringPair, pack.Bytes32, pac
 	copy(sighash32[:], crypto.Keccak256(ethereum.Encode(
 		pack.Bytes32(phash32),
 		pack.NewU256FromUint64(mintAmount),
-		pack.Bytes32(token32),
+		pack.Bytes32(shash32),
 		pack.Bytes32(to),
 		pack.Bytes32(nhash32),
 	)))
