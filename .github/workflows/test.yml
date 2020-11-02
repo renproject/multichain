@@ -63,6 +63,7 @@ jobs:
             cd $GITHUB_WORKSPACE/infra
             source .env
             docker-compose up -d --build \
+              acala \
               bitcoin \
               bitcoincash \
               dogecoin \
@@ -87,6 +88,7 @@ jobs:
             source ./infra/.env
             cd $GITHUB_WORKSPACE
             CI=true go test -timeout 1500s
+            CI=true go test ./chain/acala/...
 
   build:
     runs-on: ubuntu-latest
