@@ -39,6 +39,8 @@ type eventTreasury struct {
 	Topics  []types.Hash
 }
 
+// RenVmBridgeEvents represents all of the system events that could be emitted
+// along with extrinsics specific to the RenVmBridge module.
 type RenVmBridgeEvents struct {
 	types.EventRecords
 	Currencies_Deposited  []eventDeposited

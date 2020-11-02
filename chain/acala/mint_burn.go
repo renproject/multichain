@@ -9,10 +9,15 @@ import (
 	"github.com/renproject/pack"
 )
 
+// To returns the default recipient of the newly minted tokens in Acala. We use
+// Alice's address as this recipient.
 func (client *Client) To() (pack.String, pack.Bytes) {
 	return pack.String(signature.TestKeyringPairAlice.Address), pack.Bytes(signature.TestKeyringPairAlice.PublicKey)
 }
 
+// Mint consumes a RenVM mint signature and parameters, constructs an unsigned
+// extrinsic to mint new RenBTC tokens for minterKey and broadcasts this
+// extrinsic. It returns the extrinsic hash on successful execution.
 func (client *Client) Mint(minterKey signature.KeyringPair, phash, nhash pack.Bytes32, sig pack.Bytes65, amount uint64) (pack.Bytes32, error) {
 	opts := types.SerDeOptions{NoPalletIndices: true}
 	types.SetSerDeOptions(opts)
@@ -36,6 +41,9 @@ func (client *Client) Mint(minterKey signature.KeyringPair, phash, nhash pack.By
 	return pack.NewBytes32(hash), nil
 }
 
+// Burn broadcasts a signed extrinsic to burn RenBTC tokens from burnerKey on
+// Acala. It returns the hash (of the block it was included in), the nonce
+// (burn count) and the extrinsic's signature.
 func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes, amount uint64) (pack.Bytes32, pack.U32, pack.Bytes, error) {
 	opts := types.SerDeOptions{NoPalletIndices: false}
 	types.SetSerDeOptions(opts)
@@ -113,12 +121,14 @@ func (client *Client) Burn(burnerKey signature.KeyringPair, recipient pack.Bytes
 	}
 }
 
+// TokenAccount represents the token balance information of an address.
 type TokenAccount struct {
 	Free     types.U128
 	Reserved types.U128
 	Frozen   types.U128
 }
 
+// Balance returns the RenBTC free balance of an address.
 func (client *Client) Balance(user signature.KeyringPair) (pack.U256, error) {
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {
@@ -139,6 +149,8 @@ func (client *Client) Balance(user signature.KeyringPair) (pack.U256, error) {
 	return pack.NewU256FromInt(data.Free.Int), nil
 }
 
+// Nonce returns the burn count in RenVmBridge. This is an identifier used to
+// fetch burn logs from Acala's storage.
 func (client *Client) Nonce() (pack.U32, error) {
 	meta, err := client.api.RPC.State.GetMetadataLatest()
 	if err != nil {

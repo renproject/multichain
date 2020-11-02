@@ -14,14 +14,18 @@ import (
 )
 
 const (
+	// DefaultClientRPCURL is the default RPC URL used while connecting to an
+	// Acala node.
 	DefaultClientRPCURL = "ws://127.0.0.1:9944"
 )
 
+// ClientOptions define the options for Acala client.
 type ClientOptions struct {
 	Logger *zap.Logger
 	rpcURL pack.String
 }
 
+// DefaultClientOptions are the Acala client options used by default.
 func DefaultClientOptions() ClientOptions {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -33,16 +37,21 @@ func DefaultClientOptions() ClientOptions {
 	}
 }
 
+// WithRPCURL sets the RPC URL in the client options to return a new instance
+// of client options.
 func (opts ClientOptions) WithRPCURL(rpcURL pack.String) ClientOptions {
 	opts.rpcURL = rpcURL
 	return opts
 }
 
+// Client represents an Acala client. It interacts with a Substrate node (Acala)
+// via the Go-substrate RPC API.
 type Client struct {
 	opts ClientOptions
 	api  gsrpc.SubstrateAPI
 }
 
+// NewClient constructs a new Acala client using the client options.
 func NewClient(opts ClientOptions) (*Client, error) {
 	substrateAPI, err := gsrpc.NewSubstrateAPI(string(opts.rpcURL))
 	if err != nil {
@@ -55,22 +64,26 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	}, nil
 }
 
+// BurnLogInput defines a structure used to serialize relevant data to fetch
+// Acala burn logs from RenVmBridge's system events.
 type BurnLogInput struct {
 	Blockhash pack.Bytes32
 	ExtSign   pack.Bytes
 }
 
+// BurnLogOutput defines a structure used to represent burn data from Acala.
 type BurnLogOutput struct {
 	Amount    pack.U256
 	Recipient address.RawAddress
 	Confs     pack.U64
 }
 
+// CallContractSystemEvents fetches burn logs from the substrate system events.
 func (client *Client) CallContractSystemEvents(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
 	// Deserialise the calldata bytes.
 	input := BurnLogInput{}
 	if err := surge.FromBinary(&input, calldata); err != nil {
-		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v\n", err)
+		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v", err)
 	}
 
 	// Get chain metadata.

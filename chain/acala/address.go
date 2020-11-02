@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	// The default address type byte used for a substrate chain.
+	// AddressTypeDefault is the default address type byte for a substrate chain.
 	AddressTypeDefault = byte(42)
-	// The address type used for testnet.
+	// AddressTypeTestnet is the address type used for testnet.
 	AddressTypeTestnet = byte(42)
-	// The address type used for canary network.
+	// AddressTypeCanaryNetwork is the address type used for canary network.
 	AddressTypeCanaryNetwork = byte(8)
-	// The address type used for mainnet.
+	// AddressTypeMainnet is the address type used for mainnet.
 	AddressTypeMainnet = byte(10)
 )
 
@@ -25,6 +25,8 @@ var (
 	Prefix = []byte("SS58PRE")
 )
 
+// GetAddressType returns the appropriate prefix address type for a network
+// type.
 func GetAddressType(network multichain.Network) byte {
 	switch network {
 	case multichain.NetworkLocalnet, multichain.NetworkDevnet:

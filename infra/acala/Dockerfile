@@ -14,7 +14,7 @@ RUN mv Acala /app
 WORKDIR /app
 
 # Make sure submodule.recurse is set to true to make life with submodule easier.
-RUN git fetch && git checkout 59128d876ff1c246e9204ae63bb0f510340c2fec
+RUN git fetch && git checkout c71dd4e6a5675a0a58a61d7d877a7f02daa3d99f
 RUN git config --global submodule.recurse true
 
 # Build

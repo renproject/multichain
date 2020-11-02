@@ -12,10 +12,15 @@ import (
 	"github.com/renproject/surge"
 )
 
+// BurnCallContractInput is the input structure that is consumed in a serialized
+// byte form by the contract call API to fetch Acala's burn logs.
 type BurnCallContractInput struct {
 	Nonce pack.U32
 }
 
+// BurnCallContractOutput is the output structure that is returned in a
+// serialized byte form by the contract call API. It contains all the fields
+// specific to the burn log at the given burn count (nonce).
 type BurnCallContractOutput struct {
 	Amount    pack.U256
 	Recipient address.RawAddress
@@ -23,17 +28,24 @@ type BurnCallContractOutput struct {
 	Payload   pack.Bytes
 }
 
+// BurnEventData defines the data stored as burn logs when RenBTC tokens are
+// burnt on Acala.
 type BurnEventData struct {
 	BlockNumber types.U32
 	Recipient   types.Bytes
 	Amount      types.U128
 }
 
+// CallContract implements the multichain.ContractCaller interface for Acala. It
+// is used specifically for fetching burn logs from Acala's storage. The input
+// calldata is serialized nonce (burn count) of RenVmBridge, and it returns
+// the serialized byte form of the respected burn log along with the number of
+// block confirmations of that burn.
 func (client *Client) CallContract(_ context.Context, _ address.Address, calldata contract.CallData) (pack.Bytes, error) {
 	// Deserialise the calldata bytes.
 	input := BurnCallContractInput{}
 	if err := surge.FromBinary(&input, calldata); err != nil {
-		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v\n", err)
+		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v", err)
 	}
 
 	// Get chain metadata.
