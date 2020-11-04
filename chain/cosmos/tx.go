@@ -63,7 +63,8 @@ func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 
 // BuildTx consumes a list of MsgSend to build and return a cosmos transaction.
 // This transaction is unsigned, and must be signed before submitting to the
-// cosmos chain.
+// cosmos chain. Note that the gas price is represented in the pico-denomination
+// (1e-12) and must be converted back to the micro-denomination (1e-6).
 func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
 	types.GetConfig().SetBech32PrefixForAccount(builder.client.hrp, builder.client.hrp+"pub")
 
@@ -90,7 +91,7 @@ func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, 
 
 	fees := Coins{Coin{
 		Denom:  builder.client.opts.CoinDenom,
-		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
+		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Div(pack.NewU256FromUint64(uint64(microToPico))).Int().Uint64()),
 	}}
 
 	accountNumber, err := builder.client.AccountNumber(ctx, from)
