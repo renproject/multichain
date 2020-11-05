@@ -1,15 +1,9 @@
-FROM ubuntu:bionic
+FROM golang
 
 RUN apt update -y
 RUN apt install -y mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl wget
 RUN apt upgrade -y
 
-RUN wget -c https://golang.org/dl/go1.14.6.linux-amd64.tar.gz
-RUN tar -C /usr/local -xzf go1.14.6.linux-amd64.tar.gz
-
-ENV GOROOT=/usr/local/go
-ENV GOPATH=$HOME/go
-ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ENV GO111MODULE=on
 ENV GOPROXY=direct
 ENV GOSUMDB=off
