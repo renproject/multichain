@@ -205,6 +205,8 @@ func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pa
 
 // AccountBalance returns the account balancee for a given address.
 func (client *Client) AccountBalance(_ context.Context, addr address.Address) (pack.U256, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
