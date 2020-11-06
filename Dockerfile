@@ -5,8 +5,7 @@ RUN apt install -y mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config 
 RUN apt upgrade -y
 
 ENV GO111MODULE=on
-ENV GOPROXY=direct
-ENV GOSUMDB=off
+ENV GOPROXY=https://proxy.golang.org
 
 RUN mkdir -p $(go env GOPATH)
 WORKDIR $GOPATH
