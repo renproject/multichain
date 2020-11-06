@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 
 RUN apt-get update && apt-get install --yes --fix-missing software-properties-common curl git clang
 RUN apt-get install --yes --fix-missing --no-install-recommends build-essential
@@ -13,17 +13,17 @@ RUN git clone https://github.com/AcalaNetwork/Acala.git
 RUN mv Acala /app
 WORKDIR /app
 
-# TEMPORARY: use the branch that has a good reference to the submodules
-# TODO: remove when the `master` branch of Acala is updated
-RUN git fetch
-RUN git checkout update-orml
-RUN git pull
-
 # Make sure submodule.recurse is set to true to make life with submodule easier.
+RUN git fetch && \
+	git pull origin master && \
+	git checkout a92256960d27ff9c9428b07b947c7e5ef132fedd
 RUN git config --global submodule.recurse true
 
 # Build
-RUN make init
+RUN rustup default nightly-2020-09-27
+RUN rustup target add wasm32-unknown-unknown --toolchain nightly-2020-09-27
+RUN make submodule
+RUN make build-full
 RUN make build
 
 WORKDIR /

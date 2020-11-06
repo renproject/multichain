@@ -68,7 +68,7 @@ jobs:
               dogecoin \
               terra \
               zcash
-            docker run -d -p 1234:1234 -h 0.0.0.0        \
+            docker run -d -p 1234:1234 -h 0.0.0.0 \
               --name infra_filecoin_1 rohitnarurkar/multichain_filecoin:latest
 
       - name: Sleep until the nodes are up
@@ -86,7 +86,7 @@ jobs:
             export PATH=$PATH:$(go env GOPATH)/bin
             source ./infra/.env
             cd $GITHUB_WORKSPACE
-            CI=true go test -timeout 1500s
+            go test -timeout 1500s
 
   build:
     runs-on: ubuntu-latest

@@ -3,7 +3,7 @@ ADDRESS=$1
 
 # Start
 cd /app
-make run
+SKIP_WASM_BUILD= cargo run --features with-acala-runtime -- --dev --execution=native -lruntime=debug --ws-external --rpc-external
 sleep 10
 
 # Print setup
