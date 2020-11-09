@@ -2,9 +2,7 @@ package cosmos_test
 
 import (
 	"context"
-	"math/rand"
 	"testing/quick"
-	"time"
 
 	"github.com/renproject/multichain/chain/cosmos"
 	"github.com/renproject/pack"
@@ -14,16 +12,13 @@ import (
 )
 
 var _ = Describe("Gas", func() {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	Context("when estimating gas parameters", func() {
 		It("should work", func() {
-			f := func() bool {
-				gasPriceMicro := r.Float64()
-				gasEstimator := cosmos.NewGasEstimator(gasPriceMicro)
-				gasPricePico, _, err := gasEstimator.EstimateGas(context.Background())
+			f := func(gasPerByte pack.U256) bool {
+				gasEstimator := cosmos.NewGasEstimator(gasPerByte)
+				gasPrice, _, err := gasEstimator.EstimateGas(context.Background())
 				Expect(err).NotTo(HaveOccurred())
-				expectedGasPrice := pack.NewU256FromUint64(uint64(gasPriceMicro * 1000000))
-				Expect(gasPricePico).To(Equal(expectedGasPrice))
+				Expect(gasPrice).To(Equal(gasPerByte))
 				return true
 			}
 			Expect(quick.Check(f, nil)).To(Succeed())
