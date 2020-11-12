@@ -162,7 +162,7 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 
 	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
 	if err != nil {
-		return pack.U256{}, fmt.Errorf("searching state for addr: %v", addr)
+		return pack.U256{}, fmt.Errorf("searching state for addr %v: %v", addr, err)
 	}
 
 	return pack.NewU256FromU64(pack.NewU64(actor.Nonce)), nil
@@ -177,7 +177,7 @@ func (client *Client) AccountBalance(ctx context.Context, addr address.Address) 
 
 	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
 	if err != nil {
-		return pack.U256{}, fmt.Errorf("searching state for addr: %v", addr)
+		return pack.U256{}, fmt.Errorf("searching state for addr %v: %v", addr, err)
 	}
 
 	balance := actor.Balance.Int
