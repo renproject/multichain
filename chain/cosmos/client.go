@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/renproject/multichain/api/account"
@@ -25,13 +27,15 @@ const (
 	DefaultClientTimeoutRetry = time.Second
 	// DefaultClientHost used by the Client. This should only be used for local
 	// deployments of the multichain.
-	DefaultClientHost = "http://0.0.0.0:26657"
+	DefaultClientHost = pack.String("http://0.0.0.0:26657")
 	// DefaultBroadcastMode configures the behaviour of a cosmos client while it
 	// interacts with the cosmos node. Allowed broadcast modes can be async, sync
 	// and block. "async" returns immediately after broadcasting, "sync" returns
 	// after the transaction has been checked and "block" waits until the
 	// transaction is committed to the chain.
-	DefaultBroadcastMode = "sync"
+	DefaultBroadcastMode = pack.String("sync")
+	// DefaultCoinDenom used by the Client.
+	DefaultCoinDenom = pack.String("uluna")
 )
 
 // ClientOptions are used to parameterise the behaviour of the Client.
@@ -40,6 +44,7 @@ type ClientOptions struct {
 	TimeoutRetry  time.Duration
 	Host          pack.String
 	BroadcastMode pack.String
+	CoinDenom     pack.String
 }
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
@@ -49,14 +54,40 @@ func DefaultClientOptions() ClientOptions {
 	return ClientOptions{
 		Timeout:       DefaultClientTimeout,
 		TimeoutRetry:  DefaultClientTimeoutRetry,
-		Host:          pack.String(DefaultClientHost),
-		BroadcastMode: pack.String(DefaultBroadcastMode),
+		Host:          DefaultClientHost,
+		BroadcastMode: DefaultBroadcastMode,
+		CoinDenom:     DefaultCoinDenom,
 	}
 }
 
-// WithHost sets the URL of the Bitcoin node.
+// WithTimeout sets the timeout used by the Client.
+func (opts ClientOptions) WithTimeout(timeout time.Duration) ClientOptions {
+	opts.Timeout = timeout
+	return opts
+}
+
+// WithTimeoutRetry sets the timeout retry used by the Client.
+func (opts ClientOptions) WithTimeoutRetry(timeoutRetry time.Duration) ClientOptions {
+	opts.TimeoutRetry = timeoutRetry
+	return opts
+}
+
+// WithHost sets the URL of the node.
 func (opts ClientOptions) WithHost(host pack.String) ClientOptions {
 	opts.Host = host
+	return opts
+}
+
+// WithBroadcastMode sets the behaviour of the Client when interacting with the
+// underlying node.
+func (opts ClientOptions) WithBroadcastMode(broadcastMode pack.String) ClientOptions {
+	opts.BroadcastMode = broadcastMode
+	return opts
+}
+
+// WithCoinDenom sets the coin denomination used by the Client.
+func (opts ClientOptions) WithCoinDenom(coinDenom pack.String) ClientOptions {
+	opts.CoinDenom = coinDenom
 	return opts
 }
 
@@ -66,11 +97,22 @@ type Client struct {
 	opts   ClientOptions
 	cliCtx cliContext.CLIContext
 	cdc    *codec.Codec
+	hrp    string
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
-	httpClient, err := rpchttp.NewWithTimeout(opts.Host.String(), "websocket", uint(opts.Timeout/time.Second))
+func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
+	httpClient, err := rpchttp.NewWithClient(
+		string(opts.Host),
+		"websocket",
+		&http.Client{
+			Timeout: opts.Timeout,
+
+			// We override the transport layer with a custom implementation as
+			// there is an issue with the Cosmos SDK that causes it to
+			// incorrectly parse URLs.
+			Transport: newTransport(string(opts.Host), &http.Transport{}),
+		})
 	if err != nil {
 		panic(err)
 	}
@@ -81,6 +123,7 @@ func NewClient(opts ClientOptions, cdc *codec.Codec) *Client {
 		opts:   opts,
 		cliCtx: cliCtx,
 		cdc:    cdc,
+		hrp:    hrp,
 	}
 }
 
@@ -126,6 +169,8 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 // AccountNonce returns the current nonce of the account. This is the nonce to
 // be used while building a new transaction.
 func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pack.U256, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
@@ -142,6 +187,8 @@ func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pac
 
 // AccountNumber returns the account number for a given address.
 func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
@@ -154,4 +201,55 @@ func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pa
 	}
 
 	return pack.U64(acc.GetAccountNumber()), nil
+}
+
+// AccountBalance returns the account balancee for a given address.
+func (client *Client) AccountBalance(_ context.Context, addr address.Address) (pack.U256, error) {
+	types.GetConfig().SetBech32PrefixForAccount(client.hrp, client.hrp+"pub")
+
+	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
+	}
+
+	accGetter := auth.NewAccountRetriever(client.cliCtx)
+	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return pack.U256{}, err
+	}
+
+	balance := acc.GetCoins().AmountOf(string(client.opts.CoinDenom)).BigInt()
+
+	// If the balance exceeds `MaxU256`, return an error.
+	if pack.MaxU256.Int().Cmp(balance) == -1 {
+		return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
+	}
+
+	return pack.NewU256FromInt(balance), nil
+}
+
+type transport struct {
+	remote string
+	proxy  http.RoundTripper
+}
+
+// newTransport returns a custom implementation of http.RoundTripper that
+// overrides the request URL prior to sending the request.
+func newTransport(remote string, proxy http.RoundTripper) *transport {
+	return &transport{
+		remote: remote,
+		proxy:  proxy,
+	}
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	u, err := url.Parse(t.remote)
+	if err != nil {
+		return nil, err
+	}
+	req.URL = u
+	req.Host = u.Host
+
+	// Proxy request.
+	return t.proxy.RoundTrip(req)
 }

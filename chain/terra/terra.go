@@ -18,16 +18,19 @@ type (
 )
 
 var (
-	// DefaultClientOptions re-exports default cosmos-compatible client options
+	// DefaultClientOptions re-exports cosmos.DefaultClientOptions
 	DefaultClientOptions = cosmos.DefaultClientOptions
+
+	// DefaultTxBuilderOptions re-exports cosmos.DefaultTxBuilderOptions
+	DefaultTxBuilderOptions = cosmos.DefaultTxBuilderOptions
 
 	// NewGasEstimator re-exports cosmos.NewGasEstimator
 	NewGasEstimator = cosmos.NewGasEstimator
 )
 
-// NewClient returns returns a new Client with terra codec
+// NewClient returns returns a new Client with Terra codec.
 func NewClient(opts ClientOptions) *Client {
-	return cosmos.NewClient(opts, app.MakeCodec())
+	return cosmos.NewClient(opts, app.MakeCodec(), "terra")
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface

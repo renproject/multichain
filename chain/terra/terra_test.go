@@ -53,15 +53,19 @@ var _ = Describe("Terra", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// instantiate a new client
-				client := terra.NewClient(terra.DefaultClientOptions())
+				client := terra.NewClient(
+					terra.DefaultClientOptions().
+						WithCoinDenom("uluna"),
+				)
 				nonce, err := client.AccountNonce(ctx, multichain.Address(addr.String()))
 				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
-				txBuilder := terra.NewTxBuilder(terra.TxBuilderOptions{
-					ChainID:   "testnet",
-					CoinDenom: "uluna",
-				}, client)
+				txBuilder := terra.NewTxBuilder(
+					terra.DefaultTxBuilderOptions().
+						WithChainID("testnet"),
+					client,
+				)
 
 				// build the transaction
 				payload := pack.NewBytes([]byte("multichain"))

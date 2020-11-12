@@ -162,8 +162,30 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 
 	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
 	if err != nil {
-		return pack.U256{}, fmt.Errorf("searching state for addr: %v", addr)
+		return pack.U256{}, fmt.Errorf("searching state for addr %v: %v", addr, err)
 	}
 
 	return pack.NewU256FromU64(pack.NewU64(actor.Nonce)), nil
+}
+
+// AccountBalance returns the account balancee for a given address.
+func (client *Client) AccountBalance(ctx context.Context, addr address.Address) (pack.U256, error) {
+	filAddr, err := filaddress.NewFromString(string(addr))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("bad address '%v': %v", addr, err)
+	}
+
+	actor, err := client.node.StateGetActor(ctx, filAddr, types.NewTipSetKey(cid.Undef))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("searching state for addr %v: %v", addr, err)
+	}
+
+	balance := actor.Balance.Int
+
+	// If the balance exceeds `MaxU256`, return an error.
+	if pack.MaxU256.Int().Cmp(balance) == -1 {
+		return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
+	}
+
+	return pack.NewU256FromInt(balance), nil
 }

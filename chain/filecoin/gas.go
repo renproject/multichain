@@ -39,8 +39,8 @@ func (gasEstimator *GasEstimator) EstimateGas(ctx context.Context) (pack.U256, p
 	// Create a dummy "Send" message.
 	msgIn := types.Message{
 		Version:    types.MessageVersion,
-		From:       filaddress.Undef,
-		To:         filaddress.Undef,
+		From:       filaddress.TestAddress,
+		To:         filaddress.TestAddress2,
 		Value:      types.EmptyInt,
 		Nonce:      0,
 		GasLimit:   gasEstimator.gasLimit,

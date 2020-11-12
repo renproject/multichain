@@ -51,20 +51,21 @@ var _ = Describe("Starname", func() {
 				recipient, err := addrEncoder.EncodeAddress(address.RawAddress(pack.Bytes(pkRecipient.PubKey().Address())))
 				Expect(err).NotTo(HaveOccurred())
 
-				// avoid a port collision with terra and set BroadcastMode to block to avoid having to loop on client.Tx()
-				options := starname.DefaultClientOptions()
-				options.Host = "http://0.0.0.0:46657"
-				options.BroadcastMode = "block"
+				// instantiate a new client and avoid a port collision with terra and
+				// set BroadcastMode to block to avoid having to loop on client.Tx()
+				client := starname.NewClient(
+					starname.DefaultClientOptions().
+						WithHost("http://0.0.0.0:46657").
+						WithBroadcastMode("block").
+						WithCoinDenom("tiov"),
+				)
 
-				// instantiate a new client
-				client := starname.NewClient(options)
 				nonce, err := client.AccountNonce(ctx, multichain.Address(addr.String()))
 				Expect(err).NotTo(HaveOccurred())
 
 				// create a new cosmos-compatible transaction builder
 				txBuilder := starname.NewTxBuilder(starname.TxBuilderOptions{
-					ChainID:   "testnet",
-					CoinDenom: "tiov",
+					ChainID: "testnet",
 				}, client)
 
 				// build the transaction
@@ -115,7 +116,7 @@ var _ = Describe("Starname", func() {
 				foundTx, confs, err := client.Tx(ctx, txHash)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(confs.Uint64()).To(Equal(uint64(1)))
-				Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(payload.String()))))
+				Expect(foundTx.Payload()).To(Equal(multichain.ContractCallData([]byte(string(payload)))))
 				Expect(foundTx.From()).To(Equal(multichain.Address(addr.String())))
 				Expect(foundTx.To()).To(Equal(recipient))
 				Expect(foundTx.Value()).To(Equal(amount))
