@@ -48,7 +48,7 @@ var _ = Describe("Terra", func() {
 
 				// random recipient
 				pkRecipient := secp256k1.GenPrivKey()
-				addrEncoder := terra.NewAddressEncoder("terra")
+				addrEncoder := terra.NewAddressEncoder()
 				recipient, err := addrEncoder.EncodeAddress(address.RawAddress(pack.Bytes(pkRecipient.PubKey().Address())))
 				Expect(err).NotTo(HaveOccurred())
 
