@@ -146,7 +146,7 @@ var _ = Describe("Multichain", func() {
 			{
 				multichain.Terra,
 				func() multichain.AddressEncodeDecoder {
-					return terra.NewAddressEncodeDecoder("terra")
+					return terra.NewAddressEncodeDecoder()
 				},
 				func() multichain.Address {
 					pk := secp256k1.GenPrivKey()
@@ -317,7 +317,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					var pk secp256k1.PrivKeySecp256k1
 					copy(pk[:], pkBytes)
-					addrEncoder := terra.NewAddressEncoder("terra")
+					addrEncoder := terra.NewAddressEncoder()
 					senderAddr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
 					Expect(err).NotTo(HaveOccurred())
 					senderPrivKey := id.PrivKey{}
@@ -330,7 +330,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					var pk secp256k1.PrivKeySecp256k1
 					copy(pk[:], pkBytes)
-					addrEncoder := terra.NewAddressEncoder("terra")
+					addrEncoder := terra.NewAddressEncoder()
 					addr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
 					Expect(err).NotTo(HaveOccurred())
 					return addr
@@ -338,7 +338,7 @@ var _ = Describe("Multichain", func() {
 				"http://127.0.0.1:26657",
 				func() multichain.Address {
 					recipientKey := secp256k1.GenPrivKey()
-					addrEncoder := terra.NewAddressEncoder("terra")
+					addrEncoder := terra.NewAddressEncoder()
 					recipient, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(recipientKey.PubKey().Address())))
 					Expect(err).NotTo(HaveOccurred())
 					return recipient
