@@ -150,7 +150,6 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.Address {
 					pk := secp256k1.GenPrivKey()
-					cosmossdk.GetConfig().SetBech32PrefixForAccount("terra", "terrapub")
 					addr := cosmossdk.AccAddress(pk.PubKey().Address())
 					return multichain.Address(addr.String())
 				},
