@@ -211,7 +211,7 @@ type Chain string
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	//Acala             = Chain("Acala") // DEZU: Commented out because it breaks the docker build process, #progamermove (#pro-grammermove?)
+	Acala             = Chain("Acala")
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")

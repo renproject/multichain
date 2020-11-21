@@ -1,19 +1,17 @@
 version: "2"
 services:
-
-  # DEZU; Commented out because break build etc etc, notice colons too
   #
   # Acala
   #
-  # acala
-  #  build
-  #    context ./acala
-  #  ports
-  #    - "0.0.0.0:9933:9933"
-  #    - "0.0.0.0:9944:9944"
-  #  entrypoint
-  #    - "./root/run.sh"
-  #    - "${ACALA_ADDRESS}"
+  acala:
+    build:
+      context: ./acala
+    ports:
+      - "0.0.0.0:9933:9933"
+      - "0.0.0.0:9944:9944"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ACALA_ADDRESS}"
 
   #
   # Binance Smart Chain

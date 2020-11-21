@@ -15,10 +15,9 @@ WORKDIR /app
 
 # TEMPORARY: use the branch that has a good reference to the submodules
 # TODO: remove when the `master` branch of Acala is updated
-# DEZU: commented out because it fails
-#RUN git fetch
-#RUN git checkout update-orml
-#RUN git pull
+RUN git fetch
+RUN git checkout update-orml
+RUN git pull
 
 # Make sure submodule.recurse is set to true to make life with submodule easier.
 RUN git config --global submodule.recurse true
