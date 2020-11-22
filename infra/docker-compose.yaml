@@ -115,6 +115,23 @@ services:
       - "/root/run.sh"
 
   #
+  # Qtum
+  #
+  # DEZU; TODO
+  qtum:
+    build:
+      context: ./qtum
+    ports:
+      - "0.0.0.0:3888:3888"
+      - "0.0.0.0:3889:3889"
+      - "0.0.0.0:13888:13888"
+      - "0.0.0.0:13889:13889"
+    entrypoint:
+      - "./root/run.sh"
+      - "${QTUM_ADDRESS}"
+      - "${QTUM_PK}"
+
+  #
   # Solana
   #
   solana:
