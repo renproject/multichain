@@ -17,6 +17,7 @@ require (
 	github.com/multiformats/go-varint v0.0.6
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
+	github.com/qtumproject/qtumsuite v0.0.0-20191105052314-80f1a6a75e13
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.5
 	github.com/renproject/surge v1.2.6
