@@ -1,8 +1,7 @@
 # DEZU: Originally stolen from qtum-docker github page
 FROM ubuntu
-# MAINTAINER pandazwb
 
-RUN apt-get update && apt-get install --yes -qq --no-install-recommends ca-certificates curl wget apt-utils jq
+RUN apt-get update --fix-missing && apt-get install --yes -qq --no-install-recommends ca-certificates curl wget apt-utils jq
 RUN apt-get install --yes curl
 
 # install qtum binaries
@@ -11,10 +10,11 @@ RUN mv ./qtum-0.20.1 /app
 RUN chmod +x /app/bin/qtumd
 RUN chmod +x /app/bin/qtum-cli
 
-COPY qtum.conf /root/.qtum/
-COPY run.sh /root/
+COPY qtum.conf /root/.qtum/qtum.conf
+COPY run.sh /root/run.sh
 RUN chmod +x /root/run.sh
 
-EXPOSE 3888 3889 13888 13889
+# DEZU: Not sure if these are technically correct for regtest, but they work
+EXPOSE 13888 13889
 
 ENTRYPOINT ["./root/run.sh"]
