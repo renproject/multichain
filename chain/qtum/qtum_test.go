@@ -86,11 +86,11 @@ var _ = Describe("Qtum", func() {
 				recipients := []utxo.Recipient{
 					{
 						To:    address.Address(pkhAddr.EncodeAddress()),
-						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), // DEZU: the constant fee here will cause error if too low, demand of > 90000 seems common
-					},
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), 	// DEZU: the constant fee here will cause test error if too low, demand of > 90000 seems common
+					},																																											// TODO: Examinate why this value needs to be so high for Qtum (was 1000 for BTC)
 					{
 						To:    address.Address(pkhAddrUncompressed.EncodeAddress()),
-						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), // DEZU: Ditto above
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), 	// DEZU: Ditto above
 					},
 				}
 				tx, err := qtum.NewTxBuilder(&RegressionNetParams).BuildTx(inputs, recipients)
