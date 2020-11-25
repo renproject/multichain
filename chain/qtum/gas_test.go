@@ -1,7 +1,6 @@
 package qtum_test
 
-// DEZU: This is literally dogecoin's test with dogecoin replaced with qtum
-// TODO: Check if it actually works?
+// Shamelessly stolen from Dogecoin's re-export of bitcoin's implementation. Steal-ception!
 
 import (
 	"context"

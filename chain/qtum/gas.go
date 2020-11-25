@@ -1,5 +1,6 @@
 package qtum
-// DEZU: TODO: This should probably be replaced with something from Qtum
+
+// I *Think* it is fine to simply use Bitcoin's estimator here
 
 import "github.com/renproject/multichain/chain/bitcoin"
 
