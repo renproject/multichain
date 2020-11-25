@@ -1,6 +1,7 @@
 package qtum_test
 
-// DEZU: This is a straight rip of dogecoin's implementation
+// This is a copy of Bitcoin's implementation with btcsuite swapped for qtumsuite,
+// along with some minimal additional changes
 
 import (
 	"context"
@@ -9,63 +10,47 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/qtumproject/qtumsuite/chaincfg"
+	"github.com/qtumproject/qtumsuite"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/multichain/chain/qtum"
 	"github.com/renproject/pack"
-	//"github.com/qtumproject/qtumsuite/chaincfg"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-	// DEZU: values take from from qtumsuit
-var RegressionNetParams = chaincfg.Params{
-	Name: "regtest",
-	DefaultPort: "23888",
-
-	Net: 0xe1c6ddfd,
-
-	// Address encoding magics
-	PubKeyHashAddrID: 120, // starts with m or n
-	ScriptHashAddrID: 110, // starts with 2
-	PrivateKeyID:     239, // starts with 9 (uncompressed) or c (compressed)
-
-	// BIP32 hierarchical deterministic extended key magics
-	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with tprv
-	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with tpub
-
-	// Human-readable part for Bech32 encoded segwit addresses, as defined in BIP 173.
-	Bech32HRPSegwit: "qcrt",
-}
 
 var _ = Describe("Qtum", func() {
 	Context("when submitting transactions", func() {
 		Context("when sending QTUM to multiple addresses", func() {
 			It("should work", func() {
 				// Load private key, and assume that the associated address has
-				// funds to spend. You can do this by setting QTUM_PK to the
+				// funds to spend. You can do this by setting BITCOIN_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
 				pkEnv := os.Getenv("QTUM_PK")
 				if pkEnv == "" {
 					panic("QTUM_PK is undefined")
 				}
-				wif, err := btcutil.DecodeWIF(pkEnv)
+				wif, err := qtumsuite.DecodeWIF(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
-				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &RegressionNetParams)
+				pkhAddr, err := qtumsuite.NewAddressPubKeyHash(qtumsuite.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
-				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &RegressionNetParams)
+				pkhAddrUncompressed, err := qtumsuite.NewAddressPubKeyHash(qtumsuite.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("PKH                %v", pkhAddr.EncodeAddress())
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
+				// WPKH
+				wpkAddr, err := qtumsuite.NewAddressWitnessPubKeyHash([]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, &chaincfg.RegressionNetParams)
+				Expect(err).ToNot(HaveOccurred())
+				log.Printf("WPKH               %v", wpkAddr.EncodeAddress())
+
 				// Setup the client and load the unspent transaction outputs.
-				client := qtum.NewClient(qtum.DefaultClientOptions().WithHost("http://127.0.0.1:13889")) // DEZU: TODO: This is QTUM's testnet address, is that the one?
+				client := qtum.NewClient(qtum.DefaultClientOptions().WithHost("http://127.0.0.1:13889")) // This is actually supposed to be Qtum's testnet port, but it seems to work
 				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, address.Address(pkhAddr.EncodeAddress()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
@@ -77,23 +62,39 @@ var _ = Describe("Qtum", func() {
 				output2, _, err := client.Output(context.Background(), output.Outpoint)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
+				output2, _, err = client.UnspentOutput(context.Background(), output.Outpoint)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
 				inputs := []utxo.Input{
-					{Output: output},
+					{Output: utxo.Output{
+						Outpoint: utxo.Outpoint{
+							Hash:  output.Outpoint.Hash[:],
+							Index: output.Outpoint.Index,
+						},
+						PubKeyScript: output.PubKeyScript,
+						Value:        output.Value,
+					}},
 				}
+				// The constant (relay fee) subtracted below should really be derived by
+				// an estimatesmartfee call to the node, but if BTC is lazy we can be too
 				recipients := []utxo.Recipient{
 					{
 						To:    address.Address(pkhAddr.EncodeAddress()),
-						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), 	// DEZU: the constant fee here will cause test error if too low, demand of > 90000 seems common
-					},																																											// TODO: Examinate why this value needs to be so high for Qtum (was 1000 for BTC)
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 150000) / 3)),
+					},
 					{
 						To:    address.Address(pkhAddrUncompressed.EncodeAddress()),
-						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 100000) / 2)), 	// DEZU: Ditto above
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 150000) / 3)),
+					},
+					{
+						To:    address.Address(wpkAddr.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 150000) / 3)),
 					},
 				}
-				tx, err := qtum.NewTxBuilder(&RegressionNetParams).BuildTx(inputs, recipients)
+				tx, err := qtum.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and
@@ -112,7 +113,7 @@ var _ = Describe("Qtum", func() {
 				}
 				Expect(tx.Sign(signatures, pack.NewBytes(wif.SerializePubKey()))).To(Succeed())
 
-				// Submit the transaction to the Qtum node. Again, this
+				// Submit the transaction to the Bitcoin node. Again, this
 				// should be running a la `./multichaindeploy`.
 				txHash, err := tx.Hash()
 				Expect(err).ToNot(HaveOccurred())
@@ -125,15 +126,19 @@ var _ = Describe("Qtum", func() {
 					// confirmations. This implies that the transaction is
 					// definitely valid, and the test has passed. We were
 					// successfully able to use the multichain to construct and
-					// submit a Qtum transaction!
+					// submit a Bitcoin transaction!
 					confs, err := client.Confirmations(context.Background(), txHash)
 					Expect(err).ToNot(HaveOccurred())
-					log.Printf("                   %v/3 confirmations", confs)
-					if confs >= 3 {
+					log.Printf("                   %v/1 confirmations", confs)
+					if confs >= 1 { // Only wait for 1 conf to cut 20 sec of test time
 						break
 					}
 					time.Sleep(10 * time.Second)
 				}
+				ctxWithTimeout, cancelCtxWithTimeout := context.WithTimeout(context.Background(), time.Second)
+				defer cancelCtxWithTimeout()
+				_, _, err = client.UnspentOutput(ctxWithTimeout, output.Outpoint)
+				Expect(err).To(HaveOccurred())
 
 				// Check that we can load the output and that it is equal.
 				// Otherwise, something strange is happening with the RPC

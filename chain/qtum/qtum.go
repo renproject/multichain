@@ -1,5 +1,8 @@
 package qtum
 
+// This is a copy of Bitcoin's implementation with btcsuite swapped for qtumquite,
+// along with some minimal additional changes
+
 import (
 	"bytes"
 	"context"
@@ -14,7 +17,7 @@ import (
 
 	"strconv" // DEZU: TODO: Remove debug
 
-	"github.com/btcsuite/btcd/btcjson"	// DEZU: Not in qtumsuite, unsure how to handle it
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/qtumproject/qtumsuite/chaincfg/chainhash"
 	"github.com/qtumproject/qtumsuite"
 	"github.com/renproject/multichain/api/address"
@@ -29,7 +32,7 @@ const (
 	DefaultClientTimeoutRetry = time.Second
 	// DefaultClientHost used by the Client. This should only be used for local
 	// deployments of the multichain.
-	DefaultClientHost = "http://0.0.0.0:13889" // DEZU: TODO: Change???
+	DefaultClientHost = "http://0.0.0.0:13889" // This should be testnet address, but works for regtest apparently
 	// DefaultClientUser used by the Client. This is insecure, and should only
 	// be used for local — or publicly accessible — deployments of the
 	// multichain.
