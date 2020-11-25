@@ -3,11 +3,11 @@ package filecoin
 import (
 	"bytes"
 	"fmt"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
 
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/specs-actors/actors/abi"
-	"github.com/filecoin-project/specs-actors/actors/abi/big"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"

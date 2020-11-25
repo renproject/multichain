@@ -4,12 +4,15 @@ import (
 	"math/big"
 )
 
+// BigIntOne ...
 var BigIntOne = big.NewInt(1)
 
+// BytesForZero ...
 func BytesForZero() []byte {
 	return []byte{0}
 }
 
+// BigIntToBytes ...
 func BigIntToBytes(i *big.Int) []byte {
 	if i == nil || i.Sign() == 0 {
 		return BytesForZero()
@@ -31,6 +34,7 @@ func BigIntToBytes(i *big.Int) []byte {
 	}
 }
 
+// BigIntSetBytes ...
 func BigIntSetBytes(i *big.Int, bs []byte) *big.Int {
 	i.SetBytes(bs)
 	if len(bs) > 0 && (bs[0]&0x80) != 0 {
@@ -41,6 +45,7 @@ func BigIntSetBytes(i *big.Int, bs []byte) *big.Int {
 	return i
 }
 
+// Uint64ToBytes ..
 func Uint64ToBytes(v uint64) []byte {
 	if v == 0 {
 		return BytesForZero()
@@ -57,6 +62,7 @@ func Uint64ToBytes(v uint64) []byte {
 	return bs
 }
 
+// SizeToBytes ...
 func SizeToBytes(v uint64) []byte {
 	if v == 0 {
 		return BytesForZero()
@@ -72,6 +78,7 @@ func SizeToBytes(v uint64) []byte {
 	return bs
 }
 
+// BytesToUint64 ...
 func BytesToUint64(bs []byte) uint64 {
 	if len(bs) == 0 {
 		return 0
@@ -86,6 +93,7 @@ func BytesToUint64(bs []byte) uint64 {
 	return v
 }
 
+// BytesToSize ...
 func BytesToSize(bs []byte) uint64 {
 	var v uint64
 	for _, b := range bs {
@@ -94,6 +102,7 @@ func BytesToSize(bs []byte) uint64 {
 	return v
 }
 
+// BytesToInt64 ...
 func BytesToInt64(bs []byte) int64 {
 	if len(bs) == 0 {
 		return 0
@@ -112,6 +121,7 @@ func BytesToInt64(bs []byte) int64 {
 	}
 }
 
+// Int64ToBytes ...
 func Int64ToBytes(v int64) []byte {
 	if v == 0 {
 		return BytesForZero()

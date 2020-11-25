@@ -20,9 +20,21 @@ type PrivateKey struct {
 	bytes []byte // 32-byte
 }
 
+// NewPrivateKey ...
+func (key *PrivateKey) NewPrivateKey(skey string) *PrivateKey {
+	key.bytes = []byte(skey)
+	return key
+}
+
+// Add ...
+func (key *PrivateKey) Add(k []byte) *PrivateKey {
+	key.bytes = k
+	return key
+}
+
 // String returns the string representation.
 func (key *PrivateKey) String() string {
-	return hex.EncodeToString(key.bytes)
+	return "0x" + hex.EncodeToString(key.bytes)
 }
 
 // PublicKey generates a public key paired with itself.
@@ -114,6 +126,8 @@ func (key *PublicKey) String() string {
 	return "0x" + hex.EncodeToString(key.bytes)
 }
 
+// TODO add 'func ToECDSA() ecdsa.PublicKey' if needed
+
 // GenerateKeyPair generates a private and public key pair.
 func GenerateKeyPair() (privKey *PrivateKey, pubKey *PublicKey) {
 	pub, priv := secp256k1.GenerateKeyPair()
@@ -122,7 +136,7 @@ func GenerateKeyPair() (privKey *PrivateKey, pubKey *PublicKey) {
 	return
 }
 
-// ParsePublicKey parse private key and return private key object.
+// ParsePrivateKey parse private key and return private key object.
 func ParsePrivateKey(b []byte) (*PrivateKey, error) {
 	if len(b) != PrivateKeyLen {
 		return nil, errors.New("InvalidKeyLength")

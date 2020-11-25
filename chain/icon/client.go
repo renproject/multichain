@@ -1,84 +1,94 @@
 package icon
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/icon-project/goloop/client"
+	v3 "github.com/icon-project/goloop/server/v3"
+	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/api/address"
+	"log"
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
-	"github.com/icon-project/goloop/common"
-	"github.com/icon-project/goloop/common/errors"
 	"github.com/icon-project/goloop/server/jsonrpc"
-	"github.com/renproject/multichain/chain/icon/intconv"
-	"github.com/renproject/multichain/chain/icon/transaction"
 	"github.com/renproject/pack"
 )
 
-// Client interacts with an instance of ICON network using the REST
-// interface exposed by a client node.
+const jsonprcVersion = "2.0"
+
+// Request ...
+type Request struct {
+	Version string          `json:"jsonrpc" validate:"required,version"`
+	Method  string          `json:"method" validate:"required"`
+	Params  json.RawMessage `json:"params,omitempty"`
+	ID      interface{}     `json:"id"`
+}
+
+// Response ...
+type Response struct {
+	Version string      `json:"jsonrpc" validate:"required,version"`
+	ID      interface{} `json:"id"`
+	Result  Tx          `json:"result"`
+}
+
+// Client ...
 type Client struct {
-	*JsonRpcClient
-	Debug *JsonRpcClient
-	conns map[string]*websocket.Conn
+	v3       client.ClientV3
+	endpoint string
 }
 
 // NewClient returns a new Client.
-func NewClient(endpoint string) *Client {
-	client := new(http.Client)
-	apiClient := NewJsonRpcClient(client, endpoint)
-	var debugClient *JsonRpcClient
-	if ep := guessDebugEndpoint(endpoint); len(ep) > 0 {
-		debugClient = NewJsonRpcClient(client, ep)
-	}
+func NewClient(endpoint pack.String) *Client {
 
 	return &Client{
-		JsonRpcClient: apiClient,
-		Debug:         debugClient,
-		conns:         make(map[string]*websocket.Conn),
+		v3:       *client.NewClientV3(endpoint.String()),
+		endpoint: endpoint.String(),
 	}
 }
 
-// Tx query transaction with txHash
-func (client Client) Tx(ctx context.Context, hash pack.Bytes) (Tx, pack.U64, error) {
-	t := &Transaction{}
-	_, err := client.Do("icx_getTransactionByHash", hash, t)
+// Tx ...
+func (ct *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
+	txResult, err := ct.v3.GetTransactionByHash(&v3.TransactionHashParam{Hash: jsonrpc.HexBytes(txHash)})
 	if err != nil {
-		return nil, err
+		return nil, pack.NewU64(0), err
 	}
-	return t, pack.NewU64(1), nil
+	return &Tx{
+		Version:     txResult.Version,
+		Amount:      txResult.Value,
+		FromAddress: address.Address(txResult.From.Address().String()),
+		ToAddress:   address.Address(txResult.To.Address().String()),
+		StepLimit:   txResult.StepLimit,
+		Signature:   string(txResult.Signature.Bytes()),
+		Timestamp:   txResult.TimeStamp,
+		NID:         txResult.NID,
+		DataType:    &txResult.DataType,
+	}, pack.NewU64(1), nil
 }
 
-// SubmitTx to ICON network.
-func (client Client) SubmitTx(ctx context.Context, tx Tx) error {
-	Tx.Timestamp = jsonrpc.HexInt(intconv.FormatInt(time.Now().UnixNano() / int64(time.Microsecond)))
-	js, err := json.Marshal(Tx)
-	if err != nil {
-		return nil, err
-	}
-
-	bs, err := transaction.SerializeJSON(js, nil, txSerializeExcludes)
-	if err != nil {
-		return nil, err
-	}
-	bs = append([]byte("icx_sendTransaction."), bs...)
-
-	var result jsonrpc.HexBytes
-	if _, err = client.Do("icx_sendTransaction", Tx, &result); err != nil {
-		return nil, err
-	}
-	return &result, nil
+// SubmitTx ...
+func (ct *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
+	_, err := ct.sendTransaction(tx)
+	return err
 }
 
-// EstimateStep cost for a transaction
-func (client *Client) EstimateStep(param Tx) (*common.HexInt, error) {
-	if client.Debug == nil {
-		return nil, errors.InvalidStateError.New("UnavailableDebugEndPoint")
+func (ct Client) sendTransaction(tx account.Tx) (*http.Response, error) {
+	rq := &Request{
+		Version: jsonprcVersion,
+		Method:  "icx_sendTransaction",
+		ID:      time.Now().UnixNano() / int64(time.Millisecond),
 	}
-	param.Timestamp = jsonrpc.HexInt(intconv.FormatInt(time.Now().UnixNano() / int64(time.Microsecond)))
-	var result common.HexInt
-	if _, err := client.Debug.Do("debug_estimateStep", param, &result); err != nil {
+	b, _ := json.Marshal(tx)
+	rq.Params = json.RawMessage(b)
+	reqB, err := json.Marshal(rq)
+	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	res, err := http.Post(ct.endpoint, "application/json; charset=utf-8", bytes.NewReader(reqB))
+	if err != nil {
+		log.Panic(err)
+		return nil, err
+	}
+	return res, nil
 }
