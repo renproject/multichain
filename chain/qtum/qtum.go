@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/qtumproject/qtumsuite/chaincfg/chainhash"
 	"github.com/qtumproject/qtumsuite"
@@ -40,6 +41,89 @@ const (
 	// multichain.
 	DefaultClientPassword = "password"
 )
+
+// Added the below because the other chains do, haven't tested them though.
+// Don't really know which parameters are important, we'll see
+// If you get type errors using these, try importing
+// "github.com/qtumproject/qtumsuite/chaincfg"
+// And use those parameters instead
+
+// MainNetParams returns the chain configuration for mainnet.
+var MainNetParams = chaincfg.Params{
+	Name:        "mainnet",
+	Net:         0xd3a6cff1,
+	DefaultPort: "3888",
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "qc", // always bc for main net
+
+	// Address encoding magics
+	PubKeyHashAddrID:        58,   // starts with Q
+	ScriptHashAddrID:        50,   // starts with M
+	PrivateKeyID:            128,  // starts with 5 (uncompressed) or K (compressed)
+	WitnessPubKeyHashAddrID: 0x06, // starts with p2
+	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x88, 0xad, 0xe4}, // starts with xprv
+	HDPublicKeyID:  [4]byte{0x04, 0x88, 0xb2, 0x1e}, // starts with xpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 2301,
+}
+
+// TestNetParams returns the chain configuration for testnet.
+var TestNetParams = chaincfg.Params{
+	Name:        "testnet3",
+	Net:         0x0615220d,
+	DefaultPort: "13888",
+
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "tq", // always tb for test net
+
+	// Address encoding magics
+	PubKeyHashAddrID:        120,  // starts with m or n
+	ScriptHashAddrID:        110,  // starts with 2
+	WitnessPubKeyHashAddrID: 0x03, // starts with QW
+	WitnessScriptHashAddrID: 0x28, // starts with T7n
+	PrivateKeyID:            239,  // starts with 9 (uncompressed) or c (compressed)
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with tprv
+	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with tpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 1,
+}
+
+// RegressionNetParams returns the chain configuration for regression net.
+var RegressionNetParams = chaincfg.Params{
+	Name:        "regtest",
+	Net:         0xe1c6ddfd,
+	DefaultPort: "23888",
+
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "qcrt", // always bcrt for reg test net
+
+	// Address encoding magics
+	PubKeyHashAddrID: 120, // starts with m or n
+	ScriptHashAddrID: 110, // starts with 2
+	PrivateKeyID:     239, // starts with 9 (uncompressed) or c (compressed)
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with tprv
+	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with tpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 1,
+}
 
 // ClientOptions are used to parameterise the behaviour of the Client.
 type ClientOptions struct {
