@@ -15,8 +15,6 @@ import (
 	"net/http"
 	"time"
 
-	"strconv" // DEZU: TODO: Remove debug
-
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/qtumproject/qtumsuite/chaincfg/chainhash"
 	"github.com/qtumproject/qtumsuite"
@@ -194,7 +192,6 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 
 // UnspentOutputs spendable by the given address.
 func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64, addr address.Address) ([]utxo.Output, error) {
-	fmt.Println("(fun UnspentOutputs) Creating request: 'listunspent " + strconv.FormatInt(minConf, 10) + " " + strconv.FormatInt(maxConf, 10) + " " + string(addr) + "'") // DEZU: TODO: Remove debug
 
 	resp := []btcjson.ListUnspentResult{}
 	if err := client.send(ctx, &resp, "listunspent", minConf, maxConf, []string{string(addr)}); err != nil && err != io.EOF {
@@ -255,7 +252,6 @@ func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int
 // blocks. An error will be returned if the bitcoin node hasn't observed enough
 // blocks to make an estimate for the provided target `numBlocks`.
 func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
-	fmt.Println("(fun EstimateSmartFee) Creating request: 'estimatesmartfee " + strconv.FormatInt(numBlocks, 10) + " '") // DEZU: TODO: Remove debug
 
 	resp := btcjson.EstimateSmartFeeResult{}
 
@@ -301,25 +297,24 @@ func (client *client) send(ctx context.Context, resp interface{}, method string,
 		// the context is done.
 		req, err := http.NewRequest("POST", client.opts.Host, bytes.NewBuffer(data))
 		if err != nil {
-			return fmt.Errorf("(fun send) building http request: %v", err)
+			return fmt.Errorf("building http request: %v", err)
 		}
 		req.SetBasicAuth(client.opts.User, client.opts.Password)
 
 		// Send the request and decode the response.
 		res, err := client.httpClient.Do(req)
 		if err != nil {
-			return fmt.Errorf("(fun send) sending http request: %v", err)
+			return fmt.Errorf("sending http request: %v", err)
 		}
 		defer res.Body.Close()
 		if err := decodeResponse(resp, res.Body); err != nil {
-			return fmt.Errorf("(fun send) decoding http response: %v", err)
+			return fmt.Errorf("decoding http response: %v", err)
 		}
 		return nil
 	})
 }
 
 func encodeRequest(method string, params []interface{}) ([]byte, error) {
-	fmt.Println("(fun encodeRequest) encoding request '" + method + "'") // DEZU: TODO: Remove debug
 	rawParams, err := json.Marshal(params)
 	if err != nil {
 		return nil, fmt.Errorf("encoding params: %v", err)
@@ -337,7 +332,7 @@ func encodeRequest(method string, params []interface{}) ([]byte, error) {
 	}
 	rawReq, err := json.Marshal(req)
 	if err != nil {
-		return nil, fmt.Errorf("fun encodeRequest) encoding request: %v", err)
+		return nil, fmt.Errorf("encoding request: %v", err)
 	}
 	return rawReq, nil
 }
@@ -351,16 +346,16 @@ func decodeResponse(resp interface{}, r io.Reader) error {
 	}{}
 
 	if err := json.NewDecoder(r).Decode(&res); err != nil {
-		return fmt.Errorf("(OPT1)decoding response: %v", err) // DEZU: TODO: Remove debug
+		return fmt.Errorf("decoding response: %v", err)
 	}
 	if res.Error != nil {
-		return fmt.Errorf("(OPT2)decoding response: %v", string(*res.Error)) // DEZU: TODO: Remove debug
+		return fmt.Errorf("decoding response: %v", string(*res.Error))
 	}
 	if res.Result == nil {
-		return fmt.Errorf("(OPT3)decoding result: result is nil") // DEZU: TODO: Remove debug
+		return fmt.Errorf("decoding result: result is nil")
 	}
 	if err := json.Unmarshal(*res.Result, resp); err != nil {
-		return fmt.Errorf("(OPT4)decoding result: %v", err) // DEZU: TODO: Remove debug
+		return fmt.Errorf("decoding result: %v", err)
 	}
 	return nil
 }
