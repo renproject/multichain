@@ -121,8 +121,8 @@ services:
     build:
       context: ./qtum
     ports:
-      - "0.0.0.0:13888:13888"
-      - "0.0.0.0:13889:13889"
+      - "0.0.0.0:13888:13888" # These addresses are actually for testnet, 
+      - "0.0.0.0:13889:13889" # but they work in regtest too apparently
     entrypoint:
       - "./root/run.sh"
       - "${QTUM_ADDRESS}"

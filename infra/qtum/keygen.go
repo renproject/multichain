@@ -11,12 +11,12 @@ import (
 	"github.com/renproject/id"
 )
 
-// DEZU: values take from from qtumsuit
+// Copied from multichain/chain/qtum/qtum.go
+// RegressionNetParams returns the chain configuration for regression net.
 var RegressionNetParams = chaincfg.Params{
-	Name: "regtest",
+	Name:        "regtest",
+	Net:         0xe1c6ddfd,
 	DefaultPort: "23888",
-
-	Net: 0xe1c6ddfd,
 
 	// Address encoding magics
 	PubKeyHashAddrID: 120, // starts with m or n
@@ -27,8 +27,9 @@ var RegressionNetParams = chaincfg.Params{
 	HDPrivateKeyID: [4]byte{0x04, 0x35, 0x83, 0x94}, // starts with tprv
 	HDPublicKeyID:  [4]byte{0x04, 0x35, 0x87, 0xcf}, // starts with tpub
 
-	// Human-readable part for Bech32 encoded segwit addresses, as defined in BIP 173.
-	Bech32HRPSegwit: "qcrt",
+	// Human-readable part for Bech32 encoded segwit addresses, as defined in
+	// BIP 173.
+	Bech32HRPSegwit: "qcrt", // always bcrt for reg test net
 }
 
 func main() {

@@ -1,4 +1,5 @@
-# DEZU: Originally stolen from qtum-docker github page
+# DEZU: Modified version of file from qtum-docker github page
+# I'm not 100% sure if all commands here are necessary, I've done a lot of copypasta
 FROM ubuntu
 
 RUN apt-get update --fix-missing && apt-get install --yes -qq --no-install-recommends ca-certificates curl wget apt-utils jq
@@ -14,7 +15,7 @@ COPY qtum.conf /root/.qtum/qtum.conf
 COPY run.sh /root/run.sh
 RUN chmod +x /root/run.sh
 
-# DEZU: Not sure if these are technically correct for regtest, but they work
+# These addresses are actually for testnet, but they work in regtest too apparently
 EXPOSE 13888 13889
 
 ENTRYPOINT ["./root/run.sh"]
