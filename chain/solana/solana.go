@@ -7,7 +7,9 @@ import (
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 	"go.uber.org/zap"
 )
 
@@ -37,14 +39,42 @@ func NewClient(opts ClientOptions) *Client {
 	return &Client{opts: opts}
 }
 
-func (client *Client) CallContract(ctx context.Context, contract address.Address, input pack.Bytes) (output pack.Bytes, err error) {
-	if input != nil && len(input) != 0 {
-		return nil, fmt.Errorf("expected nil input, got %v input", input)
+func FindProgramAddress(seeds []byte, program address.RawAddress) address.Address {
+	return address.Address("")
+}
+
+type BurnCallContractInput struct {
+	Nonce pack.U256
+}
+
+type BurnCallContractOutput struct {
+	Amount    pack.U256
+	Recipient address.RawAddress
+	Confs     pack.U64
+	Payload   pack.Bytes
+}
+
+func (client *Client) CallContract(
+	ctx context.Context,
+	program address.Address,
+	calldata contract.CallData,
+) (pack.Bytes, error) {
+	// Deserialise the calldata bytes.
+	input := BurnCallContractInput{}
+	if err := surge.FromBinary(&input, calldata); err != nil {
+		return pack.Bytes{}, fmt.Errorf("deserialise calldata: %v", err)
 	}
+
+	addressDecoder := NewAddressDecoder()
+	decodedProgram, err := addressDecoder.DecodeAddress(program)
+	if err != nil {
+		return pack.Bytes(nil), fmt.Errorf("decode address: %v", err)
+	}
+	burnLogAccount := FindProgramAddress(input.Nonce.Bytes(), decodedProgram)
 
 	// Make an RPC call to "getAccountInfo" to get the data associated with the
 	// account (we interpret the contract address as the account identifier).
-	params, err := json.Marshal(string(pack.String(contract)))
+	params, err := json.Marshal(string(burnLogAccount))
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("encoding params: %v", err)
 	}

@@ -1,0 +1,11 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+**/.install-solana-ffi
+**/*.a
+**/*.h
+cgo/*.h
+cgo/*.a
+cgo/*.go

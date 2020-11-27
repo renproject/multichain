@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/renproject/pack"
+	"github.com/renproject/multichain/api/address"
 )
 
 type AddressDecoder struct{}
@@ -13,10 +13,10 @@ func NewAddressDecoder() AddressDecoder {
 	return AddressDecoder{}
 }
 
-func (AddressDecoder) DecodeAddress(encoded pack.String) (pack.Bytes, error) {
+func (AddressDecoder) DecodeAddress(encoded address.Address) (address.RawAddress, error) {
 	decoded := base58.Decode(string(encoded))
 	if len(decoded) != 32 {
 		return nil, fmt.Errorf("expected address length 32, got address length %v", len(decoded))
 	}
-	return pack.Bytes(decoded), nil
+	return address.RawAddress(decoded), nil
 }

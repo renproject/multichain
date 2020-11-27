@@ -16,3 +16,8 @@ type ResponseGetAccountInfo struct {
 	Context AccountContext `json:"context"`
 	Value   AccountValue   `json:"value"`
 }
+
+type BurnLog struct {
+	Amount    int      `json:"amount"`
+	Recipient [25]byte `json:"recipient"`
+}

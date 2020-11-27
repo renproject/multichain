@@ -1,0 +1,18 @@
+header = """
+/* solana-ffi Header */
+#ifdef __cplusplus
+extern "C" {{
+#endif
+"""
+trailer = """
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+"""
+
+include_guard = "SOLANA_FFI_H"
+include_version = true
+language = "C"
+
+[parse]
+parse_deps = false
