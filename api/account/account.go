@@ -62,7 +62,7 @@ type TxBuilder interface {
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
-	// LatestBlock returns the most recent block.
+	// LatestBlock returns the block number of the latest block.
 	LatestBlock(context.Context) (pack.U64, error)
 
 	// AccountBalance returns the current balance of the given account.

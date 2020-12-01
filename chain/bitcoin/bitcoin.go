@@ -109,7 +109,7 @@ func NewClient(opts ClientOptions) Client {
 	}
 }
 
-// LatestBlock returns the most recent block.
+// LatestBlock returns the height of the longest blockchain.
 func (client *client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	var resp int64
 	if err := client.send(ctx, &resp, "getblockcount"); err != nil {

@@ -85,7 +85,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	return &Client{opts, node, closer}, nil
 }
 
-// LatestBlock returns the most recent block height.
+// LatestBlock returns the block number at the current chain head.
 func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	headTipset, err := client.node.ChainHead(ctx)
 	if err != nil {
