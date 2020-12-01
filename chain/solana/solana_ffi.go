@@ -25,3 +25,12 @@ func ProgramDerivedAddress(seeds []byte, program string) pack.Bytes32 {
 	copy(pubkey32[:], programDerivedAddressDecoded)
 	return pubkey32
 }
+
+// func RenBridgeInitialize(
+// 	keypairPath string,
+// 	rpcUrl string,
+// 	authority pack.Bytes,
+// ) pack.String {
+// 	signature := cgo.RenBridgeInitialize(keypairPath, rpcUrl, []byte(authority))
+// 	return pack.String(signature)
+// }
