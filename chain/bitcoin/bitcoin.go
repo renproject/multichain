@@ -109,6 +109,16 @@ func NewClient(opts ClientOptions) Client {
 	}
 }
 
+// LatestBlock returns the most recent block.
+func (client *client) LatestBlock(ctx context.Context) (pack.U64, error) {
+	var resp int64
+	if err := client.send(ctx, &resp, "getblockcount"); err != nil {
+		return pack.NewU64(0), fmt.Errorf("get block count: %v", err)
+	}
+
+	return pack.NewU64(uint64(resp)), nil
+}
+
 // Output associated with an outpoint, and its number of confirmations.
 func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
 	resp := btcjson.TxRawResult{}

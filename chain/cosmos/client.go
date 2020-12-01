@@ -13,6 +13,7 @@ import (
 	"github.com/renproject/pack"
 
 	cliContext "github.com/cosmos/cosmos-sdk/client/context"
+	cliRpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -125,6 +126,16 @@ func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
 		cdc:    cdc,
 		hrp:    hrp,
 	}
+}
+
+// LatestBlock returns the most recent block's number.
+func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
+	height, err := cliRpc.GetChainHeight(client.cliCtx)
+	if err != nil {
+		return pack.NewU64(0), fmt.Errorf("get chain height: %v", err)
+	}
+
+	return pack.NewU64(uint64(height)), nil
 }
 
 // Tx query transaction with txHash

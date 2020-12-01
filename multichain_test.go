@@ -515,6 +515,15 @@ var _ = Describe("Multichain", func() {
 						time.Sleep(5 * time.Second)
 					}
 				})
+
+				It("should be able to fetch the latest block", func() {
+					// Initialise client
+					accountClient, _ := accountChain.initialise(accountChain.rpcURL)
+
+					latestBlock, err := accountClient.LatestBlock(ctx)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(uint64(latestBlock)).To(BeNumerically(">", 1))
+				})
 			})
 		}
 	})
@@ -975,6 +984,21 @@ var _ = Describe("Multichain", func() {
 						}
 						time.Sleep(10 * time.Second)
 					}
+				})
+
+				It("should be able to fetch the latest block", func() {
+					// get a random address
+					randAddr := make([]byte, 20)
+					rand.Read(randAddr)
+					pkhAddr, err := utxoChain.newAddressPKH(randAddr)
+					Expect(err).NotTo(HaveOccurred())
+
+					// initialise client
+					utxoClient, _, _ := utxoChain.initialise(utxoChain.rpcURL, pkhAddr)
+
+					latestBlock, err := utxoClient.LatestBlock(ctx)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(uint64(latestBlock)).To(BeNumerically(">", 1))
 				})
 			})
 		}

@@ -85,6 +85,16 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	return &Client{opts, node, closer}, nil
 }
 
+// LatestBlock returns the most recent block height.
+func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
+	headTipset, err := client.node.ChainHead(ctx)
+	if err != nil {
+		return pack.NewU64(0), fmt.Errorf("get chain head: %v", err)
+	}
+
+	return pack.NewU64(uint64(headTipset.Height())), nil
+}
+
 // Tx returns the transaction uniquely identified by the given transaction
 // hash. It also returns the number of confirmations for the transaction.
 func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
@@ -107,13 +117,13 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	}
 
 	// get the most recent tipset and its height
-	headTipset, err := client.node.ChainHead(ctx)
+	chainHead, err := client.LatestBlock(ctx)
 	if err != nil {
-		return nil, pack.NewU64(0), fmt.Errorf("getting head from chain: %v", err)
+		return nil, pack.NewU64(0), err
 	}
-	confs := headTipset.Height() - messageLookup.Height + 1
+	confs := uint64(chainHead) - uint64(messageLookup.Height) + 1
 	if confs < 0 {
-		return nil, pack.NewU64(0), fmt.Errorf("getting head from chain: negative confirmations")
+		return nil, pack.NewU64(0), fmt.Errorf("get chain head: negative confirmations")
 	}
 
 	// get the message
@@ -122,7 +132,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 		return nil, pack.NewU64(0), fmt.Errorf("getting txid %v from chain: %v", msgID, err)
 	}
 
-	return &Tx{msg: *msg}, pack.NewU64(uint64(confs)), nil
+	return &Tx{msg: *msg}, pack.NewU64(confs), nil
 }
 
 // SubmitTx to the underlying blockchain network.
