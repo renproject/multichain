@@ -115,6 +115,9 @@ func (client *client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	if err := client.send(ctx, &resp, "getblockcount"); err != nil {
 		return pack.NewU64(0), fmt.Errorf("get block count: %v", err)
 	}
+	if resp < 0 {
+		return pack.NewU64(0), fmt.Errorf("unexpected block count, expected > 0, got: %v", resp)
+	}
 
 	return pack.NewU64(uint64(resp)), nil
 }

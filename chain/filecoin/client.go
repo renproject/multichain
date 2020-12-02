@@ -91,6 +91,9 @@ func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	if err != nil {
 		return pack.NewU64(0), fmt.Errorf("get chain head: %v", err)
 	}
+	if headTipset.Height() < 0 {
+		return pack.NewU64(0), fmt.Errorf("unexpected chain head, expected > 0, got: %v", headTipset.Height())
+	}
 
 	return pack.NewU64(uint64(headTipset.Height())), nil
 }

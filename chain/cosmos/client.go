@@ -134,6 +134,9 @@ func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	if err != nil {
 		return pack.NewU64(0), fmt.Errorf("get chain height: %v", err)
 	}
+	if height < 0 {
+		return pack.NewU64(0), fmt.Errorf("unexpected chain height, expected > 0, got: %v", height)
+	}
 
 	return pack.NewU64(uint64(height)), nil
 }
