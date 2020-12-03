@@ -80,6 +80,9 @@ type TxBuilder interface {
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
+	// LatestBlock returns the the height of the longest blockchain.
+	LatestBlock(context.Context) (pack.U64, error)
+
 	// Output returns the transaction output identified by the given outpoint.
 	// It also returns the number of confirmations for the output. If the output
 	// cannot be found before the context is done, or the output is invalid,
