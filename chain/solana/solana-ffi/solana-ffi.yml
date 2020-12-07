@@ -21,7 +21,6 @@ PARSER:
 TRANSLATOR:
   Rules:
     function:
-      - {action: accept, from: "hello"}
       - {action: accept, from: "unique_pubkey"}
       - {action: accept, from: "program_derived_address"}
     private:

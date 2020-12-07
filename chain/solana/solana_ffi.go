@@ -1,36 +1,24 @@
 package solana
 
 import (
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/solana/solana-ffi/cgo"
 	"github.com/renproject/pack"
 )
 
-func Hello(name string) string {
-	return cgo.Hello(name)
+// UniquePubkey creates an atomically incrementing pubkey used for tests and
+// benchmarking purposes.
+func UniquePubkey() address.Address {
+	pubkey := cgo.UniquePubkey()
+	return address.Address(pubkey)
 }
 
-func UniquePubkey() pack.Bytes32 {
-	pubkeyEncoded := cgo.UniquePubkey()
-	pubkeyDecoded := base58.Decode(pubkeyEncoded)
-	pubkey32 := pack.Bytes32{}
-	copy(pubkey32[:], pubkeyDecoded)
-	return pubkey32
+// ProgramDerivedAddress derives an address for an account that only the given
+// program has the authority to sign. The address is of the same form as a
+// Solana pubkey, except they are ensured to not be on the es25519 curve and
+// thus have no associated private key. This address is deterministic, based
+// upon the program and the seeds slice.
+func ProgramDerivedAddress(seeds pack.Bytes, program address.Address) address.Address {
+	programDerivedAddressEncoded := cgo.ProgramDerivedAddress(seeds, uint32(len(seeds)), string(program))
+	return address.Address(programDerivedAddressEncoded)
 }
-
-func ProgramDerivedAddress(seeds []byte, program string) pack.Bytes32 {
-	programDerivedAddressEncoded := cgo.ProgramDerivedAddress(seeds, uint32(len(seeds)), program)
-	programDerivedAddressDecoded := base58.Decode(programDerivedAddressEncoded)
-	pubkey32 := pack.Bytes32{}
-	copy(pubkey32[:], programDerivedAddressDecoded)
-	return pubkey32
-}
-
-// func RenBridgeInitialize(
-// 	keypairPath string,
-// 	rpcUrl string,
-// 	authority pack.Bytes,
-// ) pack.String {
-// 	signature := cgo.RenBridgeInitialize(keypairPath, rpcUrl, []byte(authority))
-// 	return pack.String(signature)
-// }
