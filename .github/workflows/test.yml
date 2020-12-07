@@ -41,6 +41,7 @@ jobs:
             go get -u golang.org/x/lint/golint
             go get -u github.com/loongy/covermerge
             go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
 
       - name: Run vetting
         run: |
