@@ -11,8 +11,14 @@ GENERATOR:
     - {name: "LDFLAGS", flags: [
         "-L${SRCDIR}",
         "-lsolana_ffi",
+    ]}
+    - {name: "linux LDFLAGS", flags: [
+        "-lcrypto",
         "-ldl",
         "-lm",
+        "-lrt",
+        "-lssl",
+        "-ludev",
     ]}
     - {name: "darwin LDFLAGS", flags: [
         "-F/Library/Frameworks",
