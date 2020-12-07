@@ -8,10 +8,16 @@ edition = "2018"
 crate-type = ["staticlib"]
 
 [dependencies]
+arrayref = "0.3.6"
+bincode = "1.3.1"
+digest = "0.9.0"
 libc = "0.2.58"
 ren-bridge = { git = "https://github.com/renproject/ren-solana", branch = "feat/solana-program", features = ["no-entrypoint"] }
+renvm-sig = { git = "https://github.com/roynalnaruto/renvm-sig" }
+sha3 = "0.9.1"
 solana-client = "1.4.12"
 solana-sdk = "1.4.12"
+spl-associated-token-account = { version = "1.0.0", features = ["no-entrypoint"] }
 spl-token = { version = "3.0.0", features = ["no-entrypoint"] }
 
 [build-dependencies]

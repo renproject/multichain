@@ -8,7 +8,20 @@ GENERATOR:
   Includes:
     - solana-ffi.h
   FlagGroups:
-    - {name: LDFLAGS, flags: ["-L${SRCDIR} -lsolana_ffi -ldl -lm"]}
+    - {name: "LDFLAGS", flags: [
+        "-L${SRCDIR}",
+        "-lsolana_ffi",
+        "-ldl",
+        "-lm",
+    ]}
+    - {name: "darwin LDFLAGS", flags: [
+        "-F/Library/Frameworks",
+        "-framework Security",
+        "-framework CoreServices",
+        "-framework IOKit",
+        "-framework IOSurface",
+        "-framework AppKit",
+    ]}
 
 PARSER:
   Defines:
@@ -22,6 +35,12 @@ TRANSLATOR:
     function:
       - {action: accept, from: "unique_pubkey"}
       - {action: accept, from: "program_derived_address"}
+      - {action: accept, from: "ren_bridge_initialize"}
+      - {action: accept, from: "ren_bridge_initialize_token"}
+      - {action: accept, from: "ren_bridge_initialize_account"}
+      - {action: accept, from: "ren_bridge_get_burn_count"}
+      - {action: accept, from: "ren_bridge_mint"}
+      - {action: accept, from: "ren_bridge_burn"}
     private:
       - {transform: unexport}
     post-global:
