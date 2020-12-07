@@ -9,7 +9,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 libc = "0.2.58"
-ren-bridge = { git = "https://github.com/roynalnaruto/ren-bridge-solana", features = ["no-entrypoint"] }
+ren-bridge = { git = "https://github.com/renproject/ren-solana", branch = "feat/solana-program", features = ["no-entrypoint"] }
 solana-client = "1.4.12"
 solana-sdk = "1.4.12"
 spl-token = { version = "3.0.0", features = ["no-entrypoint"] }

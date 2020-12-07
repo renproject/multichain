@@ -1806,7 +1806,7 @@ dependencies = [
 [[package]]
 name = "ren-bridge"
 version = "0.1.0"
-source = "git+https://github.com/roynalnaruto/ren-bridge-solana#c3d54722b01859d0ffa82f10f522c356a178c0fd"
+source = "git+https://github.com/renproject/ren-solana?branch=feat/solana-program#8f4ca587d96bab76261a0ff9bc64d4ef811636b2"
 dependencies = [
  "arrayref 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2231,7 +2231,7 @@ version = "0.1.0"
 dependencies = [
  "cbindgen 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.80 (registry+https://github.com/rust-lang/crates.io-index)",
- "ren-bridge 0.1.0 (git+https://github.com/roynalnaruto/ren-bridge-solana)",
+ "ren-bridge 0.1.0 (git+https://github.com/renproject/ren-solana?branch=feat/solana-program)",
  "solana-client 1.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-sdk 1.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "spl-token 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3629,7 +3629,7 @@ dependencies = [
 "checksum regex 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "38cf2c13ed4745de91a5eb834e11c00bcc3709e773173b2ce4c56c9fbde04b9c"
 "checksum regex-syntax 0.6.21 (registry+https://github.com/rust-lang/crates.io-index)" = "3b181ba2dcf07aaccad5448e8ead58db5b742cf85dfe035e2227f137a539a189"
 "checksum remove_dir_all 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dfc5b3ce5d5ea144bb04ebd093a9e14e9765bcfec866aecda9b6dec43b3d1e24"
-"checksum ren-bridge 0.1.0 (git+https://github.com/roynalnaruto/ren-bridge-solana)" = "<none>"
+"checksum ren-bridge 0.1.0 (git+https://github.com/renproject/ren-solana?branch=feat/solana-program)" = "<none>"
 "checksum reqwest 0.10.9 (registry+https://github.com/rust-lang/crates.io-index)" = "fb15d6255c792356a0f578d8a645c677904dc02e862bebe2ecc18e0c01b9a0ce"
 "checksum ring 0.16.12 (registry+https://github.com/rust-lang/crates.io-index)" = "1ba5a8ec64ee89a76c98c549af81ff14813df09c3e6dc4766c3856da48597a0c"
 "checksum rpassword 4.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "99371657d3c8e4d816fb6221db98fa408242b0b53bac08f8676a41f8554fe99f"
