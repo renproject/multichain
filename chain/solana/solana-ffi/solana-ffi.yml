@@ -8,11 +8,10 @@ GENERATOR:
   Includes:
     - solana-ffi.h
   FlagGroups:
-    - {name: LDFLAGS, flags: ["-L${SRCDIR} -lsolana_ffi"]}
+    - {name: LDFLAGS, flags: ["-L${SRCDIR} -lsolana_ffi -ldl -lm"]}
 
 PARSER:
   Defines:
-    __has_include_next(x): 1
   IncludePaths:
     - /usr/include
   SourcesPaths:
