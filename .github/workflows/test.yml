@@ -45,12 +45,12 @@ jobs:
 
       - name: Run vetting
         run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
             cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
             make
             cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
             make
-            export PATH=$PATH:$(go env GOPATH)/bin
             go vet ./...
 
       - name: Run linting
