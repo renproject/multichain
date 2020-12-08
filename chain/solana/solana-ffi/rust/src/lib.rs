@@ -224,7 +224,7 @@ pub extern "C" fn ren_bridge_initialize_account(
 }
 
 #[no_mangle]
-pub extern "C" fn ren_bridge_get_burn_count(rpc_url: *const libc::c_char) -> u64 {
+pub extern "C" fn ren_bridge_get_burn_count(rpc_url: *const libc::c_char) -> libc::c_ulonglong {
     // Initialize client.
     let buf_name = unsafe { CStr::from_ptr(rpc_url).to_bytes() };
     let rpc_url = String::from_utf8(buf_name.to_vec()).unwrap();
@@ -245,7 +245,7 @@ pub extern "C" fn ren_bridge_mint(
     rpc_url: *const libc::c_char,
     authority_secret: *const libc::c_char,
     selector: *const libc::c_char,
-    amount: u64,
+    amount: libc::c_ulonglong,
 ) -> *const libc::c_char {
     // Solana default signer and fee payer.
     let buf_name = unsafe { CStr::from_ptr(keypair_path).to_bytes() };
@@ -345,8 +345,8 @@ pub extern "C" fn ren_bridge_burn(
     keypair_path: *const libc::c_char,
     rpc_url: *const libc::c_char,
     selector: *const libc::c_char,
-    burn_count: u64,
-    burn_amount: u64,
+    burn_count: libc::c_ulonglong,
+    burn_amount: libc::c_ulonglong,
     recipient_pointer: *const u8,
 ) -> *const libc::c_char {
     // Solana default signer and fee payer.
