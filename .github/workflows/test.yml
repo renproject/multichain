@@ -90,6 +90,17 @@ jobs:
             cd $GITHUB_WORKSPACE
             CI=true go test -timeout 1500s
 
+      - name: Run tests for Solana
+        run: |
+            sh -c "$(curl -sSfL https://release.solana.com/v1.4.14/install)"
+            git clone https://github.com/renproject/ren-solana.git
+            cd ren-solana
+            git checkout feat/solana-program
+            echo ${{ secrets.REN_BRIDGE_PROGRAM_ID }} > ~/.config/solana/ren-bridge-program.json
+            ./setup.sh
+            cd $GITHUB_WORKSPACE/chain/solana
+            go test -timeout 100s
+
   build:
     runs-on: ubuntu-latest
     steps:
