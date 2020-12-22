@@ -19,7 +19,6 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/btcsuite/btcutil/bech32"
 	cosmossdk "github.com/cosmos/cosmos-sdk/types"
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
@@ -71,7 +70,7 @@ var _ = Describe("Multichain", func() {
 			{
 				multichain.Bitcoin,
 				func() multichain.AddressEncodeDecoder {
-					addrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams, "bc")
+					addrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
 					return addrEncodeDecoder
 				},
 				func() multichain.Address {
@@ -296,6 +295,8 @@ var _ = Describe("Multichain", func() {
 				}
 
 				if chain.chain == multichain.Bitcoin {
+					mainnetEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.MainNetParams)
+
 					It("should decode a Bech32 address correctly", func() {
 						segwitAddrs := []string{
 							"bc1qp3gcp95e85rupv9zgj57j0lvsqnzcehawzaax3",
@@ -310,12 +311,11 @@ var _ = Describe("Multichain", func() {
 							"bc1qztxl2qc3k90uud846qfeawqzz3aedhq48vv3lu",
 							"bc1qvkknfkfhfr0axql478klvjs6sanwj6njym5wf2",
 							"bc1qya5t2pj7hqpezcnwh72k69h4cgg3srqwtd0e6w",
-							"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx",
 						}
 						for _, segwitAddr := range segwitAddrs {
-							decodedRawAddr, err := encodeDecoder.DecodeAddress(multichain.Address(segwitAddr))
+							decodedRawAddr, err := mainnetEncodeDecoder.DecodeAddress(multichain.Address(segwitAddr))
 							Expect(err).NotTo(HaveOccurred())
-							encodedAddr, err := encodeDecoder.EncodeAddress(decodedRawAddr)
+							encodedAddr, err := mainnetEncodeDecoder.EncodeAddress(decodedRawAddr)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(string(encodedAddr)).To(Equal(segwitAddr))
 						}
@@ -323,24 +323,17 @@ var _ = Describe("Multichain", func() {
 
 					It("should encode a Bech32 address correctly", func() {
 						loop := func() bool {
-							l := 33
-							f := byte(0)
+							l := 21
 							if r.Intn(2) == 1 {
-								l = 65
-								f = 1
+								l = 33
 							}
-							randBytesBase32 := make([]byte, l)
-							for i := range randBytesBase32 {
-								randBytesBase32[i] = byte(r.Intn(32))
-							}
-							randBytesBase32[0] = f
-							randBytes, err := bech32.ConvertBits(randBytesBase32, 5, 8, true)
-							Expect(err).NotTo(HaveOccurred())
-
+							randBytes := make([]byte, l)
+							r.Read(randBytes)
+							randBytes[0] = byte(0)
 							rawAddr := multichain.RawAddress(randBytes)
-							encodedAddr, err := encodeDecoder.EncodeAddress(rawAddr)
+							encodedAddr, err := mainnetEncodeDecoder.EncodeAddress(rawAddr)
 							Expect(err).NotTo(HaveOccurred())
-							decodedRawAddr, err := encodeDecoder.DecodeAddress(encodedAddr)
+							decodedRawAddr, err := mainnetEncodeDecoder.DecodeAddress(encodedAddr)
 							Expect(err).NotTo(HaveOccurred())
 							Expect(decodedRawAddr).To(Equal(rawAddr))
 							return true
