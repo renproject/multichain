@@ -310,6 +310,7 @@ var _ = Describe("Multichain", func() {
 							"bc1qztxl2qc3k90uud846qfeawqzz3aedhq48vv3lu",
 							"bc1qvkknfkfhfr0axql478klvjs6sanwj6njym5wf2",
 							"bc1qya5t2pj7hqpezcnwh72k69h4cgg3srqwtd0e6w",
+							"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx",
 						}
 						for _, segwitAddr := range segwitAddrs {
 							decodedRawAddr, err := encodeDecoder.DecodeAddress(multichain.Address(segwitAddr))
@@ -321,11 +322,18 @@ var _ = Describe("Multichain", func() {
 					})
 
 					It("should encode a Bech32 address correctly", func() {
-						f := func() bool {
-							randBytesBase32 := make([]byte, 33)
+						loop := func() bool {
+							l := 33
+							f := byte(0)
+							if r.Intn(2) == 1 {
+								l = 65
+								f = 1
+							}
+							randBytesBase32 := make([]byte, l)
 							for i := range randBytesBase32 {
 								randBytesBase32[i] = byte(r.Intn(32))
 							}
+							randBytesBase32[0] = f
 							randBytes, err := bech32.ConvertBits(randBytesBase32, 5, 8, true)
 							Expect(err).NotTo(HaveOccurred())
 
@@ -337,7 +345,7 @@ var _ = Describe("Multichain", func() {
 							Expect(decodedRawAddr).To(Equal(rawAddr))
 							return true
 						}
-						Expect(quick.Check(f, nil)).To(Succeed())
+						Expect(quick.Check(loop, nil)).To(Succeed())
 					})
 				}
 			})

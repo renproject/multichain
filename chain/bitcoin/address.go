@@ -11,6 +11,13 @@ import (
 	"github.com/renproject/multichain/api/address"
 )
 
+const (
+	// MainnetHRP is the human-readable part of the bech32 address for mainnet.
+	MainnetHRP = "bc"
+	// TestnetHRP is the human-readable part of the bech32 address for testnet.
+	TestnetHRP = "tb"
+)
+
 // AddressEncodeDecoder implements the address.EncodeDecoder interface
 type AddressEncodeDecoder struct {
 	AddressEncoder
@@ -44,10 +51,8 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 	switch len(rawAddr) {
 	case 25:
 		return encoder.encodeBase58(rawAddr)
-	case 21:
-		return encoder.encodeBech32(rawAddr)
 	default:
-		return address.Address(""), fmt.Errorf("non-exhaustive pattern: raw address length %v", len(rawAddr))
+		return encoder.encodeBech32(rawAddr)
 	}
 }
 
