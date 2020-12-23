@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"reflect"
 	"strings"
+	"testing/quick"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -42,6 +43,9 @@ import (
 )
 
 var _ = Describe("Multichain", func() {
+	// new randomness
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	// Create context to work within.
 	ctx := context.Background()
 
@@ -98,8 +102,8 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.Address {
 					// Random bytes of script.
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					// Create address script hash from the random script bytes.
 					addrScriptHash, err := btcutil.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
@@ -108,8 +112,8 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.RawAddress {
 					// Random bytes of script.
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					// Create address script hash from the random script bytes.
 					addrScriptHash, err := btcutil.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
@@ -125,14 +129,14 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.Address {
 					pubKey := make([]byte, 64)
-					rand.Read(pubKey)
+					r.Read(pubKey)
 					addr, err := filaddress.NewSecp256k1Address(pubKey)
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(addr.String())
 				},
 				func() multichain.RawAddress {
 					rawAddr := make([]byte, 20)
-					rand.Read(rawAddr)
+					r.Read(rawAddr)
 					formattedRawAddr := append([]byte{byte(filaddress.SECP256K1)}, rawAddr[:]...)
 					return multichain.RawAddress(pack.NewBytes(formattedRawAddr[:]))
 				},
@@ -191,15 +195,15 @@ var _ = Describe("Multichain", func() {
 					return multichain.RawAddress(pack.Bytes(addrBytes))
 				},
 				func() multichain.Address {
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(addrScriptHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -231,15 +235,15 @@ var _ = Describe("Multichain", func() {
 					return multichain.RawAddress(pack.Bytes(base58.Decode(addrPubKeyHash.EncodeAddress())))
 				},
 				func() multichain.Address {
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					addrScriptHash, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(addrScriptHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
-					script := make([]byte, rand.Intn(100))
-					rand.Read(script)
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
 					addrScriptHash, err := zcash.NewAddressScriptHash(script, &zcash.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.RawAddress(pack.Bytes(base58.Decode(addrScriptHash.EncodeAddress())))
@@ -287,6 +291,54 @@ var _ = Describe("Multichain", func() {
 						encodedAddr, err := encodeDecoder.EncodeAddress(decodedRawAddr)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(encodedAddr).To(Equal(scriptAddr))
+					})
+				}
+
+				if chain.chain == multichain.Bitcoin {
+					mainnetEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.MainNetParams)
+
+					It("should decode a Bech32 address correctly", func() {
+						segwitAddrs := []string{
+							"bc1qp3gcp95e85rupv9zgj57j0lvsqnzcehawzaax3",
+							"bc1qh6fjfx39ae4ahvusc4eggyrwjm65zyu83mzwlx",
+							"bc1q3zqxadsagdwjp2fpddn8dk5ge8lf0nn0p750ar",
+							"bc1q2lthuszmh0mynte4nzsfqtjjseu6fdrmeffr62",
+							"bc1qdqkfrt2hpgncqwut88809he6wxysfw8w3cgsh4",
+							"bc1qna5zwwuqcst3dqqx8rmwa66jpa45w28tlypg54",
+							"bc1qjk2ytl6uctuxfsyf8dn6ptwfsthfat4hd78l0m",
+							"bc1qyg6zhg9dhmkj0wz4svsdz6g0ujll225v0wc5hx",
+							"bc1quvtmmjccre6plqslujw7qcy820fycg2q2a73an",
+							"bc1qztxl2qc3k90uud846qfeawqzz3aedhq48vv3lu",
+							"bc1qvkknfkfhfr0axql478klvjs6sanwj6njym5wf2",
+							"bc1qya5t2pj7hqpezcnwh72k69h4cgg3srqwtd0e6w",
+						}
+						for _, segwitAddr := range segwitAddrs {
+							decodedRawAddr, err := mainnetEncodeDecoder.DecodeAddress(multichain.Address(segwitAddr))
+							Expect(err).NotTo(HaveOccurred())
+							encodedAddr, err := mainnetEncodeDecoder.EncodeAddress(decodedRawAddr)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(string(encodedAddr)).To(Equal(segwitAddr))
+						}
+					})
+
+					It("should encode a Bech32 address correctly", func() {
+						loop := func() bool {
+							l := 21
+							if r.Intn(2) == 1 {
+								l = 33
+							}
+							randBytes := make([]byte, l)
+							r.Read(randBytes)
+							randBytes[0] = byte(0)
+							rawAddr := multichain.RawAddress(randBytes)
+							encodedAddr, err := mainnetEncodeDecoder.EncodeAddress(rawAddr)
+							Expect(err).NotTo(HaveOccurred())
+							decodedRawAddr, err := mainnetEncodeDecoder.DecodeAddress(encodedAddr)
+							Expect(err).NotTo(HaveOccurred())
+							Expect(decodedRawAddr).To(Equal(rawAddr))
+							return true
+						}
+						Expect(quick.Check(loop, nil)).To(Succeed())
 					})
 				}
 			})
@@ -989,7 +1041,7 @@ var _ = Describe("Multichain", func() {
 				It("should be able to fetch the latest block", func() {
 					// get a random address
 					randAddr := make([]byte, 20)
-					rand.Read(randAddr)
+					r.Read(randAddr)
 					pkhAddr, err := utxoChain.newAddressPKH(randAddr)
 					Expect(err).NotTo(HaveOccurred())
 
