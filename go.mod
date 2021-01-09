@@ -3,6 +3,8 @@ module github.com/renproject/multichain
 go 1.14
 
 require (
+	github.com/bitspill/flod v0.0.0-20200117025253-bf2a74ee75ee
+	github.com/bitspill/floutil v0.0.0-20180525171018-986e42f96cdb
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/codahale/blake2 v0.0.0-20150924215134-8d10d0420cbf

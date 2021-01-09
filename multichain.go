@@ -107,6 +107,7 @@ const (
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
 	FIL  = Asset("FIL")  // Filecoin
+	FLO  = Asset("FLO")  // Flo
 	FTM  = Asset("FTM")  // Fantom
 	SOL  = Asset("SOL")  // Solana
 	LUNA = Asset("LUNA") // Luna
@@ -140,6 +141,8 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case FIL:
 		return Filecoin
+	case FLO:
+		return Flo
 	case FTM:
 		return Fantom
 	case LUNA:
@@ -167,7 +170,7 @@ func (asset Asset) OriginChain() Chain {
 // ChainType returns the chain-type (Account or UTXO) for the given asset
 func (asset Asset) ChainType() ChainType {
 	switch asset {
-	case BCH, BTC, DGB, DOGE, ZEC:
+	case BCH, BTC, DGB, DOGE, FLO, ZEC:
 		return ChainTypeUTXOBased
 	case BNB, ETH, FIL, LUNA:
 		return ChainTypeAccountBased
@@ -218,6 +221,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Flo               = Chain("Flo")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -252,7 +256,7 @@ func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 // for the chain.
 func (chain Chain) ChainType() ChainType {
 	switch chain {
-	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
+	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Flo, Zcash:
 		return ChainTypeUTXOBased
 	case BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
@@ -300,6 +304,8 @@ func (chain Chain) NativeAsset() Asset {
 		return ETH
 	case Filecoin:
 		return FIL
+	case Flo:
+		return FLO
 	case Terra:
 		return LUNA
 	case Zcash:

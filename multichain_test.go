@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/bitspill/flod/floec"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -14,6 +15,8 @@ import (
 	"testing/quick"
 	"time"
 
+	flochaincfg "github.com/bitspill/flod/chaincfg"
+	"github.com/bitspill/floutil"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
@@ -30,6 +33,7 @@ import (
 	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
+	"github.com/renproject/multichain/chain/flo"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
@@ -145,6 +149,61 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.RawAddress {
 					return multichain.RawAddress([]byte{})
+				},
+			},
+			{
+				multichain.Flo,
+				func() multichain.AddressEncodeDecoder {
+					addrEncodeDecoder := flo.NewAddressEncodeDecoder(&flochaincfg.RegressionNetParams)
+					return addrEncodeDecoder
+				},
+				func() multichain.Address {
+					// Generate a random SECP256K1 private key.
+					pk := id.NewPrivKey()
+					// Get flo WIF private key with the pub key configured to be in
+					// the compressed form.
+					wif, err := floutil.NewWIF((*floec.PrivateKey)(pk), &flochaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := floutil.NewAddressPubKeyHash(floutil.Hash160(wif.SerializePubKey()), &flochaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Return the human-readable encoded flo address in base58 format.
+					return multichain.Address(addrPubKeyHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					// Generate a random SECP256K1 private key.
+					pk := id.NewPrivKey()
+					// Get flo WIF private key with the pub key configured to be in
+					// the compressed form.
+					wif, err := floutil.NewWIF((*floec.PrivateKey)(pk), &flochaincfg.RegressionNetParams, true)
+					Expect(err).NotTo(HaveOccurred())
+					// Get the address pubKey hash. This is the most commonly used format
+					// for a flo address.
+					addrPubKeyHash, err := floutil.NewAddressPubKeyHash(floutil.Hash160(wif.SerializePubKey()), &flochaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Encode into the checksummed base58 format.
+					encoded := addrPubKeyHash.EncodeAddress()
+					return multichain.RawAddress(pack.Bytes(base58.Decode(encoded)))
+				},
+				func() multichain.Address {
+					// Random bytes of script.
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
+					// Create address script hash from the random script bytes.
+					addrScriptHash, err := floutil.NewAddressScriptHash(script, &flochaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Return in human-readable encoded form.
+					return multichain.Address(addrScriptHash.EncodeAddress())
+				},
+				func() multichain.RawAddress {
+					// Random bytes of script.
+					script := make([]byte, r.Intn(100))
+					r.Read(script)
+					// Create address script hash from the random script bytes.
+					addrScriptHash, err := floutil.NewAddressScriptHash(script, &flochaincfg.RegressionNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					// Encode to the checksummed base58 format.
+					encoded := addrScriptHash.EncodeAddress()
+					return multichain.RawAddress(pack.Bytes(base58.Decode(encoded)))
 				},
 			},
 			{

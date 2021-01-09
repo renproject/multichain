@@ -113,6 +113,19 @@ services:
       - "/root/run.sh"
 
   #
+  # Flo
+  #
+  flo:
+    build:
+      context: ./flo
+    ports:
+      - "0.0.0.0:8333:8333"
+    entrypoint:
+      - "./root/run.sh"
+      - "${FLO_ADDRESS}"
+
+
+  #
   # Solana
   #
   solana:
