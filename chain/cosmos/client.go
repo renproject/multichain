@@ -198,6 +198,7 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 		accGetter := auth.NewAccountRetriever(client.cliCtx)
 		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
 		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
 			continue
 		}
 
@@ -222,6 +223,7 @@ func (client *Client) AccountNumber(ctx context.Context, addr address.Address) (
 		accGetter := auth.NewAccountRetriever(client.cliCtx)
 		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
 		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
 			continue
 		}
 		return pack.U64(acc.GetAccountNumber()), nil
@@ -245,6 +247,7 @@ func (client *Client) AccountBalance(ctx context.Context, addr address.Address) 
 		accGetter := auth.NewAccountRetriever(client.cliCtx)
 		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
 		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
 			continue
 		}
 
