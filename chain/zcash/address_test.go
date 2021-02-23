@@ -1,6 +1,7 @@
 package zcash_test
 
 import (
+	"bytes"
 	"math/rand"
 
 	. "github.com/onsi/ginkgo"
@@ -52,7 +53,7 @@ var _ = Describe("Zcash Address", func() {
 			params := []zcash.Params{
 				zcash.MainNetParams,
 				zcash.TestNet3Params,
-				// zcash.RegressionNetParams,   // disable Regression net as it has same prefix as testnet
+				zcash.RegressionNetParams,
 			}
 
 			for i, param := range params {
@@ -75,15 +76,16 @@ var _ = Describe("Zcash Address", func() {
 				for j := range params {
 					addrEncodeDecoder := zcash.NewAddressEncodeDecoder(&params[j])
 					_, err := addrEncodeDecoder.DecodeAddress(p2pkhAddr)
-					// Only the decoder has the same network param should work
-					if i == j {
+					// Check the prefix in the params instead of comparing the network directly
+					// because testnet and regression network has the same prefix.
+					if bytes.Equal(params[i].P2PKHPrefix, params[j].P2PKHPrefix) {
 						Expect(err).NotTo(HaveOccurred())
 					} else {
 						Expect(err).To(HaveOccurred())
 					}
 
 					_, err = addrEncodeDecoder.DecodeAddress(p2shAddr)
-					if i == j {
+					if bytes.Equal(params[i].P2PKHPrefix, params[j].P2PKHPrefix) {
 						Expect(err).NotTo(HaveOccurred())
 					} else {
 						Expect(err).To(HaveOccurred())
