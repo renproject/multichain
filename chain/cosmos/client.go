@@ -182,58 +182,84 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 
 // AccountNonce returns the current nonce of the account. This is the nonce to
 // be used while building a new transaction.
-func (client *Client) AccountNonce(_ context.Context, addr address.Address) (pack.U256, error) {
+func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (pack.U256, error) {
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	accGetter := auth.NewAccountRetriever(client.cliCtx)
-	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
-	if err != nil {
-		return pack.U256{}, err
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			return pack.U256{}, ctx.Err()
+		default:
+		}
 
-	return pack.NewU256FromU64(pack.NewU64(acc.GetSequence())), nil
+		accGetter := auth.NewAccountRetriever(client.cliCtx)
+		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
+			continue
+		}
+
+		return pack.NewU256FromU64(pack.NewU64(acc.GetSequence())), nil
+	}
 }
 
 // AccountNumber returns the account number for a given address.
-func (client *Client) AccountNumber(_ context.Context, addr address.Address) (pack.U64, error) {
+func (client *Client) AccountNumber(ctx context.Context, addr address.Address) (pack.U64, error) {
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	accGetter := auth.NewAccountRetriever(client.cliCtx)
-	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
-	if err != nil {
-		return 0, err
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		default:
+		}
 
-	return pack.U64(acc.GetAccountNumber()), nil
+		accGetter := auth.NewAccountRetriever(client.cliCtx)
+		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
+			continue
+		}
+		return pack.U64(acc.GetAccountNumber()), nil
+	}
 }
 
 // AccountBalance returns the account balancee for a given address.
-func (client *Client) AccountBalance(_ context.Context, addr address.Address) (pack.U256, error) {
+func (client *Client) AccountBalance(ctx context.Context, addr address.Address) (pack.U256, error) {
 	cosmosAddr, err := types.AccAddressFromBech32(string(addr))
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	accGetter := auth.NewAccountRetriever(client.cliCtx)
-	acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
-	if err != nil {
-		return pack.U256{}, err
+	for {
+		select {
+		case <-ctx.Done():
+			return pack.U256{}, ctx.Err()
+		default:
+		}
+
+		accGetter := auth.NewAccountRetriever(client.cliCtx)
+		acc, err := accGetter.GetAccount(Address(cosmosAddr).AccAddress())
+		if err != nil {
+			time.Sleep(client.opts.TimeoutRetry)
+			continue
+		}
+
+		balance := acc.GetCoins().AmountOf(string(client.opts.CoinDenom)).BigInt()
+
+		// If the balance exceeds `MaxU256`, return an error.
+		if pack.MaxU256.Int().Cmp(balance) == -1 {
+			return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
+		}
+
+		return pack.NewU256FromInt(balance), nil
 	}
-
-	balance := acc.GetCoins().AmountOf(string(client.opts.CoinDenom)).BigInt()
-
-	// If the balance exceeds `MaxU256`, return an error.
-	if pack.MaxU256.Int().Cmp(balance) == -1 {
-		return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
-	}
-
-	return pack.NewU256FromInt(balance), nil
 }
 
 type transport struct {
