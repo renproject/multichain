@@ -85,7 +85,7 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 		if err != nil {
 			return &Tx{}, err
 		}
-		addr, err := addressFromRawBytes(addrBytes)
+		addr, err := addressFromRawBytes(addrBytes, txBuilder.params)
 		if err != nil {
 			return &Tx{}, err
 		}
