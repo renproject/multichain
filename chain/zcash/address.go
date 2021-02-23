@@ -65,11 +65,11 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 	var prefix []byte
 	if len(rawAddr) == 26 {
 		prefix = rawAddr[:2]
-		addrType, _, err = parsePrefix(prefix)
+		addrType, err = addressType(prefix, encoder.params)
 		copy(hash[:], rawAddr[2:22])
 	} else {
 		prefix = rawAddr[:1]
-		addrType, _, err = parsePrefix(prefix)
+		addrType, err = addressType(prefix, encoder.params)
 		copy(hash[:], rawAddr[1:21])
 	}
 	if err != nil {
@@ -105,10 +105,10 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	var err error
 	var hash [20]byte
 	if len(decoded) == 26 {
-		addrType, _, err = parsePrefix(decoded[:2])
+		addrType, err = addressType(decoded[:2], decoder.params)
 		copy(hash[:], decoded[2:22])
 	} else {
-		addrType, _, err = parsePrefix(decoded[:1])
+		addrType, err = addressType(decoded[:1], decoder.params)
 		copy(hash[:], decoded[1:21])
 	}
 	if err != nil {
@@ -121,6 +121,16 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	default:
 		return nil, errors.New("unknown address")
 	}
+}
+
+func addressType(prefix []byte, param *Params) (uint8, error) {
+	if bytes.Equal(prefix, param.P2PKHPrefix) {
+		return 0, nil
+	}
+	if bytes.Equal(prefix, param.P2SHPrefix) {
+		return 1, nil
+	}
+	return 0, btcutil.ErrUnknownAddressType
 }
 
 // An Address represents a Zcash address.
