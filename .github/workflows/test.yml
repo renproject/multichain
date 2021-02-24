@@ -74,7 +74,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '5m'
+          time: '8m'
 
       - name: Check on docker containers
         run: docker ps -a
