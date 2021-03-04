@@ -101,6 +101,7 @@ type Asset string
 const (
 	BCH  = Asset("BCH")  // Bitcoin Cash
 	BNB  = Asset("BNB")  // Binance Coin
+	BSV  = Asset("BSV")  // Bitcoin SV
 	BTC  = Asset("BTC")  // Bitcoin
 	CELO = Asset("CELO") // Celo
 	DGB  = Asset("DGB")  // DigiByte
@@ -128,6 +129,8 @@ func (asset Asset) OriginChain() Chain {
 		return BitcoinCash
 	case BNB:
 		return BinanceSmartChain
+	case BSV:
+		return BitcoinSV
 	case BTC:
 		return Bitcoin
 	case CELO:
@@ -167,7 +170,7 @@ func (asset Asset) OriginChain() Chain {
 // ChainType returns the chain-type (Account or UTXO) for the given asset
 func (asset Asset) ChainType() ChainType {
 	switch asset {
-	case BCH, BTC, DGB, DOGE, ZEC:
+	case BCH, BSV, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
 	case BNB, ETH, FIL, LUNA:
 		return ChainTypeAccountBased
@@ -212,6 +215,7 @@ const (
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
+	BitcoinSV         = Chain("BitcoinSV")
 	Celo              = Chain("Celo")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
@@ -252,7 +256,7 @@ func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 // for the chain.
 func (chain Chain) ChainType() ChainType {
 	switch chain {
-	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
+	case Bitcoin, BitcoinCash, BitcoinSV, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
 	case BinanceSmartChain, Ethereum, Filecoin, Terra:
 		return ChainTypeAccountBased
@@ -290,6 +294,8 @@ func (chain Chain) NativeAsset() Asset {
 		return BNB
 	case BitcoinCash:
 		return BCH
+	case BitcoinSV:
+		return BSV
 	case Bitcoin:
 		return BTC
 	case DigiByte:
