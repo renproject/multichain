@@ -1,9 +1,0 @@
-FROM bitcoinsv/bitcoin-sv:latest
-
-COPY bitcoin.conf /root/.bitcoin/
-COPY run.sh /root/
-RUN chmod +x /root/run.sh
-
-EXPOSE 8332
-
-ENTRYPOINT ["./root/run.sh"]
