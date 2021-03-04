@@ -126,6 +126,18 @@ services:
       - "./root/run.sh"
 
   #
+  # LBRY
+  #
+  lbry:
+    build:
+      context: ./lbry
+    ports:
+      - "0.0.0.0:29245:29245"
+    entrypoint:
+      - "./root/run.sh"
+      - "${LBRY_ADDRESS}"
+
+  #
   # Zcash
   #
   zcash:
