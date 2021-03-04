@@ -50,6 +50,18 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${BITCOINCASH_ADDRESS}"
+      
+  #
+  # Bitcoin SV
+  #
+  bitcoinsv:
+    build:
+      context: ./bitcoinsv
+    ports:
+      - "0.0.0.0:8332:8332"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BITCOINSV_ADDRESS}"
 
   #
   # DigiByte
