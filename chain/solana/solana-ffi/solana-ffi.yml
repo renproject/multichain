@@ -41,12 +41,11 @@ TRANSLATOR:
     function:
       - {action: accept, from: "unique_pubkey"}
       - {action: accept, from: "program_derived_address"}
-      - {action: accept, from: "ren_bridge_initialize"}
-      - {action: accept, from: "ren_bridge_initialize_token"}
-      - {action: accept, from: "ren_bridge_initialize_account"}
-      - {action: accept, from: "ren_bridge_get_burn_count"}
-      - {action: accept, from: "ren_bridge_mint"}
-      - {action: accept, from: "ren_bridge_burn"}
+      - {action: accept, from: "gateway_initialize"}
+      - {action: accept, from: "gateway_initialize_account"}
+      - {action: accept, from: "gateway_get_burn_count"}
+      - {action: accept, from: "gateway_mint"}
+      - {action: accept, from: "gateway_burn"}
     private:
       - {transform: unexport}
     post-global:

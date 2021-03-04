@@ -22,7 +22,7 @@ var _ = Describe("Solana FFI", func() {
 	Context("Program Derived Address", func() {
 		It("should correctly compute 1", func() {
 			program := address.Address("6kAHanNCT1LKFoMn3fBdyvJuvHLcWhLpJbTpbHpqRiG4")
-			seeds := []byte("RenBridgeState")
+			seeds := []byte("GatewayState")
 			programDerivedAddress := solana.ProgramDerivedAddress(pack.Bytes(seeds), program)
 			expectedDerivedAddress := address.Address("7gMf4XXqunXaagnMVf8c3KSKnANTjhDvn2HgVTxMb4ZD")
 			Expect(programDerivedAddress[:]).To(Equal(expectedDerivedAddress))

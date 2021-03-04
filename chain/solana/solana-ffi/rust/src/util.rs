@@ -1,10 +1,10 @@
-use ren_bridge::types::{
+use gateway::types::{
     RenVmMintMessage, Secp256k1InstructionData, RENVM_MINT_MESSAGE_SIZE, RENVM_MINT_SECP_DATA_SIZE,
 };
 use solana_sdk::{
     instruction::Instruction,
     program_pack::Pack,
-    secp256k1::{
+    secp256k1_instruction::{
         SecpSignatureOffsets, HASHED_PUBKEY_SERIALIZED_SIZE, SIGNATURE_OFFSETS_SERIALIZED_SIZE,
     },
 };

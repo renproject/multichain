@@ -92,12 +92,12 @@ jobs:
 
       - name: Run tests for Solana
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.4.14/install)"
+            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
             git clone https://github.com/renproject/ren-solana.git
             cd ren-solana
-            git checkout feat/solana-program
-            echo ${{ secrets.REN_BRIDGE_PROGRAM_ID }} > ~/.config/solana/ren-bridge-program.json
+            git checkout feat/gateway
+            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
             ./setup.sh
             cd $GITHUB_WORKSPACE/chain/solana
             go test -timeout 100s

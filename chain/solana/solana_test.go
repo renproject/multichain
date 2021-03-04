@@ -29,7 +29,7 @@ var _ = Describe("Solana", func() {
 
 	Context("mint and burn", func() {
 		It("should succeed", func() {
-			// Base58 address of the RenBridge program that is deployed to Solana.
+			// Base58 address of the Gateway program that is deployed to Solana.
 			program := multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP")
 
 			// Construct user's keypair path (~/.config/solana/id.json).
@@ -43,25 +43,20 @@ var _ = Describe("Solana", func() {
 			renVmAuthorityBytes, err := hex.DecodeString(renVmAuthority)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Initialize RenBridge program.
-			initializeSig := cgo.RenBridgeInitialize(keypairPath, solana.DefaultClientRPCURL, renVmAuthorityBytes)
-			logger.Debug("Initialize", zap.String("tx signature", string(initializeSig)))
-
-			// Initialize RenBTC token.
-			time.Sleep(10 * time.Second)
+			// Initialize Gateway for the RenBTC token.
 			selector := "BTC/toSolana"
-			initializeTokenSig := cgo.RenBridgeInitializeToken(keypairPath, solana.DefaultClientRPCURL, selector)
-			logger.Debug("InitializeToken", zap.String("tx signature", string(initializeTokenSig)))
+			initializeSig := cgo.GatewayInitialize(keypairPath, solana.DefaultClientRPCURL, renVmAuthorityBytes, selector)
+			logger.Debug("Initialize", zap.String("tx signature", string(initializeSig)))
 
 			// Initialize a new token account.
 			time.Sleep(10 * time.Second)
-			initializeAccountSig := cgo.RenBridgeInitializeAccount(keypairPath, solana.DefaultClientRPCURL, selector)
+			initializeAccountSig := cgo.GatewayInitializeAccount(keypairPath, solana.DefaultClientRPCURL, selector)
 			logger.Debug("InitializeAccount", zap.String("tx signature", string(initializeAccountSig)))
 
 			// Mint some tokens.
 			time.Sleep(10 * time.Second)
 			mintAmount := uint64(10000000000) // 10 tokens.
-			mintSig := cgo.RenBridgeMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount)
+			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount)
 			logger.Debug("Mint", zap.String("tx signature", string(mintSig)))
 
 			// Burn some tokens.
@@ -70,9 +65,9 @@ var _ = Describe("Solana", func() {
 			bitcoinAddrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
 			recipientRawAddr, err := bitcoinAddrEncodeDecoder.DecodeAddress(recipient)
 			Expect(err).NotTo(HaveOccurred())
-			burnCount := cgo.RenBridgeGetBurnCount(solana.DefaultClientRPCURL)
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
 			burnAmount := uint64(5000000000) // 5 tokens.
-			burnSig := cgo.RenBridgeBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, []byte(recipientRawAddr))
+			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, []byte(recipientRawAddr))
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
 
 			// Fetch burn log.
