@@ -132,7 +132,7 @@ var MainNetParams = chaincfg.Params{
 
 	// Address encoding magics
 	PubKeyHashAddrID:        0x1e, // starts with 1
-	ScriptHashAddrID:        0x32, // starts with 3
+	ScriptHashAddrID:        0x3f, // starts with 3
 	PrivateKeyID:            0x80, // starts with 5 (uncompressed) or K (compressed)
 	WitnessPubKeyHashAddrID: 0x06, // starts with p2
 	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
