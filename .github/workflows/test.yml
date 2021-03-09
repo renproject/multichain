@@ -60,6 +60,41 @@ jobs:
             go get -u golang.org/x/lint/golint
             golint $(go list ./... | grep -v filecoin-ffi)
 
+      - name: Setup environment for Solana tests
+        run: |
+            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
+            cd $GITHUB_WORKSPACE
+            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+            git clone https://github.com/renproject/ren-solana.git
+            cd ren-solana
+            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
+            ./setup.sh
+
+      - name: Sleep until the node is up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests for Solana
+        run: |
+            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+            cd $GITHUB_WORKSPACE/ren-solana
+            solana airdrop --url http://0.0.0.0:8899 10
+            solana program deploy --final \
+              --keypair ~/.config/solana/id.json \
+              --program-id ~/.config/solana/gateway-program.json \
+              target/deploy/gateway.so
+            cd $GITHUB_WORKSPACE/chain/solana
+            go test -timeout 100s
+
+      - name: Remove docker containers
+        run: |
+            cd $GITHUB_WORKSPACE/ren-solana
+            npx solana-localnet down
+
       - name: Run multichain infrastructure
         run: |
             cd $GITHUB_WORKSPACE/infra
@@ -76,7 +111,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '10m'
+          time: '15m'
 
       - name: Check on docker containers
         run: docker ps -a
@@ -90,17 +125,15 @@ jobs:
             cd $GITHUB_WORKSPACE
             CI=true go test -timeout 1500s
 
-      - name: Run tests for Solana
+      - name: Remove docker containers
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
-            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            git clone https://github.com/renproject/ren-solana.git
-            cd ren-solana
-            git checkout feat/gateway
-            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
-            ./setup.sh
-            cd $GITHUB_WORKSPACE/chain/solana
-            go test -timeout 100s
+            docker rm -f \
+              infra_bitcoin_1 \
+              infra_bitcoincash_1 \
+              infra_dogecoin_1 \
+              infra_terra_1 \
+              infra_zcash_1 \
+              infra_filecoin_1
 
   build:
     runs-on: ubuntu-latest

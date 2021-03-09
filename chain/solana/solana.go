@@ -7,12 +7,30 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
 	"go.uber.org/zap"
 )
+
+var (
+	// GatewayRenBTC is the address of the Gateway program deployed on Solana
+	// for the selector "BTC/toSolana".
+	GatewayRenBTC = "9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"
+)
+
+// GatewayProgram returns the address of the deployed Gateway program for the
+// given asset.
+func GatewayProgram(asset multichain.Asset) (multichain.Address, error) {
+	switch asset {
+	case multichain.BTC:
+		return multichain.Address(GatewayRenBTC), nil
+	default:
+		return multichain.Address(""), fmt.Errorf("unsupported asset: %v", asset)
+	}
+}
 
 // DefaultClientRPCURL is the default RPC URL for the Solana cluster.
 const DefaultClientRPCURL = "http://localhost:8899"
@@ -34,6 +52,13 @@ func DefaultClientOptions() ClientOptions {
 		Logger: logger,
 		RPCURL: DefaultClientRPCURL,
 	}
+}
+
+// WithRPCURL returns a modified version of the options with the given API
+// rpc-url
+func (opts ClientOptions) WithRPCURL(rpcURL pack.String) ClientOptions {
+	opts.RPCURL = string(rpcURL)
+	return opts
 }
 
 // Client represents a Solana client that implements the multichain Contract API.
