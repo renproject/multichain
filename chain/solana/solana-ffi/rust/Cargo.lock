@@ -1024,7 +1024,7 @@ dependencies = [
 [[package]]
 name = "gateway"
 version = "0.1.0"
-source = "git+https://github.com/renproject/ren-solana?branch=feat/gateway#1efbaf251170cd2e00405330ee2585fa4186cd92"
+source = "git+https://github.com/renproject/ren-solana?branch=master#1623b451913bb2b689a8f8426845f48750cf2eb3"
 dependencies = [
  "arrayref",
  "digest 0.9.0",

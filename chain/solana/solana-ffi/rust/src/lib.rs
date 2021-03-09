@@ -86,8 +86,7 @@ pub extern "C" fn gateway_initialize(
     let selector_hash: [u8; 32] = hasher.finalize().into();
 
     // Find derived address that will hold Gateway's state.
-    let (gateway_account_id, _) =
-        Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
+    let (gateway_account_id, _) = Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
 
     // Derived address that will be the token mint.
     let (token_mint_id, _) = Pubkey::find_program_address(&[&selector_hash[..]], &gateway::id());
@@ -186,8 +185,7 @@ pub extern "C" fn gateway_get_burn_count(rpc_url: *const libc::c_char) -> libc::
     let rpc_client = RpcClient::new(rpc_url);
 
     // Fetch account data.
-    let (gateway_account_id, _) =
-        Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
+    let (gateway_account_id, _) = Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
     let gateway_account_data = rpc_client.get_account_data(&gateway_account_id).unwrap();
     let gateway_state = Gateway::unpack_unchecked(&gateway_account_data).unwrap();
 
@@ -231,8 +229,7 @@ pub extern "C" fn gateway_mint(
     let selector_hash: [u8; 32] = hasher.finalize().into();
 
     // Derived address that will be the token mint.
-    let (gateway_account_id, _) =
-        Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
+    let (gateway_account_id, _) = Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
     let (token_mint_id, _) = Pubkey::find_program_address(&[&selector_hash[..]], &gateway::id());
     let (mint_authority_id, _) =
         Pubkey::find_program_address(&[&token_mint_id.to_bytes()], &gateway::id());
@@ -248,8 +245,7 @@ pub extern "C" fn gateway_mint(
     let msg_hash = renvm_mint_msg.get_digest().unwrap();
     let renvm_sig = renvm.sign(&renvm_mint_msg).unwrap();
     let (sig_r, sig_s, sig_v) = array_refs![&renvm_sig, 32, 32, 1];
-    let (mint_log_account_id, _) =
-        Pubkey::find_program_address(&[&msg_hash[..]], &gateway::id());
+    let (mint_log_account_id, _) = Pubkey::find_program_address(&[&msg_hash[..]], &gateway::id());
     let mut tx = Transaction::new_with_payer(
         &[
             mint(
@@ -302,6 +298,7 @@ pub extern "C" fn gateway_burn(
     selector: *const libc::c_char,
     burn_count: libc::c_ulonglong,
     burn_amount: libc::c_ulonglong,
+    recipient_len: libc::size_t,
     recipient_pointer: *const u8,
 ) -> *const libc::c_char {
     // Solana default signer and fee payer.
@@ -327,16 +324,14 @@ pub extern "C" fn gateway_burn(
     let selector_hash: [u8; 32] = hasher.finalize().into();
 
     // Derived address that will be the token mint.
-    let (gateway_account_id, _) =
-        Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
+    let (gateway_account_id, _) = Pubkey::find_program_address(&[b"GatewayState"], &gateway::id());
     let (token_mint_id, _) = Pubkey::find_program_address(&[&selector_hash[..]], &gateway::id());
     let associated_token_account = get_associated_token_address(&payer.pubkey(), &token_mint_id);
 
     // Construct the 25-bytes address of release recipient of the underlying assets.
-    let recipient_slice =
-        unsafe { std::slice::from_raw_parts(recipient_pointer as *const u8, 25usize) };
-    let mut release_recipient = [0u8; 25usize];
-    release_recipient.copy_from_slice(recipient_slice);
+    let recipient_slice = unsafe {
+        std::slice::from_raw_parts(recipient_pointer as *const u8, recipient_len as usize)
+    };
 
     let (burn_log_account_id, _) =
         Pubkey::find_program_address(&[&burn_count.to_le_bytes()[..]], &gateway::id());
@@ -359,7 +354,7 @@ pub extern "C" fn gateway_burn(
                 &gateway_account_id,
                 &token_mint_id,
                 &burn_log_account_id,
-                release_recipient,
+                recipient_slice.to_vec(),
             )
             .unwrap(),
         ],

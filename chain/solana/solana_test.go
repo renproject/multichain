@@ -2,6 +2,7 @@ package solana_test
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"os"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/renproject/multichain/chain/solana"
 	"github.com/renproject/multichain/chain/solana/solana-ffi/cgo"
 	"github.com/renproject/pack"
-	"github.com/renproject/surge"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -67,22 +67,22 @@ var _ = Describe("Solana", func() {
 			Expect(err).NotTo(HaveOccurred())
 			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
 			burnAmount := uint64(5000000000) // 5 tokens.
-			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, []byte(recipientRawAddr))
+			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipientRawAddr)), []byte(recipientRawAddr))
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
 
 			// Fetch burn log.
 			time.Sleep(20 * time.Second)
 			client := solana.NewClient(solana.DefaultClientOptions())
-			contractCallInput := solana.BurnCallContractInput{Nonce: pack.NewU64(burnCount)}
-			calldata, err := surge.ToBinary(contractCallInput)
-			Expect(err).ToNot(HaveOccurred())
-			burnLogBytes, err := client.CallContract(context.Background(), program, calldata)
+			calldata := make([]byte, 8)
+			binary.LittleEndian.PutUint64(calldata, burnCount)
+			data, err := client.CallContract(context.Background(), program, multichain.ContractCallData(calldata))
 			Expect(err).NotTo(HaveOccurred())
-			burnLog := solana.BurnCallContractOutput{}
-			err = surge.FromBinary(&burnLog, burnLogBytes)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(burnLog.Amount).To(Equal(pack.U64(burnAmount)))
-			Expect(burnLog.Recipient).To(Equal(recipientRawAddr))
+
+			fetchedAmount := binary.LittleEndian.Uint64(data[:8])
+			recipientLen := uint8(data[8:9][0])
+			fetchedRecipient := pack.Bytes(data[9 : 9+int(recipientLen)])
+			Expect(fetchedAmount).To(Equal(burnAmount))
+			Expect([]byte(fetchedRecipient)).To(Equal([]byte(recipientRawAddr)))
 		})
 	})
 })
