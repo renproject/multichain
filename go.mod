@@ -19,6 +19,7 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.5
+	github.com/renproject/solana-ffi v0.1.0
 	github.com/renproject/surge v1.2.6
 	github.com/tendermint/tendermint v0.33.8
 	github.com/terra-project/core v0.4.0-rc.4
@@ -31,5 +32,7 @@ replace github.com/cosmos/ledger-cosmos-go => github.com/terra-project/ledger-te
 replace github.com/CosmWasm/go-cosmwasm => github.com/terra-project/go-cosmwasm v0.10.1-terra
 
 replace github.com/filecoin-project/filecoin-ffi => ./chain/filecoin/filecoin-ffi
+
+replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4

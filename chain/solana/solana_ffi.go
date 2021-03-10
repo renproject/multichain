@@ -2,7 +2,7 @@ package solana
 
 import (
 	"github.com/renproject/multichain/api/address"
-	"github.com/renproject/multichain/chain/solana/solana-ffi/cgo"
+	"github.com/renproject/solana-ffi/cgo"
 	"github.com/renproject/pack"
 )
 
