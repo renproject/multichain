@@ -104,17 +104,10 @@ func (client *Client) CallContract(
 	}
 
 	// Decode the Base58 encoded account data into raw byte-representation. Since
-	// this holds the burn log's data, it should be 41 bytes in size.
-	//
-	// burn amount: 8 bytes
-	// recipient length: 1 byte
-	// recipient: 32 bytes
+	// this holds the burn log's data.
 	data := base58.Decode(info.Value.Data)
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("decoding result from base58: %v", err)
-	}
-	if len(data) != 41 {
-		return pack.Bytes(nil), fmt.Errorf("unexpected data length. Expected 41, got: %v", len(data))
 	}
 
 	return pack.NewBytes(data), nil

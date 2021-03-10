@@ -77,6 +77,7 @@ var _ = Describe("Solana", func() {
 			binary.LittleEndian.PutUint64(calldata, burnCount)
 			data, err := client.CallContract(context.Background(), program, multichain.ContractCallData(calldata))
 			Expect(err).NotTo(HaveOccurred())
+			Expect(len(data)).To(Equal(41))
 
 			fetchedAmount := binary.LittleEndian.Uint64(data[:8])
 			recipientLen := uint8(data[8:9][0])
