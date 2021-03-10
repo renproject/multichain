@@ -11,7 +11,7 @@ import (
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/solana"
-	"github.com/renproject/multichain/chain/solana/solana-ffi/cgo"
+	"github.com/renproject/solana-ffi/cgo"
 	"github.com/renproject/pack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
