@@ -74,6 +74,70 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
+	Context("Multichain Declarations", func() {
+		Context("All supporting chains/assets are declared", func() {
+			accountChains := []struct {
+				chain multichain.Chain
+				asset multichain.Asset
+			}{
+				{
+					multichain.Filecoin,
+					multichain.FIL,
+				},
+				{
+					multichain.Solana,
+					multichain.SOL,
+				},
+				{
+					multichain.Terra,
+					multichain.LUNA,
+				},
+			}
+			utxoChains := []struct {
+				chain multichain.Chain
+				asset multichain.Asset
+			}{
+				{
+					multichain.Bitcoin,
+					multichain.BTC,
+				},
+				{
+					multichain.BitcoinCash,
+					multichain.BCH,
+				},
+				{
+					multichain.DigiByte,
+					multichain.DGB,
+				},
+				{
+					multichain.Dogecoin,
+					multichain.DOGE,
+				},
+				{
+					multichain.Zcash,
+					multichain.ZEC,
+				},
+			}
+
+			for _, accountChain := range accountChains {
+				accountChain := accountChain
+				Specify(fmt.Sprintf("Chain=%v, Asset=%v should be supported", accountChain.chain, accountChain.asset), func() {
+					Expect(accountChain.chain.IsAccountBased()).To(BeTrue())
+					Expect(accountChain.chain.NativeAsset()).To(Equal(accountChain.asset))
+					Expect(accountChain.asset.OriginChain()).To(Equal(accountChain.chain))
+				})
+			}
+			for _, utxoChain := range utxoChains {
+				utxoChain := utxoChain
+				Specify(fmt.Sprintf("Chain=%v, Asset=%v should be supported", utxoChain.chain, utxoChain.asset), func() {
+					Expect(utxoChain.chain.IsUTXOBased()).To(BeTrue())
+					Expect(utxoChain.chain.NativeAsset()).To(Equal(utxoChain.asset))
+					Expect(utxoChain.asset.OriginChain()).To(Equal(utxoChain.chain))
+				})
+			}
+		})
+	})
+
 	//
 	// ADDRESS API
 	//

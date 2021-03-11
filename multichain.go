@@ -254,7 +254,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Filecoin, Terra:
+	case BinanceSmartChain, Ethereum, Filecoin, Solana, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -300,6 +300,8 @@ func (chain Chain) NativeAsset() Asset {
 		return ETH
 	case Filecoin:
 		return FIL
+	case Solana:
+		return SOL
 	case Terra:
 		return LUNA
 	case Zcash:
