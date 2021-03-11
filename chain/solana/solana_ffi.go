@@ -2,8 +2,8 @@ package solana
 
 import (
 	"github.com/renproject/multichain/api/address"
-	"github.com/renproject/solana-ffi/cgo"
 	"github.com/renproject/pack"
+	"github.com/renproject/solana-ffi/cgo"
 )
 
 // UniquePubkey creates an atomically incrementing pubkey used for tests and

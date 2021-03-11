@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -42,6 +43,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var (
+	testBTC  = flag.Bool("btc", false, "Pass this flag to test Bitcoin")
+	testBCH  = flag.Bool("bch", false, "Pass this flag to test Bitcoincash")
+	testDOGE = flag.Bool("doge", false, "Pass this flag to test Dogecoin")
+	testFIL  = flag.Bool("fil", false, "Pass this flag to test Filecoin")
+	testLUNA = flag.Bool("luna", false, "Pass this flag to test Terra")
+	testZEC  = flag.Bool("zec", false, "Pass this flag to test Zcash")
+)
+
 var _ = Describe("Multichain", func() {
 	// new randomness
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -54,6 +64,15 @@ var _ = Describe("Multichain", func() {
 	loggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	logger, err := loggerConfig.Build()
 	Expect(err).ToNot(HaveOccurred())
+
+	// Populate the test flags by underlying asset chain.
+	testFlags := map[multichain.Chain]bool{}
+	testFlags[multichain.Bitcoin] = *testBTC
+	testFlags[multichain.BitcoinCash] = *testBCH
+	testFlags[multichain.Dogecoin] = *testDOGE
+	testFlags[multichain.Filecoin] = *testFIL
+	testFlags[multichain.Terra] = *testLUNA
+	testFlags[multichain.Zcash] = *testZEC
 
 	//
 	// ADDRESS API
@@ -496,6 +515,10 @@ var _ = Describe("Multichain", func() {
 
 		for _, accountChain := range accountChainTable {
 			accountChain := accountChain
+			if !testFlags[accountChain.chain] {
+				continue
+			}
+
 			Context(fmt.Sprintf("%v", accountChain.chain), func() {
 				Specify("build, broadcast and fetch tx", func() {
 					// Load private key and the associated address.
@@ -699,6 +722,10 @@ var _ = Describe("Multichain", func() {
 
 		for _, utxoChain := range utxoChainTable {
 			utxoChain := utxoChain
+			if !testFlags[utxoChain.chain] {
+				continue
+			}
+
 			Context(fmt.Sprintf("%v", utxoChain.chain), func() {
 				Specify("(P2PKH) build, broadcast and fetch tx", func() {
 					// Load private key.
