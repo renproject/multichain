@@ -74,12 +74,19 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
+	//
+	// Multichain Configs
+	//
 	Context("Multichain Declarations", func() {
 		Context("All supporting chains/assets are declared", func() {
 			accountChains := []struct {
 				chain multichain.Chain
 				asset multichain.Asset
 			}{
+				{
+					multichain.Fantom,
+					multichain.FTM,
+				},
 				{
 					multichain.Filecoin,
 					multichain.FIL,
