@@ -118,6 +118,9 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	if messageLookup.Receipt.ExitCode.IsError() {
 		return nil, pack.NewU64(0), fmt.Errorf("executing transaction: %v", messageLookup.Receipt.ExitCode.String())
 	}
+	if !messageLookup.Message.Equals(msgID) {
+		return nil, pack.U64(0), fmt.Errorf("searching state for txid: expected %v, got %v", msgID, messageLookup.Message)
+	}
 
 	// get the most recent tipset and its height
 	chainHead, err := client.LatestBlock(ctx)
