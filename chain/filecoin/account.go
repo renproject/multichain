@@ -8,6 +8,7 @@ import (
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/minio/blake2b-simd"
 	"github.com/renproject/multichain/api/account"
@@ -66,6 +67,19 @@ type Tx struct {
 // Generally, hashes are irreversible hash functions that consume the
 // content of the transaction.
 func (tx Tx) Hash() pack.Bytes {
+	if !tx.signature.Equal(&pack.Bytes65{}) {
+		// construct crypto.Signature
+		signature := crypto.Signature{
+			Type: crypto.SigTypeSecp256k1,
+			Data: tx.signature.Bytes(),
+		}
+		// construct types.SignedMessage
+		signedMessage := types.SignedMessage{
+			Message:   tx.msg,
+			Signature: signature,
+		}
+		return pack.NewBytes(signedMessage.Cid().Bytes())
+	}
 	return pack.NewBytes(tx.msg.Cid().Bytes())
 }
 
