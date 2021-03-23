@@ -1,6 +1,8 @@
 package cosmos
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/renproject/multichain/api/address"
 )
@@ -60,12 +62,18 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	if err != nil {
 		return nil, err
 	}
+	if len(rawAddr) != sdk.AddrLen {
+		return nil, fmt.Errorf("unexpected address length: want=%v, got=%v", sdk.AddrLen, len(rawAddr))
+	}
 	return address.RawAddress(rawAddr), nil
 }
 
 // EncodeAddress consumes raw bytes and encodes them to a human-readable
 // address format.
 func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	if len(rawAddr) != sdk.AddrLen {
+		return address.Address(""), fmt.Errorf("unexpected address length: want=%v, got=%v", sdk.AddrLen, len(rawAddr))
+	}
 	bech32Addr := sdk.AccAddress(rawAddr)
 	return address.Address(bech32Addr.String()), nil
 }
