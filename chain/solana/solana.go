@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/near/borsh-go"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
@@ -62,6 +63,78 @@ func FindProgramAddress(seeds []byte, program address.RawAddress) (address.Addre
 	}
 
 	return ProgramDerivedAddress(seeds, encoded), nil
+}
+
+// GetGatewayBySelectorHash queries the gateway registry account on Solana for
+// the deployed gateway address of the specific RenVM selector hash.
+func (client *Client) GetGatewayBySelectorHash(registryProgram address.Address, shash pack.Bytes32) (address.Address, error) {
+	gateways, err := client.GetGateways(registryProgram)
+	if err != nil {
+		return address.Address(""), err
+	}
+	gateway, ok := gateways[shash]
+	if !ok {
+		return address.Address(""), fmt.Errorf("gateway registry does not contain selector=%v", shash)
+	}
+	return gateway, nil
+}
+
+// GetGateways queries the gateway registry account on Solana to fetch all
+// the gateway addresses and returns a map of RenVM selector hashes to their
+// gateway addresses.
+func (client *Client) GetGateways(registryProgram address.Address) (map[pack.Bytes32]address.Address, error) {
+	registry, err := client.getGatewayRegistry(registryProgram)
+	if err != nil {
+		return nil, fmt.Errorf("get gateway registry: %v", err)
+	}
+
+	gateways := make(map[pack.Bytes32]address.Address)
+	addrEncodeDecoder := NewAddressEncodeDecoder()
+	for i := 0; i < int(registry.Count); i++ {
+		selector := registry.Selectors[i]
+		gateway, err := addrEncodeDecoder.EncodeAddress(address.RawAddress(registry.Gateways[i][:]))
+		if err != nil {
+			return nil, fmt.Errorf("encode address: %v", err)
+		}
+		gateways[selector] = gateway
+	}
+
+	return gateways, nil
+}
+
+func (client *Client) getGatewayRegistry(registryProgram address.Address) (gatewayRegistry, error) {
+	params, err := json.Marshal([]string{string(registryProgram)})
+	if err != nil {
+		return gatewayRegistry{}, fmt.Errorf("encoding params: %v", err)
+	}
+	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
+	if err != nil {
+		return gatewayRegistry{}, fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
+	}
+	if res.Result == nil {
+		return gatewayRegistry{}, fmt.Errorf("decoding result: empty")
+	}
+
+	// Deserialise the account's info into the appropriate struct.
+	info := ResponseGetAccountInfo{}
+	if err := json.Unmarshal(*res.Result, &info); err != nil {
+		return gatewayRegistry{}, fmt.Errorf("decoding result: %v", err)
+	}
+
+	// Decode the Base58 encoded account data into raw byte-representation. Since
+	// this holds the burn log's data.
+	data := base58.Decode(info.Value.Data)
+	if err != nil {
+		return gatewayRegistry{}, fmt.Errorf("decoding result from base58: %v", err)
+	}
+
+	registry := new(gatewayRegistry)
+	err = borsh.Deserialize(registry, data)
+	if err != nil {
+		return gatewayRegistry{}, fmt.Errorf("deserializing gateway registry data: %v", err)
+	}
+
+	return *registry, nil
 }
 
 // CallContract implements the multichain Contract API. In the case of Solana,

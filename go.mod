@@ -15,6 +15,7 @@ require (
 	github.com/ipfs/go-cid v0.0.7
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/multiformats/go-varint v0.0.6
+	github.com/near/borsh-go v0.3.0
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/renproject/id v0.4.2

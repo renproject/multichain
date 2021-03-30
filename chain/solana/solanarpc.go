@@ -28,3 +28,13 @@ type BurnLog struct {
 	Amount    int      `json:"amount"`
 	Recipient [25]byte `json:"recipient"`
 }
+
+type Bytes32 = [32]byte
+
+type gatewayRegistry struct {
+	IsInitialised bool
+	Owner         Bytes32
+	Count         uint64
+	Selectors     []Bytes32
+	Gateways      []Bytes32
+}
