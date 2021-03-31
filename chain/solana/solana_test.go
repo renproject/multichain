@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/solana"
@@ -27,7 +28,7 @@ var _ = Describe("Solana", func() {
 	logger, err := loggerConfig.Build()
 	Expect(err).ToNot(HaveOccurred())
 
-	Context("mint and burn", func() {
+	Context("When minting and burning", func() {
 		It("should succeed", func() {
 			// Base58 address of the Gateway program that is deployed to Solana.
 			program := multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP")
@@ -84,6 +85,44 @@ var _ = Describe("Solana", func() {
 			fetchedRecipient := pack.Bytes(data[9 : 9+int(recipientLen)])
 			Expect(fetchedAmount).To(Equal(burnAmount))
 			Expect([]byte(fetchedRecipient)).To(Equal([]byte(recipientRawAddr)))
+		})
+	})
+
+	FContext("When getting Gateways from Registry", func() {
+		It("should deserialize successfully", func() {
+			// Solana client using default client options.
+			client := solana.NewClient(solana.DefaultClientOptions())
+
+			// Base58 address of the Gateway registry program deployed to Solana.
+			registryProgram := multichain.Address("3cvX9BpLMJsFTuEWSQBaTcd4TXgAmefqgNSJbufpyWyz")
+
+			// The registry (in the CI test environment) is pre-populated with gateway
+			// addresses for BTC/toSolana and ZEC/toSolana selectors.
+			btcSelectorHash := [32]byte{}
+			copy(btcSelectorHash[:], crypto.Keccak256([]byte("BTC/toSolana")))
+			zecSelectorHash := [32]byte{}
+			copy(zecSelectorHash[:], crypto.Keccak256([]byte("ZEC/toSolana")))
+			unknownSelectorHash := [32]byte{}
+			copy(unknownSelectorHash[:], crypto.Keccak256([]byte("UNKNOWN/toSolana")))
+
+			expectedBtcGateway := multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP")
+			expectedZecGateway := multichain.Address("9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF")
+
+			btcGateway, err := client.GetGatewayBySelectorHash(registryProgram, pack.Bytes32(btcSelectorHash))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(btcGateway).To(Equal(expectedBtcGateway))
+			zecGateway, err := client.GetGatewayBySelectorHash(registryProgram, pack.Bytes32(zecSelectorHash))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(zecGateway).To(Equal(expectedZecGateway))
+			_, err = client.GetGatewayBySelectorHash(registryProgram, pack.Bytes32(unknownSelectorHash))
+			Expect(err).To(HaveOccurred())
+
+			gateways, err := client.GetGateways(registryProgram)
+			Expect(err).NotTo(HaveOccurred())
+			expectedGatewaysMap := make(map[pack.Bytes32]multichain.Address)
+			expectedGatewaysMap[btcSelectorHash] = expectedBtcGateway
+			expectedGatewaysMap[zecSelectorHash] = expectedZecGateway
+			Expect(gateways).To(Equal(expectedGatewaysMap))
 		})
 	})
 })

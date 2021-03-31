@@ -2,6 +2,7 @@ package solana
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -102,39 +103,41 @@ func (client *Client) GetGateways(registryProgram address.Address) (map[pack.Byt
 	return gateways, nil
 }
 
-func (client *Client) getGatewayRegistry(registryProgram address.Address) (gatewayRegistry, error) {
-	params, err := json.Marshal([]string{string(registryProgram)})
-	if err != nil {
-		return gatewayRegistry{}, fmt.Errorf("encoding params: %v", err)
-	}
+func (client *Client) getGatewayRegistry(registryProgram address.Address) (GatewayRegistry, error) {
+	seeds := []byte("GatewayRegistryState")
+	programDerivedAddress := ProgramDerivedAddress(pack.Bytes(seeds), registryProgram)
+
+	// Fetch account info with base64 encoding. The default base58 encoding does
+	// not support account data that is larger than 128 bytes, hence base64.
+	params := json.RawMessage(fmt.Sprintf(`["%v", {"encoding":"base64"}]`, string(programDerivedAddress)))
 	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
 	if err != nil {
-		return gatewayRegistry{}, fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
+		return GatewayRegistry{}, fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
 	}
 	if res.Result == nil {
-		return gatewayRegistry{}, fmt.Errorf("decoding result: empty")
+		return GatewayRegistry{}, fmt.Errorf("decoding result: empty")
 	}
 
 	// Deserialise the account's info into the appropriate struct.
 	info := ResponseGetAccountInfo{}
 	if err := json.Unmarshal(*res.Result, &info); err != nil {
-		return gatewayRegistry{}, fmt.Errorf("decoding result: %v", err)
+		return GatewayRegistry{}, fmt.Errorf("decoding result: %v", err)
 	}
 
 	// Decode the Base58 encoded account data into raw byte-representation. Since
 	// this holds the burn log's data.
-	data := base58.Decode(info.Value.Data)
+	data, err := base64.RawStdEncoding.DecodeString(info.Value.Data[0])
 	if err != nil {
-		return gatewayRegistry{}, fmt.Errorf("decoding result from base58: %v", err)
+		return GatewayRegistry{}, fmt.Errorf("decoding base64 value: %v", err)
 	}
 
-	registry := new(gatewayRegistry)
-	err = borsh.Deserialize(registry, data)
+	registry := GatewayRegistry{}
+	err = borsh.Deserialize(&registry, data)
 	if err != nil {
-		return gatewayRegistry{}, fmt.Errorf("deserializing gateway registry data: %v", err)
+		return GatewayRegistry{}, fmt.Errorf("deserializing gateway registry data: %v", err)
 	}
 
-	return *registry, nil
+	return registry, nil
 }
 
 // CallContract implements the multichain Contract API. In the case of Solana,
@@ -158,10 +161,7 @@ func (client *Client) CallContract(
 
 	// Make an RPC call to "getAccountInfo" to get the data associated with the
 	// account (we interpret the contract address as the account identifier).
-	params, err := json.Marshal([]string{string(burnLogAccount)})
-	if err != nil {
-		return pack.Bytes(nil), fmt.Errorf("encoding params: %v", err)
-	}
+	params := json.RawMessage(fmt.Sprintf(`["%v", {"encoding":"base58"}]`, string(burnLogAccount)))
 	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
@@ -178,7 +178,7 @@ func (client *Client) CallContract(
 
 	// Decode the Base58 encoded account data into raw byte-representation. Since
 	// this holds the burn log's data.
-	data := base58.Decode(info.Value.Data)
+	data := base58.Decode(info.Value.Data[0])
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("decoding result from base58: %v", err)
 	}
