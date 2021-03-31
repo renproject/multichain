@@ -88,7 +88,7 @@ var _ = Describe("Solana", func() {
 		})
 	})
 
-	FContext("When getting Gateways from Registry", func() {
+	Context("When getting Gateways from Registry", func() {
 		It("should deserialize successfully", func() {
 			// Solana client using default client options.
 			client := solana.NewClient(solana.DefaultClientOptions())
