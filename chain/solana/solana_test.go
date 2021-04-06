@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/near/borsh-go"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/solana"
@@ -27,7 +29,7 @@ var _ = Describe("Solana", func() {
 	logger, err := loggerConfig.Build()
 	Expect(err).ToNot(HaveOccurred())
 
-	Context("mint and burn", func() {
+	Context("When minting and burning", func() {
 		It("should succeed", func() {
 			// Base58 address of the Gateway program that is deployed to Solana.
 			program := multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP")
@@ -84,6 +86,49 @@ var _ = Describe("Solana", func() {
 			fetchedRecipient := pack.Bytes(data[9 : 9+int(recipientLen)])
 			Expect(fetchedAmount).To(Equal(burnAmount))
 			Expect([]byte(fetchedRecipient)).To(Equal([]byte(recipientRawAddr)))
+		})
+	})
+
+	Context("When getting Gateways from Registry", func() {
+		It("should deserialize successfully", func() {
+			// Solana client using default client options.
+			client := solana.NewClient(solana.DefaultClientOptions())
+
+			// Base58 address of the Gateway registry program deployed to Solana.
+			registryProgram := multichain.Address("3cvX9BpLMJsFTuEWSQBaTcd4TXgAmefqgNSJbufpyWyz")
+			seeds := []byte("GatewayRegistryState")
+			registryState := solana.ProgramDerivedAddress(pack.Bytes(seeds), registryProgram)
+
+			// Fetch account data at gateway registry's state
+			accountData, err := client.GetAccountData(registryState)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Deserialize the account data into registry state's structure.
+			registry := solana.GatewayRegistry{}
+			err = borsh.Deserialize(&registry, []byte(accountData))
+			Expect(err).NotTo(HaveOccurred())
+
+			// The registry (in the CI test environment) is pre-populated with gateway
+			// addresses for BTC/toSolana and ZEC/toSolana selectors.
+			btcSelectorHash := [32]byte{}
+			copy(btcSelectorHash[:], crypto.Keccak256([]byte("BTC/toSolana")))
+			zecSelectorHash := [32]byte{}
+			copy(zecSelectorHash[:], crypto.Keccak256([]byte("ZEC/toSolana")))
+			zero := pack.NewU256FromU8(pack.U8(0)).Bytes32()
+
+			addrEncodeDecoder := solana.NewAddressEncodeDecoder()
+			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"))
+			expectedZecGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"))
+
+			Expect(registry.Count).To(Equal(uint64(2)))
+			Expect(registry.Selectors[0]).To(Equal(btcSelectorHash))
+			Expect(registry.Selectors[1]).To(Equal(zecSelectorHash))
+			Expect(registry.Selectors[2]).To(Equal(zero))
+			Expect(len(registry.Selectors)).To(Equal(32))
+			Expect(registry.Gateways[0][:]).To(Equal([]byte(expectedBtcGateway)))
+			Expect(registry.Gateways[1][:]).To(Equal([]byte(expectedZecGateway)))
+			Expect(registry.Gateways[2]).To(Equal(zero))
+			Expect(len(registry.Gateways)).To(Equal(32))
 		})
 	})
 })

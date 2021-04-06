@@ -2,6 +2,7 @@ package solana
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -64,6 +65,35 @@ func FindProgramAddress(seeds []byte, program address.RawAddress) (address.Addre
 	return ProgramDerivedAddress(seeds, encoded), nil
 }
 
+// GetAccountInfo fetches and returns the account data.
+func (client *Client) GetAccountData(account address.Address) (pack.Bytes, error) {
+	// Fetch account info with base64 encoding. The default base58 encoding does
+	// not support account data that is larger than 128 bytes, hence base64.
+	params := json.RawMessage(fmt.Sprintf(`["%v", {"encoding":"base64"}]`, string(account)))
+	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
+	if err != nil {
+		return nil, fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
+	}
+	if res.Result == nil {
+		return nil, fmt.Errorf("decoding result: empty")
+	}
+
+	// Deserialise the account's info into the appropriate struct.
+	info := ResponseGetAccountInfo{}
+	if err := json.Unmarshal(*res.Result, &info); err != nil {
+		return nil, fmt.Errorf("decoding result: %v", err)
+	}
+
+	// Decode the Base58 encoded account data into raw byte-representation. Since
+	// this holds the burn log's data.
+	data, err := base64.RawStdEncoding.DecodeString(info.Value.Data[0])
+	if err != nil {
+		return nil, fmt.Errorf("decoding base64 value: %v", err)
+	}
+
+	return pack.Bytes(data), nil
+}
+
 // CallContract implements the multichain Contract API. In the case of Solana,
 // it is used to fetch burn logs associated with a particular burn nonce.
 func (client *Client) CallContract(
@@ -85,10 +115,7 @@ func (client *Client) CallContract(
 
 	// Make an RPC call to "getAccountInfo" to get the data associated with the
 	// account (we interpret the contract address as the account identifier).
-	params, err := json.Marshal([]string{string(burnLogAccount)})
-	if err != nil {
-		return pack.Bytes(nil), fmt.Errorf("encoding params: %v", err)
-	}
+	params := json.RawMessage(fmt.Sprintf(`["%v", {"encoding":"base58"}]`, string(burnLogAccount)))
 	res, err := SendDataWithRetry("getAccountInfo", params, client.opts.RPCURL)
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("calling rpc method \"getAccountInfo\": %v", err)
@@ -105,7 +132,7 @@ func (client *Client) CallContract(
 
 	// Decode the Base58 encoded account data into raw byte-representation. Since
 	// this holds the burn log's data.
-	data := base58.Decode(info.Value.Data)
+	data := base58.Decode(info.Value.Data[0])
 	if err != nil {
 		return pack.Bytes(nil), fmt.Errorf("decoding result from base58: %v", err)
 	}

@@ -61,6 +61,7 @@ jobs:
             git clone https://github.com/renproject/ren-solana.git
             cd ren-solana
             echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
+            echo ${{ secrets.GATEWAY_REGISTRY_PROGRAM_ID }} > ~/.config/solana/gateway-registry-program.json
             ./setup.sh
 
       - name: Sleep until the node is up
@@ -80,6 +81,23 @@ jobs:
               --keypair ~/.config/solana/id.json \
               --program-id ~/.config/solana/gateway-program.json \
               target/deploy/gateway.so
+            solana program deploy --final \
+              --keypair ~/.config/solana/id.json \
+              --program-id ~/.config/solana/gateway-registry-program.json \
+              target/deploy/gateway_registry.so
+            target/debug/gateway-registry initialize \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json
+            target/debug/gateway-registry update \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json \
+              --selector "BTC/toSolana" \
+              --gateway "9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"
+            target/debug/gateway-registry update \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json \
+              --selector "ZEC/toSolana" \
+              --gateway "9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"
             cd $GITHUB_WORKSPACE/chain/solana
             go test -timeout 100s
 
