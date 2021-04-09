@@ -1,5 +1,6 @@
 FROM golang
 
+# doing all updates and installs in a single step and removing the apt cache helps reduce the image size
 RUN apt-get update && \
         apt-get install -y \
         mesa-opencl-icd \
