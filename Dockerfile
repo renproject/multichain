@@ -1,8 +1,20 @@
 FROM golang
 
-RUN apt update -y
-RUN apt install -y mesa-opencl-icd ocl-icd-opencl-dev libssl-dev libudev-dev gcc git bzr jq pkg-config curl wget
-RUN apt upgrade -y
+RUN apt-get update && \
+        apt-get install -y \
+        mesa-opencl-icd \
+        ocl-icd-opencl-dev \
+        libssl-dev \
+        libudev-dev \
+        gcc \
+        git \
+        bzr \
+        jq \
+        pkg-config \
+        curl \
+        wget && \
+        apt-get upgrade -y && \
+        rm -rf /var/lib/apt/lists/*
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
@@ -26,6 +38,6 @@ RUN mkdir -p src/github.com/renproject
 WORKDIR $GOPATH/src/github.com/renproject
 RUN git clone https://github.com/renproject/solana-ffi
 WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
-RUN git checkout 44840392296fa690cd777a55dce19fd4844c1559
+RUN git checkout 4bd204b6017173c1425468db8566f053abb49f0b
 RUN make clean && make
 RUN go install ./...
