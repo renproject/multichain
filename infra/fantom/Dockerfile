@@ -17,7 +17,12 @@ RUN git checkout tags/v0.7.0-rc.1 -b lachesis-v7rc1
 RUN make build
 ENV PATH=$PATH:/app/go-lachesis/build
 
+# Copy run script
+WORKDIR /
+COPY run.sh /root/run.sh
+RUN chmod +x /root/run.sh
+
 # Expose the default port of the JSON-RPC server
 EXPOSE 18545
 
-ENTRYPOINT [ "lachesis", "--fakenet", "1/1", "--rpc", "--rpcvhosts", "*", "--rpcaddr", "0.0.0.0" ]
+ENTRYPOINT ["./root/run.sh"]
