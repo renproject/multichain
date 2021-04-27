@@ -137,7 +137,7 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 func encodeLegacyAddress(rawAddr address.RawAddress, params *chaincfg.Params) (address.Address, error) {
 	// Validate that the base58 address is in fact in correct format.
 	encodedAddr := base58.Encode([]byte(rawAddr))
-	if _, err := btcutil.DecodeAddress(encodedAddr, &chaincfg.RegressionNetParams); err != nil {
+	if _, err := btcutil.DecodeAddress(encodedAddr, params); err != nil {
 		return address.Address(""), fmt.Errorf("address validation error: %v", err)
 	}
 
@@ -329,7 +329,11 @@ func addressFromRawBytes(addrBytes []byte, params *chaincfg.Params) (Address, er
 			return nil, btcutil.ErrUnknownAddressType
 		}
 	default:
-		return nil, errors.New("decoded address is of unknown size")
+		addr, err := btcutil.DecodeAddress(base58.Encode(addrBytes), params)
+		if err != nil {
+			return nil, err
+		}
+		return AddressLegacy{Address: addr}, nil
 	}
 }
 
