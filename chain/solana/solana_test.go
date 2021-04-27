@@ -22,6 +22,19 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// Bytes32 is an alias for [32]byte
+type Bytes32 = [32]byte
+
+// GatewayRegistry defines the state of gateway registry, serialized and
+// deserialized by the borsh schema.
+type GatewayRegistry struct {
+	IsInitialised uint8
+	Owner         Bytes32
+	Count         uint64
+	Selectors     []Bytes32
+	Gateways      []Bytes32
+}
+
 var _ = Describe("Solana", func() {
 	// Setup logger.
 	loggerConfig := zap.NewDevelopmentConfig()
@@ -104,7 +117,7 @@ var _ = Describe("Solana", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Deserialize the account data into registry state's structure.
-			registry := solana.GatewayRegistry{}
+			registry := GatewayRegistry{}
 			err = borsh.Deserialize(&registry, []byte(accountData))
 			Expect(err).NotTo(HaveOccurred())
 

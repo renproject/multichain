@@ -21,23 +21,3 @@ type ResponseGetAccountInfo struct {
 	Context AccountContext `json:"context"`
 	Value   AccountValue   `json:"value"`
 }
-
-// BurnLog is the data stored in a burn log account, that is received in its
-// Base58 encoded format as a part of the getAccountInfo response.
-type BurnLog struct {
-	Amount    int      `json:"amount"`
-	Recipient [25]byte `json:"recipient"`
-}
-
-// Bytes32 is an alias for [32]byte
-type Bytes32 = [32]byte
-
-// GatewayRegistry defines the state of gateway registry, serialized and
-// deserialized by the borsh schema.
-type GatewayRegistry struct {
-	IsInitialised uint8
-	Owner         Bytes32
-	Count         uint64
-	Selectors     []Bytes32
-	Gateways      []Bytes32
-}
