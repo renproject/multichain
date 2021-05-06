@@ -5,6 +5,7 @@ import (
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/solana"
 	"github.com/renproject/pack"
+	"github.com/renproject/solana-ffi/cgo"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -35,6 +36,16 @@ var _ = Describe("Solana FFI", func() {
 			programDerivedAddress := solana.ProgramDerivedAddress(pack.Bytes(selectorHash), program)
 			expectedDerivedAddress := address.Address("6SPY5x3tmjLZ9SWcZFKhwpANrhYJagNNF4Sa4LAwtbCn")
 			Expect(programDerivedAddress[:]).To(Equal(expectedDerivedAddress))
+		})
+	})
+
+	Context("Associated Token Account", func() {
+		It("should correctly calculate", func() {
+			walletAddress := "fYq3qkHoVogcPnkxFWAwiJGJs29Xtg4FZ6xcAHWd51w"
+			selector := "BTC/toSolana"
+			assTokenAccount := cgo.AssociatedTokenAccount(walletAddress, selector)
+			expectedAssTokenAccount := "GxMKqib75YSD5RegZP8A7ZkSv8uBFmfNsNXzGptBdqdo"
+			Expect(assTokenAccount).To(Equal(expectedAssTokenAccount))
 		})
 	})
 })
