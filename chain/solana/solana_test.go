@@ -45,7 +45,7 @@ var _ = Describe("Solana", func() {
 	Context("When minting and burning", func() {
 		It("should succeed", func() {
 			// Base58 address of the Gateway program that is deployed to Solana.
-			program := multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP")
+			program := multichain.Address("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif")
 
 			// Construct user's keypair path (~/.config/solana/id.json).
 			userHomeDir, err := os.UserHomeDir()
@@ -108,7 +108,7 @@ var _ = Describe("Solana", func() {
 			client := solana.NewClient(solana.DefaultClientOptions())
 
 			// Base58 address of the Gateway registry program deployed to Solana.
-			registryProgram := multichain.Address("3cvX9BpLMJsFTuEWSQBaTcd4TXgAmefqgNSJbufpyWyz")
+			registryProgram := multichain.Address("DHpzwsdvAzq61PN9ZwQWg2hzwX8gYNfKAdsNKKtdKDux")
 			seeds := []byte("GatewayRegistryState")
 			registryState := solana.ProgramDerivedAddress(pack.Bytes(seeds), registryProgram)
 
@@ -130,7 +130,7 @@ var _ = Describe("Solana", func() {
 			zero := pack.NewU256FromU8(pack.U8(0)).Bytes32()
 
 			addrEncodeDecoder := solana.NewAddressEncodeDecoder()
-			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"))
+			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif"))
 			expectedZecGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"))
 
 			Expect(registry.Count).To(Equal(uint64(2)))

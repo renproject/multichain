@@ -129,7 +129,7 @@ jobs:
               --owner ~/.config/solana/id.json \
               --fee-payer ~/.config/solana/id.json \
               --selector "BTC/toSolana" \
-              --gateway "9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"
+              --gateway "FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif"
             target/debug/gateway-registry update \
               --owner ~/.config/solana/id.json \
               --fee-payer ~/.config/solana/id.json \
