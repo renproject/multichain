@@ -1,17 +1,25 @@
 FROM ubuntu:xenial
 
-RUN apt-get update --fix-missing && apt-get install --yes software-properties-common wget
-RUN wget -c https://github.com/terra-project/core/releases/download/v0.4.0-rc.2/terra_0.4.0_rc.2_Linux_x86_64.tar.gz -O - | tar xz
-RUN mkdir -p /app/bin
-RUN mv ./terrad ./terracli /app/bin
-RUN chmod +x /app/bin/terrad
-RUN chmod +x /app/bin/terracli
-RUN ln -s /app/bin/terrad /usr/bin/terrad
-RUN ln -s /app/bin/terracli /usr/bin/terracli
+RUN apt-get update --fix-missing && apt-get install --yes software-properties-common build-essential wget curl git
+
+RUN wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
+WORKDIR /app
+RUN git clone https://github.com/terra-project/core.git
+WORKDIR /app/core
+RUN git fetch --all -p
+RUN git checkout v0.4.6
+RUN make install
 
 COPY run.sh /root/run.sh
 RUN chmod +x /root/run.sh
 
 EXPOSE 26657
+
+ENV PATH=$PATH:/root/go/bin
+
+WORKDIR /
 
 ENTRYPOINT ["./root/run.sh"]
