@@ -64,6 +64,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -72,7 +74,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
@@ -198,6 +201,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -206,7 +211,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
@@ -317,6 +323,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -325,7 +333,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
@@ -435,6 +444,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -443,7 +454,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
@@ -553,6 +565,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -561,7 +575,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
@@ -671,6 +686,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
           cd .extern/filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
@@ -679,7 +696,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
           cd .extern/solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
