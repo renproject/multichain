@@ -28,9 +28,13 @@ import (
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
 
+	"github.com/btcsuite/btcutil/bech32"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
+	"github.com/renproject/multichain/chain/harmony"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
@@ -339,6 +343,33 @@ var _ = Describe("Multichain", func() {
 					return multichain.RawAddress(pack.Bytes(base58.Decode(addrScriptHash.EncodeAddress())))
 				},
 			},
+			{
+				multichain.Harmony,
+				func() multichain.AddressEncodeDecoder {
+					return harmony.NewEncoderDecoder()
+				},
+				func() multichain.Address {
+					key, _ := crypto.GenerateKey()
+					addrBytes := crypto.PubkeyToAddress(key.PublicKey)
+					conv, err := bech32.ConvertBits(addrBytes.Bytes(), 8, 5, true)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := bech32.Encode(harmony.Bech32AddressHRP, conv)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addr)
+				},
+				func() multichain.RawAddress {
+					key, _ := crypto.GenerateKey()
+					addr := crypto.PubkeyToAddress(key.PublicKey).String()
+					Expect(err).NotTo(HaveOccurred())
+					return common.HexToAddress(addr).Bytes()
+				},
+				func() multichain.Address {
+					return multichain.Address("")
+				},
+				func() multichain.RawAddress {
+					return multichain.RawAddress([]byte{})
+				},
+			},
 		}
 
 		for _, chain := range chainTable {
@@ -581,6 +612,53 @@ var _ = Describe("Multichain", func() {
 					return amount, gasLimit, gasPrice, gasCap, payload
 				},
 				multichain.Filecoin,
+			},
+			{
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+					pkEnv := os.Getenv("HARMONY_PK")
+					if pkEnv == "" {
+						panic("HARMONY_PK is undefined")
+					}
+					senderKey, err := crypto.HexToECDSA(pkEnv)
+					Expect(err).NotTo(HaveOccurred())
+					addrBytes, err := bech32.ConvertBits(crypto.PubkeyToAddress(senderKey.PublicKey).Bytes(), 8, 5, true)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := bech32.Encode(harmony.Bech32AddressHRP, addrBytes)
+					Expect(err).NotTo(HaveOccurred())
+					return id.PrivKey(*senderKey), (*id.PubKey)(&senderKey.PublicKey), multichain.Address(addr)
+				},
+				func(privKey id.PrivKey) multichain.Address {
+					addrBytes, err := bech32.ConvertBits(crypto.PubkeyToAddress(privKey.PublicKey).Bytes(), 8, 5, true)
+					Expect(err).NotTo(HaveOccurred())
+					addr, err := bech32.Encode(harmony.Bech32AddressHRP, addrBytes)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(addr)
+				},
+				"http://127.0.0.1:9598",
+				func() multichain.Address {
+					toKey, _ := crypto.GenerateKey()
+					toAddrBytes, err := bech32.ConvertBits(crypto.PubkeyToAddress(toKey.PublicKey).Bytes(), 8, 5, true)
+					Expect(err).NotTo(HaveOccurred())
+					toAddr, err := bech32.Encode(harmony.Bech32AddressHRP, toAddrBytes)
+					Expect(err).NotTo(HaveOccurred())
+					return multichain.Address(toAddr)
+				},
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+					client := harmony.NewClient(harmony.DefaultClientOptions())
+					chainId, err := client.ChainId(ctx)
+					Expect(err).NotTo(HaveOccurred())
+					txBuilder := harmony.NewTxBuilder(chainId)
+					return client, txBuilder
+				},
+				func(client multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+					gasLimit := uint64(80000000)
+					gas, err := harmony.Estimator{}.EstimateGasPrice(ctx)
+					Expect(err).NotTo(HaveOccurred())
+
+					amount := pack.NewU256FromU64(pack.NewU64(100000000))
+					return amount, pack.NewU256FromU64(pack.NewU64(gasLimit)), gas, gas, pack.Bytes(nil)
+				},
+				multichain.Harmony,
 			},
 		}
 
