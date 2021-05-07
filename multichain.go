@@ -8,39 +8,87 @@ import (
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/multichain/api/gas"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/surge"
 )
 
 type (
-	Address               = address.Address
-	AddressEncodeDecoder  = address.EncodeDecoder
-	EthereumCompatAddress = ethereum.Address
-	RawAddress            = address.RawAddress
+	// An Address is a human-readable representation of a public identity. It can
+	// be the address of an external account, contract, or script.
+	Address = address.Address
+
+	// The AddressEncodeDecoder interfaces combines encoding and decoding
+	// functionality into one interface.
+	AddressEncodeDecoder = address.EncodeDecoder
+
+	// RawAddress is an address that has been decoded into its binary form.
+	RawAddress = address.RawAddress
 )
 
 type (
-	AccountTx        = account.Tx
+	// The AccountTx interface defines the functionality that must be exposed by
+	// account-based transactions.
+	AccountTx = account.Tx
+
+	// The AccountTxBuilder interface defines the functionality required to build
+	// account-based transactions. Most chain implementations require additional
+	// information, and this should be accepted during the construction of the
+	// chain-specific transaction builder.
 	AccountTxBuilder = account.TxBuilder
-	AccountClient    = account.Client
+
+	// The AccountClient interface defines the functionality required to interact
+	// with a chain over RPC.
+	AccountClient = account.Client
 )
 
 type (
-	UTXOutpoint   = utxo.Outpoint
-	UTXOutput     = utxo.Output
-	UTXOInput     = utxo.Input
+	// A UTXOutpoint identifies a specific output produced by a transaction.
+	UTXOutpoint = utxo.Outpoint
+
+	// A UTXOutput is produced by a transaction. It includes the conditions
+	// required to spend the output (called the pubkey script, based on Bitcoin).
+	UTXOutput = utxo.Output
+
+	// A UTXOInput specifies an existing output, produced by a previous
+	// transaction, to be consumed by another transaction. It includes the script
+	// that meets the conditions specified by the consumed output (called the sig
+	// script, based on Bitcoin).
+	UTXOInput = utxo.Input
+
+	// A UTXORecipient specifies an address, and an amount, for which a
+	// transaction will produce an output. Depending on the output, the address
+	// can take on different formats (e.g. in Bitcoin, addresses can be P2PK,
+	// P2PKH, or P2SH).
 	UTXORecipient = utxo.Recipient
-	UTXOTx        = utxo.Tx
+
+	// A UTXOTx interfaces defines the functionality that must be exposed by
+	// utxo-based transactions.
+	UTXOTx = utxo.Tx
+
+	// A UTXOTxBuilder interface defines the functionality required to build
+	// account-based transactions. Most chain implementations require additional
+	// information, and this should be accepted during the construction of the
+	// chain-specific transaction builder.
 	UTXOTxBuilder = utxo.TxBuilder
-	UTXOClient    = utxo.Client
+
+	// A UTXOClient interface defines the functionality required to interact with
+	// a chain over RPC.
+	UTXOClient = utxo.Client
 )
 
 type (
+	// ContractCallData is used to specify a function and its parameters when
+	// invoking business logic on a contract.
 	ContractCallData = contract.CallData
-	ContractCaller   = contract.Caller
+
+	// The ContractCaller interface defines the functionality required to call
+	// readonly functions on a contract. Calling functions that mutate contract
+	// state should be done using the Account API.
+	ContractCaller = contract.Caller
 )
 
 type (
+	// The GasEstimator interface defines the functionality required to know the
+	// current recommended gas prices.
 	GasEstimator = gas.Estimator
 )
 
@@ -64,6 +112,13 @@ const (
 	LUNA = Asset("LUNA") // Luna
 	ONE  = Asset("ONE")  // Harmony
 	ZEC  = Asset("ZEC")  // Zcash
+
+	// These assets are defined separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	AMOCK1 = Asset("AMOCK1") // Account-based mock asset
+	AMOCK2 = Asset("AMOCK2") // Account-based mock asset
+	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
 )
 
 // OriginChain returns the chain upon which the asset originates. For example,
@@ -96,8 +151,40 @@ func (asset Asset) OriginChain() Chain {
 		return Harmony
 	case ZEC:
 		return Zcash
+
+	// These assets are handled separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	case AMOCK1:
+		return AccountMocker1
+	case AMOCK2:
+		return AccountMocker2
+	case UMOCK:
+		return UTXOMocker
+
 	default:
 		return Chain("")
+	}
+}
+
+// ChainType returns the chain-type (Account or UTXO) for the given asset
+func (asset Asset) ChainType() ChainType {
+	switch asset {
+	case BCH, BTC, DGB, DOGE, ZEC:
+		return ChainTypeUTXOBased
+	case BNB, ETH, FIL, LUNA:
+		return ChainTypeAccountBased
+
+	// These assets are handled separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	case AMOCK1, AMOCK2:
+		return ChainTypeAccountBased
+	case UMOCK:
+		return ChainTypeUTXOBased
+
+	default:
+		return ChainType("")
 	}
 }
 
@@ -138,6 +225,13 @@ const (
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
+
+	// These chains are defined separately because they are mock chains. These
+	// chains should only be used for testing.
+
+	AccountMocker1 = Chain("AccountMocker1")
+	AccountMocker2 = Chain("AccountMocker2")
+	UTXOMocker     = Chain("UTXOMocker")
 )
 
 // SizeHint returns the number of bytes required to represent the chain in
@@ -158,30 +252,93 @@ func (chain *Chain) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
 	return surge.UnmarshalString((*string)(chain), buf, rem)
 }
 
+// ChainType returns the chain type (whether account-based or utxo-based chain)
+// for the chain.
 func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum:
+	case BinanceSmartChain, Ethereum, Fantom, Filecoin, Solana, Terra:
 		return ChainTypeAccountBased
+
+	// These chains are handled separately because they are mock chains. These
+	// chains should only be used for testing.
+
+	case AccountMocker1, AccountMocker2:
+		return ChainTypeAccountBased
+	case UTXOMocker:
+		return ChainTypeUTXOBased
+
 	default:
 		return ChainType("")
 	}
 }
 
+// IsAccountBased returns true when invoked on an account-based chain, otherwise
+// returns false.
 func (chain Chain) IsAccountBased() bool {
 	return chain.ChainType() == ChainTypeAccountBased
 }
 
+// IsUTXOBased returns true when invoked on a utxo-based chain, otherwise
+// returns false.
 func (chain Chain) IsUTXOBased() bool {
 	return chain.ChainType() == ChainTypeUTXOBased
 }
 
+// NativeAsset returns the underlying native asset for a chain. For example, the
+// root asset of Bitcoin chain is BTC.
+func (chain Chain) NativeAsset() Asset {
+	switch chain {
+	case BinanceSmartChain:
+		return BNB
+	case BitcoinCash:
+		return BCH
+	case Bitcoin:
+		return BTC
+	case DigiByte:
+		return DGB
+	case Dogecoin:
+		return DOGE
+	case Ethereum:
+		return ETH
+	case Fantom:
+		return FTM
+	case Filecoin:
+		return FIL
+	case Solana:
+		return SOL
+	case Terra:
+		return LUNA
+	case Zcash:
+		return ZEC
+
+	// These chains are handled separately because they are mock chains. These
+	// chains should only be used for testing.
+
+	case AccountMocker1:
+		return AMOCK1
+	case AccountMocker2:
+		return AMOCK2
+	case UTXOMocker:
+		return UMOCK
+
+	default:
+		return Asset("")
+	}
+}
+
+// ChainType represents the type of chain (whether account-based or utxo-based)
 type ChainType string
 
 const (
+	// ChainTypeAccountBased is an identifier for all account-based chains,
+	// namely, BinanceSmartChain, Ethereum, Filecoin, and so on.
 	ChainTypeAccountBased = ChainType("Account")
-	ChainTypeUTXOBased    = ChainType("UTXO")
+
+	// ChainTypeUTXOBased is an identifier for all utxo-based chains, namely,
+	// Bitcoin, BitcoinCash, DigiByte, and so on.
+	ChainTypeUTXOBased = ChainType("UTXO")
 )
 
 // SizeHint returns the number of bytes required to represent the chain type in
@@ -202,12 +359,32 @@ func (chainType *ChainType) Unmarshal(buf []byte, rem int) ([]byte, int, error) 
 	return surge.UnmarshalString((*string)(chainType), buf, rem)
 }
 
+// Network identifies the network type for the multichain deployment
 type Network string
 
 const (
+	// NetworkLocalnet represents a local network for chains. It is usually only
+	// accessible from the device running the network, and is not accessible
+	// over the Internet.  Chain rules are often slightly different to allow for
+	// faster block times and easier access to testing funds. This is also
+	// sometimes referred to as "regnet" or "regression network". It should only
+	// be used for local testing.
 	NetworkLocalnet = Network("localnet")
-	NetworkTestnet  = Network("testnet")
-	NetworkMainnet  = Network("mainnet")
+
+	// NetworkDevnet represents the development network for chains. This network
+	// is typically a deployed version of the localnet. Chain rules are often
+	// slightly different to allow for faster block times and easier access to
+	// testing funds.
+	NetworkDevnet = Network("devnet")
+
+	// NetworkTestnet represents the test network for chains. This network is
+	// typically a publicly accessible network that has the same, or very
+	// similar, chain rules compared to mainnet. Assets on this type of network
+	// are usually not considered to have value.
+	NetworkTestnet = Network("testnet")
+
+	// NetworkMainnet represents the main network for chains.
+	NetworkMainnet = Network("mainnet")
 )
 
 // SizeHint returns the number of bytes required to represent the network in

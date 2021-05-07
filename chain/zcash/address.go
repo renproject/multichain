@@ -3,13 +3,132 @@ package zcash
 import (
 	"bytes"
 	"crypto/sha256"
-	"errors"
+	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/pack"
 	"golang.org/x/crypto/ripemd160"
 )
+
+// AddressEncodeDecoder implements the address.EncodeDecoder interface
+type AddressEncodeDecoder struct {
+	AddressEncoder
+	AddressDecoder
+}
+
+// AddressEncoder encapsulates the chain specific configurations and implements
+// the address.Encoder interface
+type AddressEncoder struct {
+	params *Params
+}
+
+// AddressDecoder encapsulates the chain specific configurations and implements
+// the address.Decoder interface
+type AddressDecoder struct {
+	params *Params
+}
+
+// NewAddressEncoder constructs a new AddressEncoder with the chain specific
+// configurations
+func NewAddressEncoder(params *Params) AddressEncoder {
+	return AddressEncoder{params: params}
+}
+
+// NewAddressDecoder constructs a new AddressDecoder with the chain specific
+// configurations
+func NewAddressDecoder(params *Params) AddressDecoder {
+	return AddressDecoder{params: params}
+}
+
+// NewAddressEncodeDecoder constructs a new AddressEncodeDecoder with the
+// chain specific configurations
+func NewAddressEncodeDecoder(params *Params) AddressEncodeDecoder {
+	return AddressEncodeDecoder{
+		AddressEncoder: NewAddressEncoder(params),
+		AddressDecoder: NewAddressDecoder(params),
+	}
+}
+
+// EncodeAddress implements the address.Encoder interface
+func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
+	var addrType uint8
+	var err error
+	var hash [20]byte
+	var prefix []byte
+
+	switch len(rawAddr) {
+	case ripemd160.Size + 5:
+		prefix = rawAddr[:1]
+		addrType, err = addressType(prefix, encoder.params)
+		copy(hash[:], rawAddr[1:21])
+	case ripemd160.Size + 6:
+		prefix = rawAddr[:2]
+		addrType, err = addressType(prefix, encoder.params)
+		copy(hash[:], rawAddr[2:22])
+	default:
+		return address.Address(""), fmt.Errorf("validating address length: expected %v or %v, got %v", ripemd160.Size+5, ripemd160.Size+6, len(rawAddr))
+	}
+
+	if err != nil {
+		return address.Address(""), fmt.Errorf("parsing address type: %v", err)
+	}
+
+	switch addrType {
+	case 0, 1: // P2PKH or P2SH
+		return address.Address(pack.String(encodeAddress(hash[:], prefix))), nil
+	default:
+		return address.Address(""), fmt.Errorf("unexpected address type: %v", addrType)
+	}
+}
+
+// DecodeAddress implements the address.Decoder interface
+func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
+	var decoded = base58.Decode(string(addr))
+	var addrType uint8
+	var err error
+	var hash [20]byte
+
+	switch len(decoded) {
+	case ripemd160.Size + 5:
+		addrType, err = addressType(decoded[:1], decoder.params)
+		copy(hash[:], decoded[1:21])
+	case ripemd160.Size + 6:
+		addrType, err = addressType(decoded[:2], decoder.params)
+		copy(hash[:], decoded[2:22])
+	default:
+		return nil, fmt.Errorf("validating address length: expected %v or %v, got %v", ripemd160.Size+5, ripemd160.Size+6, len(decoded))
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("parsing address type: %v", err)
+	}
+
+	var cksum [4]byte
+	copy(cksum[:], decoded[len(decoded)-4:])
+	if checksum(decoded[:len(decoded)-4]) != cksum {
+		return nil, fmt.Errorf("validating checksum: %v", base58.ErrChecksum)
+	}
+
+	switch addrType {
+	case 0, 1: // P2PKH or P2SH
+		return address.RawAddress(pack.Bytes(decoded)), nil
+	default:
+		return nil, fmt.Errorf("unexpected address type: %v", addrType)
+	}
+}
+
+func addressType(prefix []byte, params *Params) (uint8, error) {
+	if bytes.Equal(prefix, params.P2PKHPrefix) {
+		return 0, nil
+	}
+	if bytes.Equal(prefix, params.P2SHPrefix) {
+		return 1, nil
+	}
+	return 0, btcutil.ErrUnknownAddressType
+}
 
 // An Address represents a Zcash address.
 type Address interface {
@@ -122,35 +241,26 @@ func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }
 
-func DecodeAddress(addr string) (Address, error) {
-	var decoded = base58.Decode(addr)
-	if len(decoded) != 26 && len(decoded) != 25 {
-		return nil, base58.ErrInvalidFormat
-	}
-
-	var cksum [4]byte
-	copy(cksum[:], decoded[len(decoded)-4:])
-	if checksum(decoded[:len(decoded)-4]) != cksum {
-		return nil, base58.ErrChecksum
-	}
-
-	if len(decoded)-6 != ripemd160.Size && len(decoded)-5 != ripemd160.Size {
-		return nil, errors.New("incorrect payload len")
-	}
-
+// addressFromRawBytes decodes a string-representation of an address to an address
+// type that implements the zcash.Address interface
+func addressFromRawBytes(addrBytes []byte, params *Params) (Address, error) {
 	var addrType uint8
-	var params *Params
 	var err error
 	var hash [20]byte
-	if len(decoded) == 26 {
-		addrType, params, err = parsePrefix(decoded[:2])
-		copy(hash[:], decoded[2:22])
-	} else {
-		addrType, params, err = parsePrefix(decoded[:1])
-		copy(hash[:], decoded[1:21])
+
+	switch len(addrBytes) {
+	case ripemd160.Size + 5:
+		addrType, err = addressType(addrBytes[:1], params)
+		copy(hash[:], addrBytes[1:21])
+	case ripemd160.Size + 6:
+		addrType, err = addressType(addrBytes[:2], params)
+		copy(hash[:], addrBytes[2:22])
+	default:
+		return nil, fmt.Errorf("validating address length: expected %v or %v, got %v", ripemd160.Size+5, ripemd160.Size+6, len(addrBytes))
 	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing address type: %v", err)
 	}
 
 	switch addrType {
@@ -158,9 +268,9 @@ func DecodeAddress(addr string) (Address, error) {
 		return NewAddressPubKeyHash(hash[:], params)
 	case 1: // P2SH
 		return NewAddressScriptHashFromHash(hash[:], params)
+	default:
+		return nil, fmt.Errorf("unexpected address type: %v", addrType)
 	}
-
-	return nil, errors.New("unknown address")
 }
 
 func encodeAddress(hash, prefix []byte) string {
@@ -180,26 +290,4 @@ func checksum(input []byte) (cksum [4]byte) {
 	)
 	copy(cksum[:], h2[:4])
 	return
-}
-
-func parsePrefix(prefix []byte) (uint8, *Params, error) {
-	if bytes.Equal(prefix, MainNetParams.P2PKHPrefix) {
-		return 0, &MainNetParams, nil
-	}
-	if bytes.Equal(prefix, MainNetParams.P2SHPrefix) {
-		return 1, &MainNetParams, nil
-	}
-	if bytes.Equal(prefix, TestNet3Params.P2PKHPrefix) {
-		return 0, &TestNet3Params, nil
-	}
-	if bytes.Equal(prefix, TestNet3Params.P2SHPrefix) {
-		return 1, &TestNet3Params, nil
-	}
-	if bytes.Equal(prefix, RegressionNetParams.P2PKHPrefix) {
-		return 0, &RegressionNetParams, nil
-	}
-	if bytes.Equal(prefix, RegressionNetParams.P2SHPrefix) {
-		return 1, &RegressionNetParams, nil
-	}
-	return 0, nil, btcutil.ErrUnknownAddressType
 }

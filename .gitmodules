@@ -1,0 +1,6 @@
+[submodule "chain/filecoin/filecoin-ffi"]
+	path = chain/filecoin/filecoin-ffi
+	url = https://github.com/filecoin-project/filecoin-ffi
+[submodule "chain/solana/solana-ffi"]
+	path = chain/solana/solana-ffi
+	url = https://github.com/renproject/solana-ffi

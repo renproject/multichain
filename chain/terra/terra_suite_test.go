@@ -1,4 +1,4 @@
-package ethereum_test
+package terra_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestEthereum(t *testing.T) {
+func TestTerra(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Ethereum Suite")
+	RunSpecs(t, "Terra Suite")
 }

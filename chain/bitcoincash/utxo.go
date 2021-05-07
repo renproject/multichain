@@ -26,16 +26,25 @@ const SighashMask = txscript.SigHashType(0x1F)
 // Version of Bitcoin Cash transactions supported by the multichain.
 const Version int32 = 1
 
+// ClientOptions are used to parameterise the behaviour of the Client.
 type ClientOptions = bitcoin.ClientOptions
 
+// DefaultClientOptions returns ClientOptions with the default settings. These
+// settings are valid for use with the default local deployment of the
+// multichain. In production, the host, user, and password should be changed.
 func DefaultClientOptions() ClientOptions {
 	return bitcoin.DefaultClientOptions().WithHost("http://127.0.0.1:19443")
 }
 
+// A Client interacts with an instance of the Bitcoin network using the RPC
+// interface exposed by a Bitcoin node.
 type Client = bitcoin.Client
 
+// NewClient returns a new Client.
 var NewClient = bitcoin.NewClient
 
+// The TxBuilder is an implementation of a UTXO-compatible transaction builder
+// for Bitcoin.
 type TxBuilder struct {
 	params *chaincfg.Params
 }
@@ -64,6 +73,9 @@ func NewTxBuilder(params *chaincfg.Params) utxo.TxBuilder {
 func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipient) (utxo.Tx, error) {
 	msgTx := wire.NewMsgTx(Version)
 
+	// Address encoder-decoder
+	addrEncodeDecoder := NewAddressEncodeDecoder(txBuilder.params)
+
 	// Inputs
 	for _, input := range inputs {
 		hash := chainhash.Hash{}
@@ -74,7 +86,11 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 
 	// Outputs
 	for _, recipient := range recipients {
-		addr, err := DecodeAddress(string(recipient.To), txBuilder.params)
+		addrBytes, err := addrEncodeDecoder.DecodeAddress(recipient.To)
+		if err != nil {
+			return &Tx{}, err
+		}
+		addr, err := addressFromRawBytes(addrBytes, txBuilder.params)
 		if err != nil {
 			return &Tx{}, err
 		}
@@ -103,15 +119,21 @@ type Tx struct {
 	signed bool
 }
 
+// Hash returns the transaction hash of the given underlying transaction. It
+// implements the multichain.UTXOTx interface
 func (tx *Tx) Hash() (pack.Bytes, error) {
 	txhash := tx.msgTx.TxHash()
 	return pack.NewBytes(txhash[:]), nil
 }
 
+// Inputs returns the UTXO inputs in the underlying transaction. It implements
+// the multichain.UTXOTx interface
 func (tx *Tx) Inputs() ([]utxo.Input, error) {
 	return tx.inputs, nil
 }
 
+// Outputs returns the UTXO outputs in the underlying transaction. It implements
+// the multichain.UTXOTx interface
 func (tx *Tx) Outputs() ([]utxo.Output, error) {
 	hash, err := tx.Hash()
 	if err != nil {
@@ -132,6 +154,8 @@ func (tx *Tx) Outputs() ([]utxo.Output, error) {
 	return outputs, nil
 }
 
+// Sighashes returns the digests that must be signed before the transaction
+// can be submitted by the client.
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 
@@ -157,6 +181,8 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	return sighashes, nil
 }
 
+// Sign consumes a list of signatures, and adds them to the list of UTXOs in
+// the underlying transactions. It implements the multichain.UTXOTx interface
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("already signed")
@@ -190,6 +216,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	return nil
 }
 
+// Serialize serializes the UTXO transaction to bytes
 func (tx *Tx) Serialize() (pack.Bytes, error) {
 	buf := new(bytes.Buffer)
 	if err := tx.msgTx.Serialize(buf); err != nil {

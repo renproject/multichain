@@ -7,4 +7,5 @@ ganache-cli                     \
   -k muirGlacier                \
   -i 420                        \
   -m "$MNEMONIC"                \
+  -p 8575                       \
   -u $ADDRESS

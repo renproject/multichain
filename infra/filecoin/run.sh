@@ -1,5 +1,9 @@
 #!/bin/bash
 
+cd /app/
+
+export LOTUS_SKIP_GENESIS_CHECK=_yes_
+
 ./lotus daemon --lotus-make-genesis=dev.gen --genesis-template=localnet.json --bootstrap=false &
 
 PID=$!
@@ -9,6 +13,10 @@ sleep 10
 ./lotus wallet import ~/.genesis-sectors/pre-seal-t01000.key
 
 ./lotus wallet import /root/miner.key
+
+./lotus wallet import /root/user.key
+
+./lotus auth create-token --perm admin
 
 kill $PID
 
@@ -41,19 +49,19 @@ Timeout = "30s"
 #  HeadNotifs = false
 #' > ~/.lotus/config.toml
 
-./lotus daemon --lotus-make-genesis=/root/dev.gen --genesis-template=/root/localnet.json --bootstrap=false &
+./lotus daemon --lotus-make-genesis=/root/dev.gen --genesis-template=/app/localnet.json --bootstrap=false &
 
 sleep 5
 
-./lotus-storage-miner init --genesis-miner --actor=t01000 --sector-size=2KiB --pre-sealed-sectors=~/.genesis-sectors --pre-sealed-metadata=~/.genesis-sectors/pre-seal-t01000.json --nosync
+./lotus-miner init --genesis-miner --actor=t01000 --sector-size=2KiB --pre-sealed-sectors=~/.genesis-sectors --pre-sealed-metadata=~/.genesis-sectors/pre-seal-t01000.json --nosync
 
-./lotus-storage-miner run --nosync &
+./lotus-miner run --nosync &
 
 sleep 15
 
 MAIN_WALLET="$(jq -r '.t01000.Owner' ~/.genesis-sectors/pre-seal-t01000.json)"
 
-./lotus send --from $MAIN_WALLET t17lz42vyixtlfs4a3j76cw53w32qb57w7g4g6qua 1000000
+./lotus send --from $MAIN_WALLET t1ej2tountzqwnu6uswhqdzvw6yy5xvcig6rxl2qa 1000000
 
 while :
 do

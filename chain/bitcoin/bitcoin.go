@@ -88,6 +88,10 @@ type Client interface {
 	UnspentOutputs(ctx context.Context, minConf, maxConf int64, address address.Address) ([]utxo.Output, error)
 	// Confirmations of a transaction in the Bitcoin network.
 	Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error)
+	// EstimateSmartFee
+	EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error)
+	// EstimateFeeLegacy
+	EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error)
 }
 
 type client struct {
@@ -105,13 +109,26 @@ func NewClient(opts ClientOptions) Client {
 	}
 }
 
+// LatestBlock returns the height of the longest blockchain.
+func (client *client) LatestBlock(ctx context.Context) (pack.U64, error) {
+	var resp int64
+	if err := client.send(ctx, &resp, "getblockcount"); err != nil {
+		return pack.NewU64(0), fmt.Errorf("get block count: %v", err)
+	}
+	if resp < 0 {
+		return pack.NewU64(0), fmt.Errorf("unexpected block count, expected > 0, got: %v", resp)
+	}
+
+	return pack.NewU64(uint64(resp)), nil
+}
+
 // Output associated with an outpoint, and its number of confirmations.
 func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
 	resp := btcjson.TxRawResult{}
 	hash := chainhash.Hash{}
 	copy(hash[:], outpoint.Hash)
 	if err := client.send(ctx, &resp, "getrawtransaction", hash.String(), 1); err != nil {
-		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"getrawtransaction\": %v", err)
 	}
 	if outpoint.Index.Uint32() >= uint32(len(resp.Vout)) {
 		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad index: %v is out of range", outpoint.Index)
@@ -134,6 +151,40 @@ func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.
 		PubKeyScript: pack.NewBytes(pubKeyScript),
 	}
 	return output, pack.NewU64(resp.Confirmations), nil
+}
+
+// UnspentOutput returns the unspent transaction output identified by the
+// given outpoint. It also returns the number of confirmations for the
+// output. If the output cannot be found before the context is done, the
+// output is invalid, or the output has been spent, then an error should be
+// returned.
+func (client *client) UnspentOutput(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
+	resp := btcjson.GetTxOutResult{}
+	hash := chainhash.Hash{}
+	copy(hash[:], outpoint.Hash)
+	if err := client.send(ctx, &resp, "gettxout", hash.String(), outpoint.Index.Uint32()); err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+	}
+	amount, err := btcutil.NewAmount(resp.Value)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", err)
+	}
+	if amount < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", amount)
+	}
+	if resp.Confirmations < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad confirmations: %v", resp.Confirmations)
+	}
+	pubKeyScript, err := hex.DecodeString(resp.ScriptPubKey.Hex)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad pubkey script: %v", err)
+	}
+	output := utxo.Output{
+		Outpoint:     outpoint,
+		Value:        pack.NewU256FromU64(pack.NewU64(uint64(amount))),
+		PubKeyScript: pack.NewBytes(pubKeyScript),
+	}
+	return output, pack.NewU64(uint64(resp.Confirmations)), nil
 }
 
 // SubmitTx to the Bitcoin network.
@@ -203,6 +254,41 @@ func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int
 		confirmations = 0
 	}
 	return confirmations, nil
+}
+
+// EstimateSmartFee fetches the estimated bitcoin network fees to be paid (in
+// BTC per kilobyte) needed for a transaction to be confirmed within `numBlocks`
+// blocks. An error will be returned if the bitcoin node hasn't observed enough
+// blocks to make an estimate for the provided target `numBlocks`.
+func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
+	resp := btcjson.EstimateSmartFeeResult{}
+
+	if err := client.send(ctx, &resp, "estimatesmartfee", numBlocks); err != nil {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", err)
+	}
+
+	if resp.Errors != nil && len(resp.Errors) > 0 {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", resp.Errors[0])
+	}
+
+	return *resp.FeeRate, nil
+}
+
+func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error) {
+	var resp float64
+
+	switch numBlocks {
+	case int64(0):
+		if err := client.send(ctx, &resp, "estimatefee"); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	default:
+		if err := client.send(ctx, &resp, "estimatefee", numBlocks); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	}
+
+	return resp, nil
 }
 
 func (client *client) send(ctx context.Context, resp interface{}, method string, params ...interface{}) error {

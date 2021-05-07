@@ -1,6 +1,32 @@
 version: "2"
 services:
   #
+  # Acala
+  #
+  acala:
+    build:
+      context: ./acala
+    ports:
+      - "0.0.0.0:9933:9933"
+      - "0.0.0.0:9944:9944"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ACALA_ADDRESS}"
+
+  #
+  # Binance Smart Chain
+  #
+  binance:
+    build:
+      context: ./binance
+    ports:
+      - "0.0.0.0:8575:8575"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BINANCE_MNEMONIC}"
+      - "${BINANCE_ADDRESS}"
+
+  #
   # Bitcoin
   #
   bitcoin:
@@ -11,6 +37,7 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${BITCOIN_ADDRESS}"
+      - "${BITCOIN_PK}"
 
   #
   # Bitcoin Cash
@@ -83,10 +110,6 @@ services:
       context: ./fantom
     ports:
       - "0.0.0.0:18545:18545"
-    entrypoint:
-      - "./root/run.sh"
-      - "${FANTOM_MNEMONIC}"
-      - "${FANTOM_ADDRESS}"
 
   #
   # Filecoin
@@ -98,19 +121,6 @@ services:
       - "0.0.0.0:1234:1234"
     entrypoint:
       - "/root/run.sh"
-
-  #
-  # Solana
-  #
-  solana:
-    build:
-      context: ./solana
-    ports:
-      - "0.0.0.0:8899:8899"
-      - "0.0.0.0:8900:8900"
-      - "0.0.0.0:9900:9900"
-    entrypoint:
-      - "./root/run.sh"
 
   #
   # Zcash

@@ -1,0 +1,551 @@
+name: go
+on: [push]
+jobs:
+  test-solana:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Setup environment for Solana tests
+        run: |
+            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
+            cd $GITHUB_WORKSPACE
+            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+            git clone https://github.com/renproject/ren-solana.git
+            cd ren-solana
+            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
+            echo ${{ secrets.GATEWAY_REGISTRY_PROGRAM_ID }} > ~/.config/solana/gateway-registry-program.json
+            ./setup.sh
+
+      - name: Sleep until the node is up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests for Solana
+        run: |
+            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+            cd $GITHUB_WORKSPACE/ren-solana
+            solana airdrop --url http://0.0.0.0:8899 10
+            solana program deploy --final \
+              --keypair ~/.config/solana/id.json \
+              --program-id ~/.config/solana/gateway-program.json \
+              target/deploy/gateway.so
+            solana program deploy --final \
+              --keypair ~/.config/solana/id.json \
+              --program-id ~/.config/solana/gateway-registry-program.json \
+              target/deploy/gateway_registry.so
+            target/debug/gateway-registry initialize \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json
+            target/debug/gateway-registry update \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json \
+              --selector "BTC/toSolana" \
+              --gateway "9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"
+            target/debug/gateway-registry update \
+              --owner ~/.config/solana/id.json \
+              --fee-payer ~/.config/solana/id.json \
+              --selector "ZEC/toSolana" \
+              --gateway "9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"
+            cd $GITHUB_WORKSPACE/chain/solana
+            go test -timeout 100s
+
+  test-filecoin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Run linting
+        run: |
+            cd $GITHUB_WORKSPACE
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go get -u golang.org/x/lint/golint
+            golint $(go list ./... | grep -v filecoin-ffi)
+
+      - name: Run multichain infrastructure
+        run: |
+            cd $GITHUB_WORKSPACE/infra
+            source .env
+            docker run -d -p 1234:1234 -h 0.0.0.0 \
+              --name infra_filecoin_1 rohitnarurkar/multichain_filecoin:latest
+
+      - name: Sleep until the nodes are up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '10m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests and report test coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source ./infra/.env
+            cd $GITHUB_WORKSPACE
+            go test \
+              -fil=true \
+              -timeout 1500s
+
+  test-zcash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Run linting
+        run: |
+            cd $GITHUB_WORKSPACE
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go get -u golang.org/x/lint/golint
+            golint $(go list ./... | grep -v filecoin-ffi)
+
+      - name: Run multichain infrastructure
+        run: |
+            cd $GITHUB_WORKSPACE/infra
+            source .env
+            docker-compose up -d --build zcash
+
+      - name: Sleep until the nodes are up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests and report test coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source ./infra/.env
+            cd $GITHUB_WORKSPACE
+            go test \
+              -zec=true \
+              -timeout 1500s
+
+  test-terra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Run linting
+        run: |
+            cd $GITHUB_WORKSPACE
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go get -u golang.org/x/lint/golint
+            golint $(go list ./... | grep -v filecoin-ffi)
+
+      - name: Run multichain infrastructure
+        run: |
+            cd $GITHUB_WORKSPACE/infra
+            source .env
+            docker-compose up -d --build terra
+
+      - name: Sleep until the nodes are up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests and report test coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source ./infra/.env
+            cd $GITHUB_WORKSPACE
+            go test \
+              -luna=true \
+              -timeout 1500s
+
+  test-dogecoin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Run linting
+        run: |
+            cd $GITHUB_WORKSPACE
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go get -u golang.org/x/lint/golint
+            golint $(go list ./... | grep -v filecoin-ffi)
+
+      - name: Run multichain infrastructure
+        run: |
+            cd $GITHUB_WORKSPACE/infra
+            source .env
+            docker-compose up -d --build dogecoin
+
+      - name: Sleep until the nodes are up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests and report test coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source ./infra/.env
+            cd $GITHUB_WORKSPACE
+            go test \
+              -doge=true \
+              -timeout 1500s
+
+  test-btc-bch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+        with:
+          submodules: recursive
+
+      - name: Caching modules
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
+      - name: Install dependency packages
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+      - name: Get dependencies
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            go get -u github.com/onsi/ginkgo/ginkgo
+            go get -u github.com/onsi/gomega/...
+            go get -u golang.org/x/lint/golint
+            go get -u github.com/loongy/covermerge
+            go get -u github.com/mattn/goveralls
+            go get -u github.com/xlab/c-for-go
+
+      - name: Run vetting
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source $HOME/.cargo/env
+            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
+            make
+            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
+            make
+            go vet ./...
+
+      - name: Run linting
+        run: |
+            cd $GITHUB_WORKSPACE
+            export PATH=$PATH:$(go env GOPATH)/bin
+            go get -u golang.org/x/lint/golint
+            golint $(go list ./... | grep -v filecoin-ffi)
+
+      - name: Run multichain infrastructure
+        run: |
+            cd $GITHUB_WORKSPACE/infra
+            source .env
+            docker-compose up -d --build \
+              bitcoin \
+              bitcoincash
+
+      - name: Sleep until the nodes are up
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
+
+      - name: Check on docker containers
+        run: docker ps -a
+
+      - name: Run tests and report test coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            source ./infra/.env
+            cd $GITHUB_WORKSPACE
+            go test \
+              -btc=true \
+              -bch=true \
+              -timeout 1500s
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: renbot/multichain:latest
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}

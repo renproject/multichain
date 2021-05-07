@@ -81,15 +81,18 @@ type Tx struct {
 	signed bool
 }
 
+// Hash returns the transaction hash of the given underlying transaction.
 func (tx *Tx) Hash() (pack.Bytes, error) {
 	txhash := tx.msgTx.TxHash()
 	return pack.NewBytes(txhash[:]), nil
 }
 
+// Inputs returns the UTXO inputs in the underlying transaction.
 func (tx *Tx) Inputs() ([]utxo.Input, error) {
 	return tx.inputs, nil
 }
 
+// Outputs returns the UTXO outputs in the underlying transaction.
 func (tx *Tx) Outputs() ([]utxo.Output, error) {
 	hash, err := tx.Hash()
 	if err != nil {
@@ -111,7 +114,7 @@ func (tx *Tx) Outputs() ([]utxo.Output, error) {
 }
 
 // Sighashes returns the digests that must be signed before the transaction
-// can be submitted by the client. All transactions assume that the f
+// can be submitted by the client.
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 
@@ -150,6 +153,8 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	return sighashes, nil
 }
 
+// Sign consumes a list of signatures, and adds them to the list of UTXOs in
+// the underlying transactions.
 func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	if tx.signed {
 		return fmt.Errorf("already signed")
@@ -201,6 +206,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	return nil
 }
 
+// Serialize serializes the UTXO transaction to bytes
 func (tx *Tx) Serialize() (pack.Bytes, error) {
 	buf := new(bytes.Buffer)
 	if err := tx.msgTx.Serialize(buf); err != nil {

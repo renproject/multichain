@@ -1,6 +1,7 @@
 package digibyte
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -14,11 +15,30 @@ func init() {
 	}
 	if err := chaincfg.Register(&TestnetParams); err != nil {
 		panic(err)
-	}	
+	}
 	if err := chaincfg.Register(&RegressionNetParams); err != nil {
 		panic(err)
 	}
 }
+
+var (
+	bigOne       = big.NewInt(1)
+	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 224), bigOne)
+)
+
+const (
+	// DeploymentTestDummy ...
+	DeploymentTestDummy = iota
+
+	// DeploymentCSV ...
+	DeploymentCSV
+
+	// DeploymentSegwit ...
+	DeploymentSegwit
+
+	// DefinedDeployments ...
+	DefinedDeployments
+)
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for
 // the main network, regression test network, and test network (version 3).
@@ -96,15 +116,15 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 	return hash
 }
 
-
+// MainNetParams returns the chain configuration for mainnet
 var MainNetParams = chaincfg.Params{
 	Name:        "mainnet",
 	Net:         0xdab6c3fa,
 	DefaultPort: "12024",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
@@ -112,7 +132,7 @@ var MainNetParams = chaincfg.Params{
 
 	// Address encoding magics
 	PubKeyHashAddrID:        0x1e, // starts with 1
-	ScriptHashAddrID:        0x32, // starts with 3
+	ScriptHashAddrID:        0x3f, // starts with 3
 	PrivateKeyID:            0x80, // starts with 5 (uncompressed) or K (compressed)
 	WitnessPubKeyHashAddrID: 0x06, // starts with p2
 	WitnessScriptHashAddrID: 0x0A, // starts with 7Xh
@@ -126,19 +146,20 @@ var MainNetParams = chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
+// TestnetParams returns the chain configuration for testnet
 var TestnetParams = chaincfg.Params{
-	Name:        "testnet",
+	Name: "testnet",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
 	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
 	// register the regtest network.
 	// DigiByte Core Developers will change this soon.
-	Net:         0xddbdc8fd, 
+	Net:         0xddbdc8fd,
 	DefaultPort: "12026",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
@@ -160,19 +181,20 @@ var TestnetParams = chaincfg.Params{
 	HDCoinType: 0x14,
 }
 
+// RegressionNetParams returns the chain configuration for regression net
 var RegressionNetParams = chaincfg.Params{
-	Name:        "regtest",
+	Name: "regtest",
 
 	// DigiByte has 0xdab5bffa as RegTest (same as Bitcoin's RegTest).
 	// Setting it to an arbitrary value (leet_hex(digibyte)), so that we can
 	// register the regtest network.
 	// DigiByte Core Developers will change this soon.
-	Net:         0xd191841e, 
+	Net:         0xd191841e,
 	DefaultPort: "18444",
 
 	// Chain parameters
-	GenesisBlock:             &genesisBlock,
-	GenesisHash:              &genesisHash,
+	GenesisBlock: &genesisBlock,
+	GenesisHash:  &genesisHash,
 
 	// Human-readable part for Bech32 encoded segwit addresses, as defined in
 	// BIP 173.
