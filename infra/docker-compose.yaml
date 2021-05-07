@@ -50,7 +50,17 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${BITCOINCASH_ADDRESS}"
-
+  #
+  # Decred
+  #
+  decred:
+    build:
+      context: ./decred
+    ports:
+      - "0.0.0.0:19555:19555"
+    entrypoint:
+      - "./root/run.sh"
+      
   #
   # DigiByte
   #
