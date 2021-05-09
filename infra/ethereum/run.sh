@@ -4,6 +4,7 @@ ADDRESS=$2
 
 ganache-cli      \
   -h 0.0.0.0     \
+  -a 105	 \
   -k muirGlacier \
   -l 14969745    \
   -i 420         \
