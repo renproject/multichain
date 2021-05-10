@@ -131,3 +131,14 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+
+  ##
+  ## Polygon
+  ##
+  polygon:
+    build:
+      context: ./polygon
+    ports:
+      - "0.0.0.0:28545:8545"
+    entrypoint:
+      - "./root/run.sh"
