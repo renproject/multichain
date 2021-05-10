@@ -52,6 +52,18 @@ services:
       - "${BITCOINCASH_ADDRESS}"
 
   #
+  # Bitgesell
+  #
+  bitgesell:
+    build:
+      context: ./bitgesell
+    ports:
+      - "0.0.0.0:18475:18475"
+    entrypoint:
+      - "./root/run.sh"
+      - "${BGL_ADDRESS}"
+
+  #
   # DigiByte
   #
   digibyte:
