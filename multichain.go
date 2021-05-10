@@ -103,6 +103,7 @@ const (
 	BNB  = Asset("BNB")  // Binance Coin
 	BTC  = Asset("BTC")  // Bitcoin
 	CELO = Asset("CELO") // Celo
+	DASH = Asset("DASH") // Dash Digital Cash
 	DGB  = Asset("DGB")  // DigiByte
 	DOGE = Asset("DOGE") // Dogecoin
 	ETH  = Asset("ETH")  // Ether
@@ -213,6 +214,7 @@ const (
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
 	Celo              = Chain("Celo")
+	Dash              = Chain("Dash")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
