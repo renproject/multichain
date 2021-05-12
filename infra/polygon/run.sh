@@ -8,7 +8,8 @@ bor --datadir $DATA_DIR init $NODE_DIR/genesis.json
 cp $NODE_DIR/nodekey $DATA_DIR/bor/
 cp $NODE_DIR/static-nodes.json $DATA_DIR/bor/
 
-bor --datadir $DATA_DIR \
+bor --nousb \
+  --datadir $DATA_DIR \
   --port 30303 \
   --bor.withoutheimdall \
   --http --http.addr '0.0.0.0' \
