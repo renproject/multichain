@@ -99,18 +99,18 @@ type Asset string
 // from an existing chain, you must add a human-readable string to this set of
 // enumerated values. Assets must be listed in alphabetical order.
 const (
-	BCH  = Asset("BCH")  // Bitcoin Cash
-	BNB  = Asset("BNB")  // Binance Coin
-	BTC  = Asset("BTC")  // Bitcoin
-	CELO = Asset("CELO") // Celo
-	DGB  = Asset("DGB")  // DigiByte
-	DOGE = Asset("DOGE") // Dogecoin
-	ETH  = Asset("ETH")  // Ether
-	FIL  = Asset("FIL")  // Filecoin
-	FTM  = Asset("FTM")  // Fantom
-	SOL  = Asset("SOL")  // Solana
-	LUNA = Asset("LUNA") // Luna
-	ZEC  = Asset("ZEC")  // Zcash
+	BCH   = Asset("BCH")   // Bitcoin Cash
+	BNB   = Asset("BNB")   // Binance Coin
+	BTC   = Asset("BTC")   // Bitcoin
+	DGB   = Asset("DGB")   // DigiByte
+	DOGE  = Asset("DOGE")  // Dogecoin
+	ETH   = Asset("ETH")   // Ether
+	FIL   = Asset("FIL")   // Filecoin
+	FTM   = Asset("FTM")   // Fantom
+	LUNA  = Asset("LUNA")  // Luna
+	MATIC = Asset("MATIC") // Matic PoS (Polygon)
+	SOL   = Asset("SOL")   // Solana
+	ZEC   = Asset("ZEC")   // Zcash
 
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -130,8 +130,6 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
-	case CELO:
-		return Celo
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -144,6 +142,8 @@ func (asset Asset) OriginChain() Chain {
 		return Fantom
 	case LUNA:
 		return Terra
+	case MATIC:
+		return Polygon
 	case SOL:
 		return Solana
 	case ZEC:
@@ -169,7 +169,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH, FIL, LUNA:
+	case BNB, ETH, FIL, LUNA, MATIC:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -212,12 +212,12 @@ const (
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
-	Celo              = Chain("Celo")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Polygon           = Chain("Polygon")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -254,7 +254,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Fantom, Filecoin, Solana, Terra:
+	case BinanceSmartChain, Ethereum, Fantom, Filecoin, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -302,6 +302,8 @@ func (chain Chain) NativeAsset() Asset {
 		return FTM
 	case Filecoin:
 		return FIL
+	case Polygon:
+		return MATIC
 	case Solana:
 		return SOL
 	case Terra:

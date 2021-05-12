@@ -92,6 +92,10 @@ var _ = Describe("Multichain", func() {
 					multichain.FIL,
 				},
 				{
+					multichain.Polygon,
+					multichain.MATIC,
+				},
+				{
 					multichain.Solana,
 					multichain.SOL,
 				},
