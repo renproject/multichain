@@ -3,7 +3,6 @@ package solana_test
 import (
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"os"
 	"time"
 
@@ -52,21 +51,9 @@ var _ = Describe("Solana", func() {
 			Expect(err).NotTo(HaveOccurred())
 			keypairPath := userHomeDir + "/.config/solana/id.json"
 
-			// RenVM secret and corresponding authority (20-byte Ethereum address).
+			// RenVM secret and the selector for this gateway.
 			renVmSecret := "0000000000000000000000000000000000000000000000000000000000000001"
-			renVmAuthority := "7E5F4552091A69125d5DfCb7b8C2659029395Bdf"
-			renVmAuthorityBytes, err := hex.DecodeString(renVmAuthority)
-			Expect(err).NotTo(HaveOccurred())
-
-			// Initialize Gateway for the RenBTC token.
 			selector := "BTC/toSolana"
-			initializeSig := cgo.GatewayInitialize(keypairPath, solana.DefaultClientRPCURL, renVmAuthorityBytes, selector)
-			logger.Debug("Initialize", zap.String("tx signature", string(initializeSig)))
-
-			// Initialize a new token account.
-			time.Sleep(10 * time.Second)
-			initializeAccountSig := cgo.GatewayInitializeAccount(keypairPath, solana.DefaultClientRPCURL, selector)
-			logger.Debug("InitializeAccount", zap.String("tx signature", string(initializeAccountSig)))
 
 			// Mint some tokens.
 			time.Sleep(10 * time.Second)
