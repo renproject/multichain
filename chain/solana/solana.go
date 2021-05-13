@@ -65,7 +65,7 @@ func FindProgramAddress(seeds []byte, program address.RawAddress) (address.Addre
 	return ProgramDerivedAddress(seeds, encoded), nil
 }
 
-// GetAccountInfo fetches and returns the account data.
+// GetAccountData fetches and returns the account data.
 func (client *Client) GetAccountData(account address.Address) (pack.Bytes, error) {
 	// Fetch account info with base64 encoding. The default base58 encoding does
 	// not support account data that is larger than 128 bytes, hence base64.

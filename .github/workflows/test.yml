@@ -92,14 +92,11 @@ jobs:
 
       - name: Setup environment for Solana tests
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
+            sh -c "$(curl -sSfL https://release.solana.com/v1.6.8/install)"
             cd $GITHUB_WORKSPACE
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            git clone https://github.com/renproject/ren-solana.git
-            cd ren-solana
-            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
-            echo ${{ secrets.GATEWAY_REGISTRY_PROGRAM_ID }} > ~/.config/solana/gateway-registry-program.json
-            ./setup.sh
+            echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
+            docker run -d -h 0.0.0.0 -p 8899:8899 -p 8900:8900 renbot/ren-solana:latest
 
       - name: Sleep until the node is up
         uses: jakejarvis/wait-action@master
@@ -112,29 +109,6 @@ jobs:
       - name: Run tests for Solana
         run: |
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            cd $GITHUB_WORKSPACE/ren-solana
-            solana airdrop --url http://0.0.0.0:8899 10
-            solana program deploy --final \
-              --keypair ~/.config/solana/id.json \
-              --program-id ~/.config/solana/gateway-program.json \
-              target/deploy/gateway.so
-            solana program deploy --final \
-              --keypair ~/.config/solana/id.json \
-              --program-id ~/.config/solana/gateway-registry-program.json \
-              target/deploy/gateway_registry.so
-            target/debug/gateway-registry initialize \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json
-            target/debug/gateway-registry update \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json \
-              --selector "BTC/toSolana" \
-              --gateway "FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif"
-            target/debug/gateway-registry update \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json \
-              --selector "ZEC/toSolana" \
-              --gateway "9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"
             cd $GITHUB_WORKSPACE/chain/solana
             go test -timeout 100s
 

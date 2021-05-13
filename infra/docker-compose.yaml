@@ -142,3 +142,12 @@ services:
       - "0.0.0.0:28545:8545"
     entrypoint:
       - "./root/run.sh"
+
+  ##
+  ## Solana
+  ##
+  solana:
+    image: renbot/ren-solana:latest
+    ports:
+      - "0.0.0.0:8899:8899"
+      - "0.0.0.0:8900:8900"
