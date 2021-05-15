@@ -107,6 +107,7 @@ const (
 	ETH   = Asset("ETH")   // Ether
 	FIL   = Asset("FIL")   // Filecoin
 	FTM   = Asset("FTM")   // Fantom
+	GLMR  = Asset("GLMR")  // Glimmer
 	LUNA  = Asset("LUNA")  // Luna
 	MATIC = Asset("MATIC") // Matic PoS (Polygon)
 	SOL   = Asset("SOL")   // Solana
@@ -138,6 +139,8 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case FIL:
 		return Filecoin
+	case GLMR:
+		return Moonbeam
 	case FTM:
 		return Fantom
 	case LUNA:
@@ -169,7 +172,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case BNB, ETH, FIL, LUNA, MATIC:
+	case BNB, ETH, FIL, GLMR, LUNA, MATIC:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -217,6 +220,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Moonbeam          = Chain("Moonbeam")
 	Polygon           = Chain("Polygon")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
@@ -254,7 +258,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case BinanceSmartChain, Ethereum, Fantom, Filecoin, Polygon, Solana, Terra:
+	case BinanceSmartChain, Ethereum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -302,6 +306,8 @@ func (chain Chain) NativeAsset() Asset {
 		return FTM
 	case Filecoin:
 		return FIL
+	case Moonbeam:
+		return GLMR
 	case Polygon:
 		return MATIC
 	case Solana:
