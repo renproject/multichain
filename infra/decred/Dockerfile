@@ -15,10 +15,14 @@ Run tar xvzf ${RELEASE_FILE}
 Run mkdir /decred 
 RUN mv ${RELEASE_NAME}/dcrd /decred
 RUN mv ${RELEASE_NAME}/dcrwallet /decred
+RUN mv ${RELEASE_NAME}/dcrctl /decred
 RUN chmod +x /decred/dcrd
 RUN chmod +x /decred/dcrwallet
+RUN chmod +x /decred/dcrctl
 
 COPY dcrd.conf /root/.dcrd/
+COPY rpc.key /root/.dcrd/
+COPY rpc.cert /root/.dcrd/
 COPY run.sh /root/
 RUN chmod +x /root/run.sh
 
