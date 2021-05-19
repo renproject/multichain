@@ -34,10 +34,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -64,21 +60,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
@@ -145,10 +141,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -175,21 +167,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
@@ -267,10 +259,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -297,21 +285,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
@@ -388,10 +376,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -418,21 +402,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
@@ -509,10 +493,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -539,21 +519,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
@@ -630,10 +610,6 @@ jobs:
         with:
           path: .extern
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -660,21 +636,21 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/filecoin-project/filecoin-ffi.git .extern/filecoin-ffi
-          cd .extern/filecoin-ffi
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
           git checkout ${{ env.FILECOIN_FFI_COMMIT }}
           make
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          source $HOME/.cargo/env
-          git submodule add https://github.com/renproject/solana-ffi.git .extern/solana-ffi
-          cd .extern/solana-ffi
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          go get -u github.com/xlab/c-for-go
           make clean
           make
 
