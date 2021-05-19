@@ -21,8 +21,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -58,6 +56,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -68,6 +68,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
@@ -127,8 +129,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -164,6 +164,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -174,6 +176,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
@@ -244,8 +248,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -281,6 +283,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -291,6 +295,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
@@ -360,8 +366,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -397,6 +401,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -407,6 +413,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
@@ -476,8 +484,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -513,6 +519,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -523,6 +531,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
@@ -592,8 +602,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Cache extern dependencies (FFI)
         id: cache-extern
@@ -629,6 +637,8 @@ jobs:
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE
           mkdir .extern && cd .extern
           git clone https://github.com/filecoin-project/filecoin-ffi.git
@@ -639,6 +649,8 @@ jobs:
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
         run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
           cd $GITHUB_WORKSPACE/.extern
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
