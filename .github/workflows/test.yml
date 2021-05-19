@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -238,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -359,7 +359,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -480,7 +480,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -601,7 +601,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
-      SOLANA_FFI_COMMIT: df7838d724f5eaf262ed77ed93b35b3f1f652bd3
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
