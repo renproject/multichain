@@ -4,3 +4,9 @@
 [submodule "chain/solana/solana-ffi"]
 	path = chain/solana/solana-ffi
 	url = https://github.com/renproject/solana-ffi
+[submodule "chain/harmony/bls"]
+	path = chain/harmony/bls
+	url = https://github.com/harmony-one/bls
+[submodule "chain/harmony/mcl"]
+	path = chain/harmony/mcl
+	url = https://github.com/harmony-one/mcl

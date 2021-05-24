@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/harmony-one/harmony/rpc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/renproject/multichain/api/address"
@@ -17,7 +16,7 @@ var _ = Describe("Harmony", func() {
 			contractAddr := address.Address("one155jp2y76nazx8uw5sa94fr0m4s5aj8e5xm6fu3")
 			rawAddr, err := harmony.NewEncoderDecoder().DecodeAddress(contractAddr)
 			bech32Addr := common.BytesToAddress(rawAddr)
-			callData := rpc.CallArgs{
+			callData := harmony.CallArgs{
 				To: &bech32Addr,
 			}
 			params := harmony.Params{

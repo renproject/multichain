@@ -39,6 +39,3 @@ replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 
-replace github.com/harmony-one/harmony => github.com/harjas27/harmony v1.10.3-0.20210424185836-ec03cfc7b52d
-
-replace github.com/ethereum/go-ethereum  => github.com/ethereum/go-ethereum v1.9.9
