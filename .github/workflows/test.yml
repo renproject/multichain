@@ -3,12 +3,13 @@ on: [push]
 jobs:
   test-solana:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: 1.13
-        id: go
+          go-version: "1.15.5"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -20,6 +21,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -43,26 +53,45 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Setup environment for Solana tests
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.5.13/install)"
+            sh -c "$(curl -sSfL https://release.solana.com/v1.6.8/install)"
             cd $GITHUB_WORKSPACE
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            git clone https://github.com/renproject/ren-solana.git
-            cd ren-solana
-            echo ${{ secrets.GATEWAY_PROGRAM_ID }} > ~/.config/solana/gateway-program.json
-            echo ${{ secrets.GATEWAY_REGISTRY_PROGRAM_ID }} > ~/.config/solana/gateway-registry-program.json
-            ./setup.sh
+            echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
+            docker run -d -h 0.0.0.0 -p 8899:8899 -p 8900:8900 renbot/ren-solana:latest
 
       - name: Sleep until the node is up
         uses: jakejarvis/wait-action@master
@@ -75,34 +104,14 @@ jobs:
       - name: Run tests for Solana
         run: |
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            cd $GITHUB_WORKSPACE/ren-solana
-            solana airdrop --url http://0.0.0.0:8899 10
-            solana program deploy --final \
-              --keypair ~/.config/solana/id.json \
-              --program-id ~/.config/solana/gateway-program.json \
-              target/deploy/gateway.so
-            solana program deploy --final \
-              --keypair ~/.config/solana/id.json \
-              --program-id ~/.config/solana/gateway-registry-program.json \
-              target/deploy/gateway_registry.so
-            target/debug/gateway-registry initialize \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json
-            target/debug/gateway-registry update \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json \
-              --selector "BTC/toSolana" \
-              --gateway "9TaQuUfNMC5rFvdtzhHPk84WaFH3SFnweZn4tw9RriDP"
-            target/debug/gateway-registry update \
-              --owner ~/.config/solana/id.json \
-              --fee-payer ~/.config/solana/id.json \
-              --selector "ZEC/toSolana" \
-              --gateway "9rCXCJDsnS53QtdXvYhYCAxb6yBE16KAQx5zHWfHe9QF"
             cd $GITHUB_WORKSPACE/chain/solana
             go test -timeout 100s
 
   test-filecoin:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -120,6 +129,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -143,14 +161,36 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Run linting
@@ -188,6 +228,9 @@ jobs:
 
   test-zcash:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -205,6 +248,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -228,14 +280,36 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Run linting
@@ -272,6 +346,9 @@ jobs:
 
   test-terra:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -289,6 +366,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -312,14 +398,36 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Run linting
@@ -356,6 +464,9 @@ jobs:
 
   test-dogecoin:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -373,6 +484,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -396,14 +516,36 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Run linting
@@ -440,6 +582,9 @@ jobs:
 
   test-btc-bch:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -457,6 +602,15 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
+
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
 
       # Remove apt repos that are known to break from time to time
       # See https://github.com/actions/virtual-environments/issues/323
@@ -480,14 +634,36 @@ jobs:
             go get -u github.com/mattn/goveralls
             go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
             export PATH=$PATH:$(go env GOPATH)/bin
             source $HOME/.cargo/env
-            cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-            make
-            cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-            make
+            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
             go vet ./...
 
       - name: Run linting

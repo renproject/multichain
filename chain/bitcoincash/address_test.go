@@ -1,6 +1,7 @@
 package bitcoincash_test
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -13,52 +14,73 @@ import (
 	"github.com/renproject/multichain/chain/bitcoincash"
 )
 
-var _ = Describe("Bitcoin Cash Address", func() {
-	Context("address", func() {
-		addrEncodeDecoder := bitcoincash.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
+var _ = Describe("Bitcoin Cash", func() {
+	Context("Address Encode/Decode", func() {
+		addrEncodeDecoders := []struct {
+			network       *chaincfg.Params
+			encodeDecoder bitcoincash.AddressEncodeDecoder
+		}{
+			{
+				&chaincfg.MainNetParams,
+				bitcoincash.NewAddressEncodeDecoder(&chaincfg.MainNetParams),
+			},
+			{
+				&chaincfg.TestNet3Params,
+				bitcoincash.NewAddressEncodeDecoder(&chaincfg.TestNet3Params),
+			},
+			{
+				&chaincfg.RegressionNetParams,
+				bitcoincash.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams),
+			},
+		}
 
-		It("addr pub key hash", func() {
-			pk := id.NewPrivKey()
-			wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
-			Expect(err).NotTo(HaveOccurred())
-			addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
-			Expect(err).NotTo(HaveOccurred())
-			addr := address.Address(addrPubKeyHash.EncodeAddress())
+		for _, addrEncodeDecoder := range addrEncodeDecoders {
+			addrEncodeDecoder := addrEncodeDecoder
+			Context(fmt.Sprintf("Encode/Decode for %v network", addrEncodeDecoder.network.Name), func() {
+				Specify("AddressPubKeyHash", func() {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), addrEncodeDecoder.network, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), addrEncodeDecoder.network)
+					Expect(err).NotTo(HaveOccurred())
+					addr := address.Address(addrPubKeyHash.EncodeAddress())
 
-			decodedRawAddr, err := addrEncodeDecoder.DecodeAddress(addr)
-			Expect(err).NotTo(HaveOccurred())
-			encodedAddr, err := addrEncodeDecoder.EncodeAddress(decodedRawAddr)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(encodedAddr).To(Equal(addr))
-		})
+					decodedRawAddr, err := addrEncodeDecoder.encodeDecoder.DecodeAddress(addr)
+					Expect(err).NotTo(HaveOccurred())
+					encodedAddr, err := addrEncodeDecoder.encodeDecoder.EncodeAddress(decodedRawAddr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(encodedAddr).To(Equal(addr))
+				})
 
-		It("addr script hash", func() {
-			script := make([]byte, rand.Intn(100))
-			rand.Read(script)
-			addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, &chaincfg.RegressionNetParams)
-			Expect(err).NotTo(HaveOccurred())
-			addr := address.Address(addrScriptHash.EncodeAddress())
+				Specify("AddressScriptHash", func() {
+					script := make([]byte, rand.Intn(100))
+					rand.Read(script)
+					addrScriptHash, err := bitcoincash.NewAddressScriptHash(script, addrEncodeDecoder.network)
+					Expect(err).NotTo(HaveOccurred())
+					addr := address.Address(addrScriptHash.EncodeAddress())
 
-			decodedRawAddr, err := addrEncodeDecoder.DecodeAddress(addr)
-			Expect(err).NotTo(HaveOccurred())
-			encodedAddr, err := addrEncodeDecoder.EncodeAddress(decodedRawAddr)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(encodedAddr).To(Equal(addr))
-		})
+					decodedRawAddr, err := addrEncodeDecoder.encodeDecoder.DecodeAddress(addr)
+					Expect(err).NotTo(HaveOccurred())
+					encodedAddr, err := addrEncodeDecoder.encodeDecoder.EncodeAddress(decodedRawAddr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(encodedAddr).To(Equal(addr))
+				})
 
-		It("legacy addr", func() {
-			pk := id.NewPrivKey()
-			wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
-			Expect(err).NotTo(HaveOccurred())
-			addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
-			Expect(err).NotTo(HaveOccurred())
-			addr := address.Address(addrPubKeyHash.EncodeAddress())
+				Specify("AddressLegacy", func() {
+					pk := id.NewPrivKey()
+					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), addrEncodeDecoder.network, true)
+					Expect(err).NotTo(HaveOccurred())
+					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), addrEncodeDecoder.network)
+					Expect(err).NotTo(HaveOccurred())
+					addr := address.Address(addrPubKeyHash.EncodeAddress())
 
-			decodedRawAddr, err := addrEncodeDecoder.DecodeAddress(addr)
-			Expect(err).NotTo(HaveOccurred())
-			encodedAddr, err := addrEncodeDecoder.EncodeAddress(decodedRawAddr)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(encodedAddr).To(Equal(addr))
-		})
+					decodedRawAddr, err := addrEncodeDecoder.encodeDecoder.DecodeAddress(addr)
+					Expect(err).NotTo(HaveOccurred())
+					encodedAddr, err := addrEncodeDecoder.encodeDecoder.EncodeAddress(decodedRawAddr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(encodedAddr).To(Equal(addr))
+				})
+			})
+		}
 	})
 })

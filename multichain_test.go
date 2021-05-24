@@ -96,6 +96,14 @@ var _ = Describe("Multichain", func() {
 					multichain.FIL,
 				},
 				{
+					multichain.Moonbeam,
+					multichain.GLMR,
+				},
+				{
+					multichain.Polygon,
+					multichain.MATIC,
+				},
+				{
 					multichain.Solana,
 					multichain.SOL,
 				},

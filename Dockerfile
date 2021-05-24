@@ -29,7 +29,7 @@ RUN mkdir -p src/github.com/filecoin-project
 WORKDIR $GOPATH/src/github.com/filecoin-project
 RUN git clone https://github.com/filecoin-project/filecoin-ffi
 WORKDIR $GOPATH/src/github.com/filecoin-project/filecoin-ffi
-RUN git checkout a62d00da59d1b0fb
+RUN git checkout a62d00da59d1b0fb35f3a4ae854efa9441af892d
 RUN make
 RUN go install
 
@@ -39,6 +39,6 @@ RUN mkdir -p src/github.com/renproject
 WORKDIR $GOPATH/src/github.com/renproject
 RUN git clone https://github.com/renproject/solana-ffi
 WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
-RUN git checkout 4bd204b6017173c1425468db8566f053abb49f0b
+RUN git checkout df7838d724f5eaf262ed77ed93b35b3f1f652bd3
 RUN make clean && make
 RUN go install ./...

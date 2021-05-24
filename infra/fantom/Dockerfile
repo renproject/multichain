@@ -9,15 +9,15 @@ RUN wget -c https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
-# Build lachesis
+# Build Opera
 WORKDIR /app
-RUN git clone https://github.com/Fantom-foundation/go-lachesis.git
-WORKDIR /app/go-lachesis
-RUN git checkout tags/v0.7.0-rc.1 -b lachesis-v7rc1
-RUN make build
-ENV PATH=$PATH:/app/go-lachesis/build
+RUN git clone https://github.com/Fantom-foundation/go-opera.git
+WORKDIR /app/go-opera
+RUN git checkout release/1.0.0-rc.4
+RUN make
+ENV PATH=$PATH:/app/go-opera/build
 
 # Expose the default port of the JSON-RPC server
 EXPOSE 18545
 
-ENTRYPOINT [ "lachesis", "--fakenet", "1/1", "--rpc", "--rpcvhosts", "*", "--rpcaddr", "0.0.0.0" ]
+ENTRYPOINT [ "opera", "--fakenet", "1/1", "--http", "--http.api=eth,net", "--http.vhosts", "*", "--http.addr", "0.0.0.0" ]

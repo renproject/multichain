@@ -145,3 +145,33 @@ services:
     entrypoint:
       - "./root/run.sh"
       - "${TERRA_ADDRESS}"
+
+  ##
+  ## Polygon
+  ##
+  polygon:
+    build:
+      context: ./polygon
+    ports:
+      - "0.0.0.0:28545:8545"
+    entrypoint:
+      - "./root/run.sh"
+
+  ##
+  ## Solana
+  ##
+  solana:
+    image: renbot/ren-solana:latest
+    ports:
+      - "0.0.0.0:8899:8899"
+      - "0.0.0.0:8900:8900"
+
+  ##
+  ## Moonbeam
+  ##
+  moonbeam:
+    image: purestake/moonbeam:tutorial-v7
+    ports:
+      - "0.0.0.0:9944:9944"
+      - "0.0.0.0:9933:9933"
+    command: --dev --ws-external --rpc-external
