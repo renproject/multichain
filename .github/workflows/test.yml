@@ -700,8 +700,12 @@ jobs:
               -btc=true \
               -bch=true \
               -timeout 1500s
+
   test-harmony:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: a62d00da59d1b0fb35f3a4ae854efa9441af892d
+      SOLANA_FFI_COMMIT: f6521b8a1af44f4d468bc8e7e67ba3766a5602ef
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -720,6 +724,17 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-aw-${{ hashFiles('**/go.sum') }}
 
+      - name: Cache extern dependencies (FFI)
+        id: cache-extern
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-externs
+        with:
+          path: .extern
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.FILECOIN_FFI_COMMIT }}-${{ env.SOLANA_FFI_COMMIT }}
+
+      # Remove apt repos that are known to break from time to time
+      # See https://github.com/actions/virtual-environments/issues/323
       - name: Install dependency packages
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
@@ -741,14 +756,36 @@ jobs:
           go get -u github.com/mattn/goveralls
           go get -u github.com/xlab/c-for-go
 
+      - name: Install dependencies (Filecoin FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE
+          mkdir .extern && cd .extern
+          git clone https://github.com/filecoin-project/filecoin-ffi.git
+          cd filecoin-ffi
+          git checkout ${{ env.FILECOIN_FFI_COMMIT }}
+          make
+
+      - name: Install dependencies (Solana FFI)
+        if: steps.cache-extern.outputs.cache-hit != 'true'
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          cd $GITHUB_WORKSPACE/.extern
+          git clone https://github.com/renproject/solana-ffi.git
+          cd solana-ffi
+          git checkout ${{ env.SOLANA_FFI_COMMIT }}
+          make clean
+          make
+
       - name: Run vetting
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          cd $GITHUB_WORKSPACE/chain/filecoin/filecoin-ffi
-          make
-          cd $GITHUB_WORKSPACE/chain/solana/solana-ffi
-          make
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
           go vet ./...
 
       - name: Run linting
@@ -768,7 +805,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '10m'
+          time: '1m'
 
       - name: Check on docker containers
         run: docker ps -a
@@ -779,6 +816,11 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source ./infra/.env
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
           cd $GITHUB_WORKSPACE
           export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
@@ -786,9 +828,6 @@ jobs:
           export LIBRARY_PATH=$LD_LIBRARY_PATH
           export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
           export GO111MODULE=on
-          cd $GITHUB_WORKSPACE/chain/harmony/bls
-          make
-          cd ../../..
           go test \
             -one=true \
             -timeout 1500s
