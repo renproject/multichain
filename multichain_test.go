@@ -52,6 +52,7 @@ var (
 	testBCH  = flag.Bool("bch", false, "Pass this flag to test Bitcoincash")
 	testDOGE = flag.Bool("doge", false, "Pass this flag to test Dogecoin")
 	testFIL  = flag.Bool("fil", false, "Pass this flag to test Filecoin")
+	testONE  = flag.Bool("one", false, "Pass this flag to test Harmony")
 	testLUNA = flag.Bool("luna", false, "Pass this flag to test Terra")
 	testZEC  = flag.Bool("zec", false, "Pass this flag to test Zcash")
 )
@@ -75,6 +76,7 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.BitcoinCash] = *testBCH
 	testFlags[multichain.Dogecoin] = *testDOGE
 	testFlags[multichain.Filecoin] = *testFIL
+	testFlags[multichain.Harmony] = *testONE
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
@@ -102,6 +104,10 @@ var _ = Describe("Multichain", func() {
 				{
 					multichain.Polygon,
 					multichain.MATIC,
+				},
+				{
+					multichain.Harmony,
+					multichain.ONE,
 				},
 				{
 					multichain.Solana,
