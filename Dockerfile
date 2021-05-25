@@ -1,3 +1,5 @@
+#syntax=docker/dockerfile:1.2
+
 FROM golang
 
 # doing all updates and installs in a single step and removing the apt cache helps reduce the image size
@@ -19,6 +21,12 @@ RUN apt-get update && \
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
+
+# Use GitHub personal access token to fetch dependencies.
+RUN --mount=type=secret,id=github_token \
+  export GITHUB_TOKEN=$(cat /run/secrets/github_token)
+RUN git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+ENV GOPRIVATE=github.com/renproject/ren-solana
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"

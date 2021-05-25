@@ -80,7 +80,7 @@ curl -X POST --data '{
     "params" :{
         "to":"'"$C_AVAX_BECH32_ADDRESS"'",
         "destinationChain": "C",
-        "amount": 500000000,
+        "amount": 5000000000000,
         "username":"'"$AVAX_USERNAME"'",
         "password":"'"$AVAX_PASSWORD"'"
     }

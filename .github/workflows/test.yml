@@ -757,6 +757,8 @@ jobs:
         with:
           push: true
           tags: renbot/multichain:latest
+          secrets: |
+            "github_token=${{ secrets.PERSONAL_ACCESS_TOKEN }}"
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
