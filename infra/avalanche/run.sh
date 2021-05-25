@@ -13,8 +13,6 @@ avalanchego \
 	--tx-fee=1000000 \
 	--public-ip=0.0.0.0 \
 	--network-id=local \
-	--xput-server-port=9652 \
-	--xput-server-enabled=false \
 	--signature-verification-enabled=true \
 	--api-admin-enabled=true \
 	--api-ipcs-enabled=true \
@@ -23,18 +21,14 @@ avalanchego \
 	--http-host=0.0.0.0 \
 	--http-port=9650 \
 	--http-tls-enabled=false \
-	--db-enabled=true \
-	--db-dir=/root/stash/mynewnode/db \
-	--plugin-dir=/app/avalanchego-v1.4.5/plugins \
+	--plugin-dir=/app/avalanchego-v1.4.5/avalanchego-latest/plugins \
 	--log-level=info \
-	--log-dir=/root/stash/mynode/logs \
 	--snow-avalanche-batch-size=30 \
 	--snow-avalanche-num-parents=5 \
 	--snow-sample-size=1 \
 	--snow-quorum-size=1 \
 	--snow-virtuous-commit-threshold=1 \
 	--snow-rogue-commit-threshold=4 \
-	--p2p-tls-enabled=true \
 	--staking-enabled=false \
 	--staking-port=9651 \
 	--api-auth-required=false &
@@ -47,7 +41,7 @@ curl -X POST --data '{
     "method" :"keystore.createUser",
     "params" :{
         "username":"'"$AVAX_USERNAME"'",
-	"password":"'"$AVAX_PASSWORD"'"
+	      "password":"'"$AVAX_PASSWORD"'"
     }
 }' -H 'content-type:application/json;' 127.0.0.1:9650/ext/keystore
 
@@ -59,8 +53,8 @@ curl -X POST --data '{
     "method" :"avm.importKey",
     "params" :{
         "username":"'"$AVAX_USERNAME"'",
-	"password":"'"$AVAX_PASSWORD"'",
-	"privateKey":"'"$AVAX_PK"'"
+	      "password":"'"$AVAX_PASSWORD"'",
+	      "privateKey":"'"$AVAX_PK"'"
     }
 }' -H 'content-type:application/json;' 127.0.0.1:9650/ext/bc/X
 
