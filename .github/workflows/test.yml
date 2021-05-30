@@ -39,6 +39,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -76,6 +77,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -147,6 +163,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -184,6 +201,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -266,6 +298,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -303,6 +336,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -384,6 +432,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -421,6 +470,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -502,6 +566,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -539,6 +604,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -620,6 +700,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
           sudo apt-get install -y jq mesa-opencl-icd ocl-icd-opencl-dev pkg-config libudev-dev
+          sudo apt install libgmp-dev  libssl-dev  make gcc g++
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source $HOME/.cargo/env
 
@@ -657,6 +738,21 @@ jobs:
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           make clean
           make
+
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
 
       - name: Run vetting
         run: |
@@ -780,6 +876,21 @@ jobs:
           make clean
           make
 
+      - name: Install dependencies (Harmony)
+        run: |
+          cd $GITHUB_WORKSPACE/chain/harmony
+          git clone https://github.com/harmony-one/bls.git
+          git clone https://github.com/harmony-one/mcl.git
+          cd $GITHUB_WORKSPACE/chain/harmony/bls
+          make
+          cd $GITHUB_WORKSPACE
+          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
+          export LIBRARY_PATH=$LD_LIBRARY_PATH
+          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
+          export GO111MODULE=on
+
       - name: Run vetting
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
@@ -816,18 +927,7 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source ./infra/.env
-          cd $GITHUB_WORKSPACE/chain/harmony
-          git clone https://github.com/harmony-one/bls.git
-          git clone https://github.com/harmony-one/mcl.git
-          cd $GITHUB_WORKSPACE/chain/harmony/bls
-          make
           cd $GITHUB_WORKSPACE
-          export CGO_CFLAGS="-I$GITHUB_WORKSPACE/chain/harmony/bls/include -I$GITHUB_WORKSPACE/chain/harmony/mcl/include -I/usr/local/opt/openssl/include"
-          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/chain/harmony/bls/lib -L/usr/local/opt/openssl/lib"
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/chain/harmony/bls/lib:$GITHUB_WORKSPACE/chain/harmony/mcl/lib:/usr/local/opt/openssl/lib
-          export LIBRARY_PATH=$LD_LIBRARY_PATH
-          export DYLD_FALLBACK_LIBRARY_PATH=$LD_LIBRARY_PATH
-          export GO111MODULE=on
           go test \
             -one=true \
             -timeout 1500s
