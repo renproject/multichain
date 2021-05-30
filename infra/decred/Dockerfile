@@ -7,6 +7,7 @@ ENV DCR_URL https://github.com/decred/decred-binaries/releases/download/${VERSIO
 
 
 RUN apt-get update && apt-get install --yes software-properties-common
+Run apt-get install --yes screen
 RUN apt-get install --yes curl
 
 RUN cd /tmp
