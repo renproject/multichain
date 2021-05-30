@@ -21,8 +21,11 @@ RUN chmod +x /decred/dcrwallet
 RUN chmod +x /decred/dcrctl
 
 COPY dcrd.conf /root/.dcrd/
+COPY dcrwallet.conf /root/.dcrwallet/
 COPY rpc.key /root/.dcrd/
 COPY rpc.cert /root/.dcrd/
+COPY rpc.key /root/.dcrwallet/
+COPY rpc.cert /root/.dcrwallet/
 COPY run.sh /root/
 RUN chmod +x /root/run.sh
 
