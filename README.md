@@ -40,7 +40,6 @@ Adding a `Chain`:
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-    Acala       = Chain("Acala")
     Bitcoin     = Chain("Bitcoin")
     BitcoinCash = Chain("BitcoinCash")
     Dogecoin    = Chain("Dogecoin") // (This is our new chain!)

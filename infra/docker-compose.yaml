@@ -175,3 +175,21 @@ services:
       - "0.0.0.0:9944:9944"
       - "0.0.0.0:9933:9933"
     command: --dev --ws-external --rpc-external
+
+  #
+  # Avalanche
+  #
+  avalanche:
+    build:
+      context: ./avalanche
+    ports:
+      - "0.0.0.0:9650:9650"
+    entrypoint:
+      - "./run.sh"
+      - "${AVAX_USERNAME}"
+      - "${AVAX_PASSWORD}"
+      - "${AVAX_PK}"
+      - "${AVAX_ADDRESS}"
+      - "${C_AVAX_PK}"
+      - "${C_AVAX_HEX_ADDRESS}"
+      - "${C_AVAX_BECH32_ADDRESS}"

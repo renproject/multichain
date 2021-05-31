@@ -90,6 +90,10 @@ var _ = Describe("Multichain", func() {
 				asset multichain.Asset
 			}{
 				{
+					multichain.Avalanche,
+					multichain.AVAX,
+				},
+				{
 					multichain.Fantom,
 					multichain.FTM,
 				},

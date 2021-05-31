@@ -16,6 +16,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+
       - name: Caching modules
         uses: actions/cache@v1
         with:
@@ -139,6 +144,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           submodules: recursive
+
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Caching modules
         uses: actions/cache@v1
@@ -275,6 +285,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+
       - name: Caching modules
         uses: actions/cache@v1
         with:
@@ -408,6 +423,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           submodules: recursive
+
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Caching modules
         uses: actions/cache@v1
@@ -543,6 +563,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+
       - name: Caching modules
         uses: actions/cache@v1
         with:
@@ -676,6 +701,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           submodules: recursive
+
+      - name: Configure git for Private Modules
+        env:
+            TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Caching modules
         uses: actions/cache@v1
@@ -954,6 +984,8 @@ jobs:
         with:
           push: true
           tags: renbot/multichain:latest
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
