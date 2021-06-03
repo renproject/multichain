@@ -22,7 +22,7 @@ ENV GOPROXY=https://proxy.golang.org
 
 ARG GITHUB_TOKEN
 RUN git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-ENV GOPRIVATE=github.com/renproject/ren-solana
+ENV GOPRIVATE=github.com/renproject/ren-solana,github.com/renproject/solana-ffi
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
