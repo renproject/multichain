@@ -14,7 +14,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -127,7 +127,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -251,7 +251,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -374,7 +374,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -497,7 +497,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -620,7 +620,7 @@ jobs:
       - name: Configure git for Private Modules
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://roynalnaruto:${TOKEN}@github.com".insteadOf "https://github.com"
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
