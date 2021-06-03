@@ -8,7 +8,7 @@ import (
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
 	"github.com/filecoin-project/go-state-types/crypto"
-	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/api/v0api"
 	filclient "github.com/filecoin-project/lotus/api/client"
 	"github.com/filecoin-project/lotus/chain/types"
 	"github.com/ipfs/go-cid"
@@ -66,7 +66,7 @@ func (opts ClientOptions) WithAuthToken(authToken pack.String) ClientOptions {
 // RPC client instance.
 type Client struct {
 	opts   ClientOptions
-	node   api.FullNode
+	node   v0api.FullNode
 	closer jsonrpc.ClientCloser
 }
 
@@ -77,7 +77,7 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		requestHeaders.Add(AuthorizationKey, opts.AuthToken)
 	}
 
-	node, closer, err := filclient.NewFullNodeRPC(context.Background(), opts.RPCURL, requestHeaders)
+	node, closer, err := filclient.NewFullNodeRPCV0(context.Background(), opts.RPCURL, requestHeaders)
 	if err != nil {
 		return nil, err
 	}

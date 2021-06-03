@@ -8,10 +8,10 @@ require (
 	github.com/codahale/blake2 v0.0.0-20150924215134-8d10d0420cbf
 	github.com/cosmos/cosmos-sdk v0.39.1
 	github.com/ethereum/go-ethereum v1.9.20
-	github.com/filecoin-project/go-address v0.0.4
-	github.com/filecoin-project/go-jsonrpc v0.1.2-0.20201008195726-68c6a2704e49
-	github.com/filecoin-project/go-state-types v0.0.0-20201013222834-41ea465f274f
-	github.com/filecoin-project/lotus v1.1.2
+	github.com/filecoin-project/go-address v0.0.5
+	github.com/filecoin-project/go-jsonrpc v0.1.4-0.20210217175800-45ea43ac2bec
+	github.com/filecoin-project/go-state-types v0.1.1-0.20210506134452-99b279731c48
+	github.com/filecoin-project/lotus v1.9.0
 	github.com/ipfs/go-cid v0.0.7
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/multiformats/go-varint v0.0.6
@@ -24,7 +24,7 @@ require (
 	github.com/renproject/surge v1.2.6
 	github.com/tendermint/tendermint v0.33.8
 	github.com/terra-project/core v0.4.0-rc.4
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 )
 
