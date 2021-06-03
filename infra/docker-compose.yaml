@@ -163,8 +163,7 @@ services:
   solana:
     image: renbot/ren-solana:latest
     ports:
-      - "0.0.0.0:8899:8899"
-      - "0.0.0.0:8900:8900"
+      - "0.0.0.0:8899-8900:8899-8900"
 
   ##
   ## Moonbeam
