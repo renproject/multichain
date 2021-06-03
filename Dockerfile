@@ -7,6 +7,8 @@ RUN apt-get update && \
         ocl-icd-opencl-dev \
         libssl-dev \
         libudev-dev \
+        hwloc \
+        libhwloc-dev \
         gcc \
         git \
         bzr \
