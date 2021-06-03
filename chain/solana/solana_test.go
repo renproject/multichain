@@ -57,7 +57,7 @@ var _ = Describe("Solana", func() {
 
 			// Mint some tokens.
 			time.Sleep(10 * time.Second)
-			mintAmount := uint64(10000000000) // 10 tokens.
+			mintAmount := uint64(1000000000) // 10 tokens.
 			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount)
 			logger.Debug("Mint", zap.String("tx signature", string(mintSig)))
 
@@ -68,7 +68,7 @@ var _ = Describe("Solana", func() {
 			recipientRawAddr, err := bitcoinAddrEncodeDecoder.DecodeAddress(recipient)
 			Expect(err).NotTo(HaveOccurred())
 			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
-			burnAmount := uint64(5000000000) // 5 tokens.
+			burnAmount := uint64(500000000) // 5 tokens.
 			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipientRawAddr)), []byte(recipientRawAddr))
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
 

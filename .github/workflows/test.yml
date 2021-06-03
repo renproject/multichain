@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -93,7 +93,7 @@ jobs:
 
       - name: Setup environment for Solana tests
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.6.8/install)"
+            sh -c "$(curl -sSfL https://release.solana.com/v1.7.0/install)"
             cd $GITHUB_WORKSPACE
             export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
             echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -242,7 +242,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -366,7 +366,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -490,7 +490,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -614,7 +614,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 0b1a2cd8f5a9bff6e6e0c2392443b69617e6d943
+      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -736,32 +736,3 @@ jobs:
               -btc=true \
               -bch=true \
               -timeout 1500s
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: renbot/multichain:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
