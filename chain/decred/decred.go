@@ -370,6 +370,47 @@ func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.
 	return output, pack.NewU64(uint64(result.Confirmations)), nil
 }
 
+// UnspentOutput returns the unspent transaction output identified by the
+// given outpoint. It also returns the number of confirmations for the
+// output. If the output cannot be found before the context is done, the
+// output is invalid, or the output has been spent, then an error should be
+// returned.
+func (client *client) UnspentOutput(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
+	var resp dcrjson.Response
+	hash := chainhash.Hash{}
+	copy(hash[:], outpoint.Hash)
+	if err := client.send(ctx, &resp, "gettxout", hash.String(), outpoint.Index.Uint32()); err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+	}
+
+	result := types.GetTxOutResult{}
+	err := json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"gettxout\": %v", err)
+	}
+
+	amount, err := dcrutil.NewAmount(result.Value)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", err)
+	}
+	if amount < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", amount)
+	}
+	if result.Confirmations < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad confirmations: %v", result.Confirmations)
+	}
+	pubKeyScript, err := hex.DecodeString(result.ScriptPubKey.Hex)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad pubkey script: %v", err)
+	}
+	output := utxo.Output{
+		Outpoint:     outpoint,
+		Value:        pack.NewU256FromU64(pack.NewU64(uint64(amount))),
+		PubKeyScript: pack.NewBytes(pubKeyScript),
+	}
+	return output, pack.NewU64(uint64(result.Confirmations)), nil
+}
+
 func (client *client) send(ctx context.Context, resp *dcrjson.Response, method string, params ...interface{}) error {
 	// Encode the request.
 	data, err := encodeRequest(method, params)
@@ -379,7 +420,7 @@ func (client *client) send(ctx context.Context, resp *dcrjson.Response, method s
 
 	var clSetting *ClientSetting
 	switch method {
-	case "getbestblock":
+	case "getbestblock", "getrawtransaction", "gettxout":
 		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
