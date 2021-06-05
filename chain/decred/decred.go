@@ -268,6 +268,68 @@ func (client *client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	return pack.NewU64(uint64(result.Height)), nil
 }
 
+// UnspentOutputs spendable by the given address.
+func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64, addr address.Address) ([]utxo.Output, error) {
+	var outputs []utxo.Output
+
+	//var resp int64
+	var resp dcrjson.Response
+	if err := client.send(ctx, &resp, "listunspent", minConf, maxConf, []string{string(addr)}); err != nil {
+		return []utxo.Output{}, fmt.Errorf("bad \"listunspent\": %v", err)
+	}
+
+	//outputs := make([]utxo.Output, len(resp.Result))
+	type Result struct {
+		TxId          string  `json:"txid"`
+		VOut          uint32  `json:"vout"`
+		Tree          int     `json:"tree"`
+		TxType        int     `json:"txtype"`
+		Address       string  `json:"address"`
+		Account       string  `json:"account"`
+		ScriptPubKey  string  `json:"scriptPubKey"`
+		Amount        float64 `json:"amount"`
+		Confirmations int64   `json:"confirmations"`
+		Spendable     bool    `json"spendable"`
+	}
+
+	var result []Result
+
+	err := json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return []utxo.Output{}, fmt.Errorf("bad \"listunspent\": %v", err)
+	}
+
+	for _, v := range result {
+		amount, err := dcrutil.NewAmount(v.Amount)
+		if err != nil {
+			return []utxo.Output{}, fmt.Errorf("bad amount: %v", err)
+		}
+		if amount < 0 {
+			return []utxo.Output{}, fmt.Errorf("bad amount: %v", amount)
+		}
+		pubKeyScript, err := hex.DecodeString(v.ScriptPubKey)
+		if err != nil {
+			return []utxo.Output{}, fmt.Errorf("bad pubkey script: %v", err)
+		}
+		txid, err := chainhash.NewHashFromStr(v.TxId)
+		if err != nil {
+			return []utxo.Output{}, fmt.Errorf("bad txid: %v", err)
+		}
+		o := utxo.Output{
+			Outpoint: utxo.Outpoint{
+				Hash:  pack.NewBytes(txid[:]),
+				Index: pack.NewU32(v.VOut),
+			},
+			Value:        pack.NewU256FromU64(pack.NewU64(uint64(amount))),
+			PubKeyScript: pack.NewBytes(pubKeyScript),
+		}
+
+		outputs = append(outputs, o)
+	}
+
+	return outputs, nil
+}
+
 func (client *client) send(ctx context.Context, resp *dcrjson.Response, method string, params ...interface{}) error {
 	// Encode the request.
 	data, err := encodeRequest(method, params)
