@@ -330,6 +330,46 @@ func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64
 	return outputs, nil
 }
 
+// Output associated with an outpoint, and its number of confirmations.
+func (client *client) Output(ctx context.Context, outpoint utxo.Outpoint) (utxo.Output, pack.U64, error) {
+
+	//var resp int64
+	var resp dcrjson.Response
+	hash := chainhash.Hash{}
+	copy(hash[:], outpoint.Hash)
+	if err := client.send(ctx, &resp, "getrawtransaction", hash.String(), 1); err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"getrawtransaction\": %v", err)
+	}
+
+	result := types.TxRawResult{}
+	err := json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad \"getrawtransaction\": %v", err)
+	}
+
+	if outpoint.Index.Uint32() >= uint32(len(result.Vout)) {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad index: %v is out of range", outpoint.Index)
+	}
+	vout := result.Vout[outpoint.Index.Uint32()]
+	amount, err := dcrutil.NewAmount(vout.Value)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", err)
+	}
+	if amount < 0 {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad amount: %v", amount)
+	}
+	pubKeyScript, err := hex.DecodeString(vout.ScriptPubKey.Hex)
+	if err != nil {
+		return utxo.Output{}, pack.NewU64(0), fmt.Errorf("bad pubkey script: %v", err)
+	}
+	output := utxo.Output{
+		Outpoint:     outpoint,
+		Value:        pack.NewU256FromU64(pack.NewU64(uint64(amount))),
+		PubKeyScript: pack.NewBytes(pubKeyScript),
+	}
+	return output, pack.NewU64(uint64(result.Confirmations)), nil
+}
+
 func (client *client) send(ctx context.Context, resp *dcrjson.Response, method string, params ...interface{}) error {
 	// Encode the request.
 	data, err := encodeRequest(method, params)
