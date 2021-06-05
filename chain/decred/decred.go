@@ -340,14 +340,14 @@ func (client *client) send(ctx context.Context, resp *dcrjson.Response, method s
 	var clSetting *ClientSetting
 	switch method {
 	case "getbestblock":
-		clSetting = &ClientSettings{
+		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
 			host:       client.opts.Host,
 			httpClient: client.httpClient,
 		}
 	case "listunspent":
-		clSetting = &ClientSettings{
+		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
 			host:       client.opts.WalletHost,
