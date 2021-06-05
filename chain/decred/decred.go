@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrjson/v3"
+	"github.com/decred/dcrd/dcrutil/v3"
+	"github.com/renproject/multichain/api/address"
+	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/pack"
 )
 
@@ -26,6 +31,9 @@ const (
 	// DefaultClientHost used by the Client. This should only be used for local
 	// deployments of the multichain.
 	DefaultClientHost = "https://127.0.0.1:19556"
+	// DefaultWalletHost used by dcrwallet. This should only be used for local
+	// deployments of the multichain.
+	DefaultWalletHost = "https://127.0.0.1:9110"
 	// DefaultClientUser used by the Client. This is insecure, and should only
 	// be used for local — or publicly accessible — deployments of the
 	// multichain.
@@ -48,6 +56,7 @@ type ClientOptions struct {
 	TimeoutRetry  time.Duration
 	NoTLS         bool
 	Host          string
+	WalletHost    string
 	User          string
 	Password      string
 	TLSSkipVerify bool
@@ -55,6 +64,14 @@ type ClientOptions struct {
 	ClientCert    string
 	ClientKey     string
 	RPCCert       string
+	WalletRPCCert string
+}
+
+type ClientSetting struct {
+	user       string
+	password   string
+	host       string
+	httpClient http.Client
 }
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
@@ -73,6 +90,7 @@ func DefaultClientOptions() ClientOptions {
 		TimeoutRetry:  DefaultClientTimeoutRetry,
 		NoTLS:         DefaultClientNoTLS,
 		Host:          DefaultClientHost,
+		WalletHost:    DefaultWalletHost,
 		User:          DefaultClientUser,
 		Password:      DefaultClientPassword,
 		TLSSkipVerify: DefaultClientTLSSkipVerify,
@@ -81,13 +99,31 @@ func DefaultClientOptions() ClientOptions {
 	}
 }
 
-// WithHost sets the URL of the Bitcoin node.
+// WithHost sets the URL of the dcrd node.
 func (opts ClientOptions) WithHost(host string) ClientOptions {
 	opts.Host = host
 	return opts
 }
 
-// WithUser sets the username that will be used to authenticate with the Bitcoin
+// WithRPCCert sets the path of the dcrd RPC cert.
+func (opts ClientOptions) WithRPCCert(certPath string) ClientOptions {
+	opts.RPCCert = certPath
+	return opts
+}
+
+// WithWalletHost sets the URL of the dcrwallet node.
+func (opts ClientOptions) WithWalletHost(host string) ClientOptions {
+	opts.WalletHost = host
+	return opts
+}
+
+// WithHost sets the path of the dcrwallet RPC cert.
+func (opts ClientOptions) WithWalletRPCCert(certPath string) ClientOptions {
+	opts.WalletRPCCert = certPath
+	return opts
+}
+
+// WithUser sets the username that will be used to authenticate with the dcrd
 // node.
 func (opts ClientOptions) WithUser(user string) ClientOptions {
 	opts.User = user
@@ -95,15 +131,16 @@ func (opts ClientOptions) WithUser(user string) ClientOptions {
 }
 
 // WithPassword sets the password that will be used to authenticate with the
-// Bitcoin node.
+// dcrd node.
 func (opts ClientOptions) WithPassword(password string) ClientOptions {
 	opts.Password = password
 	return opts
 }
 
 type client struct {
-	opts       ClientOptions
-	httpClient http.Client
+	opts         ClientOptions
+	httpClient   http.Client
+	walletClient http.Client
 }
 
 // NewClient returns a new Client.
@@ -153,9 +190,56 @@ func NewClient(opts ClientOptions) *client {
 		TLSClientConfig: tlsConfig,
 	}
 
+	// Wallet Client.
+	walletClient := http.Client{}
+	walletClient.Timeout = opts.Timeout
+
+	// Configure TLS if needed.
+	var tlsConf *tls.Config
+	if !opts.NoTLS {
+		tlsConf = &tls.Config{
+			InsecureSkipVerify: opts.TLSSkipVerify,
+		}
+		if !opts.TLSSkipVerify && opts.AuthType == DefaultClientAuthTypeClientCert {
+			serverCAs := x509.NewCertPool()
+			serverCert, err := ioutil.ReadFile(opts.RPCCert)
+			if err != nil {
+				return nil
+			}
+			if !serverCAs.AppendCertsFromPEM(serverCert) {
+				return nil
+			}
+			keypair, err := tls.LoadX509KeyPair(opts.ClientCert, opts.ClientKey)
+			if err != nil {
+				return nil
+			}
+
+			tlsConf.Certificates = []tls.Certificate{keypair}
+			tlsConf.RootCAs = serverCAs
+
+		}
+		if !opts.TLSSkipVerify && opts.WalletRPCCert != "" {
+			pem, err := ioutil.ReadFile(opts.WalletRPCCert)
+			if err != nil {
+				return nil
+			}
+
+			pool := x509.NewCertPool()
+			if ok := pool.AppendCertsFromPEM(pem); !ok {
+				return nil
+			}
+			tlsConf.RootCAs = pool
+		}
+	}
+
+	walletClient.Transport = &http.Transport{
+		TLSClientConfig: tlsConf,
+	}
+
 	return &client{
-		opts:       opts,
-		httpClient: httpClient,
+		opts:         opts,
+		httpClient:   httpClient,
+		walletClient: walletClient,
 	}
 }
 
@@ -191,32 +275,49 @@ func (client *client) send(ctx context.Context, resp *dcrjson.Response, method s
 		return err
 	}
 
+	var clSetting *ClientSetting
+	switch method {
+	case "getbestblock":
+		clSetting = &ClientSettings{
+			user:       client.opts.User,
+			password:   client.opts.Password,
+			host:       client.opts.Host,
+			httpClient: client.httpClient,
+		}
+	case "listunspent":
+		clSetting = &ClientSettings{
+			user:       client.opts.User,
+			password:   client.opts.Password,
+			host:       client.opts.WalletHost,
+			httpClient: client.walletClient,
+		}
+	}
+
 	return retry(ctx, client.opts.TimeoutRetry, func() error {
 		// Create request and add basic authentication headers. The context is
 		// not attached to the request, and instead we all each attempt to run
 		// for the timeout duration, and we keep attempting until success, or
 		// the context is done.
-		req, err := http.NewRequest("POST", client.opts.Host, bytes.NewBuffer(data))
+		req, err := http.NewRequest("POST", clSetting.host, bytes.NewBuffer(data))
 		if err != nil {
 			return fmt.Errorf("building http request: %v", err)
 		}
-		req.SetBasicAuth(client.opts.User, client.opts.Password)
+		req.SetBasicAuth(clSetting.user, clSetting.password)
 
 		// Send the request and decode the response.
-		res, err := client.httpClient.Do(req)
+		res, err := clSetting.httpClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("sending http request: %v", err)
 		}
 		// Read the raw bytes and close the response.
 		respBytes, err := ioutil.ReadAll(res.Body)
-		//fmt.Printf("Response: %+v \n", res)
 		defer res.Body.Close()
 		//if err := decodeResponse(resp, res.Body); err != nil {
 		//	return fmt.Errorf("decoding http response: %v", err)
 		//}
 
 		if err != nil {
-			err = fmt.Errorf("error reading json reply: %w", err)
+			err = fmt.Errorf("error reading json reply: %s", err)
 			return err
 		}
 
