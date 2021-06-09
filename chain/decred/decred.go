@@ -18,6 +18,7 @@ import (
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrjson/v3"
 	"github.com/decred/dcrd/dcrutil/v3"
+	"github.com/decred/dcrd/rpc/jsonrpc/types/v2"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/pack"
@@ -420,14 +421,14 @@ func (client *client) send(ctx context.Context, resp *dcrjson.Response, method s
 
 	var clSetting *ClientSetting
 	switch method {
-	case "getbestblock", "getrawtransaction", "gettxout":
+	case "getbestblock", "getrawtransaction", "gettxout", "sendrawtransaction":
 		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
 			host:       client.opts.Host,
 			httpClient: client.httpClient,
 		}
-	case "listunspent":
+	case "listunspent", "gettransaction":
 		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
@@ -544,5 +545,19 @@ func retry(ctx context.Context, dur time.Duration, f func() error) error {
 			err = f()
 		}
 	}
+	return nil
+}
+
+// SubmitTx to the Decred network.
+func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
+	serial, err := tx.Serialize()
+	if err != nil {
+		return fmt.Errorf("bad tx: %v", err)
+	}
+	var resp dcrjson.Response
+	if err := client.send(ctx, &resp, "sendrawtransaction", hex.EncodeToString(serial), true); err != nil {
+		return fmt.Errorf("bad \"sendrawtransaction\": %v", err)
+	}
+	fmt.Printf("Response: %+v \n", resp)
 	return nil
 }
