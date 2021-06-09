@@ -1,0 +1,1 @@
+package decred_test
