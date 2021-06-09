@@ -92,6 +92,12 @@ type Tx struct {
 	signed bool
 }
 
+// Hash returns the transaction hash of the given underlying transaction.
+func (tx *Tx) Hash() (pack.Bytes, error) {
+	txhash := tx.msgTx.TxHash()
+	return pack.NewBytes(txhash[:]), nil
+}
+
 // Inputs returns the UTXO inputs in the underlying transaction.
 func (tx *Tx) Inputs() ([]utxo.Input, error) {
 	return tx.inputs, nil
