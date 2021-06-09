@@ -149,3 +149,41 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 
 	return sighashes, nil
 }
+
+// Sign consumes a list of signatures, and adds them to the list of UTXOs in
+// the underlying transactions.
+func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
+	if tx.signed {
+		return fmt.Errorf("already signed")
+	}
+	if len(signatures) != len(tx.msgTx.TxIn) {
+		return fmt.Errorf("expected %v signatures, got %v signatures", len(tx.msgTx.TxIn), len(signatures))
+	}
+
+	for i, rsv := range signatures {
+		var err error
+
+		// Decode the signature and the pubkey script.
+		r := new(big.Int).SetBytes(rsv[:32])
+		s := new(big.Int).SetBytes(rsv[32:64])
+		signature := btcec.Signature{
+			R: r,
+			S: s,
+		}
+		sigScript := tx.inputs[i].SigScript
+
+		builder := txscript.NewScriptBuilder()
+		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll)))
+		builder.AddData(pubKey)
+		if sigScript != nil {
+			builder.AddData(sigScript)
+		}
+		tx.msgTx.TxIn[i].SignatureScript, err = builder.Script()
+		if err != nil {
+			return err
+		}
+	}
+
+	tx.signed = true
+	return nil
+}
