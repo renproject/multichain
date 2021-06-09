@@ -187,3 +187,12 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	tx.signed = true
 	return nil
 }
+
+// Serialize serializes the UTXO transaction to bytes
+func (tx *Tx) Serialize() (pack.Bytes, error) {
+	buf := new(bytes.Buffer)
+	if err := tx.msgTx.Serialize(buf); err != nil {
+		return pack.Bytes{}, err
+	}
+	return pack.NewBytes(buf.Bytes()), nil
+}
