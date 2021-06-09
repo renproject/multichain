@@ -561,3 +561,34 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	fmt.Printf("Response: %+v \n", resp)
 	return nil
 }
+
+func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
+	resp := btcjson.EstimateSmartFeeResult{}
+
+	if err := client.send(ctx, &resp, "estimatesmartfee", numBlocks); err != nil {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", err)
+	}
+
+	if resp.Errors != nil && len(resp.Errors) > 0 {
+		return 0.0, fmt.Errorf("estimating smart fee: %v", resp.Errors[0])
+	}
+
+	return *resp.FeeRate, nil
+}
+
+func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error) {
+	var resp float64
+
+	switch numBlocks {
+	case int64(0):
+		if err := client.send(ctx, &resp, "estimatefee"); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	default:
+		if err := client.send(ctx, &resp, "estimatefee", numBlocks); err != nil {
+			return 0.0, fmt.Errorf("estimating fee: %v", err)
+		}
+	}
+
+	return resp, nil
+}
