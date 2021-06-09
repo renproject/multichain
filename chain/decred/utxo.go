@@ -62,9 +62,7 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 		// Ensure the address is one of the supported types.
 		switch addr.(type) {
 		case *dcrutil.AddressPubKeyHash:
-			fmt.Printf("Address Type: %+v \n", "PubKeyHash")
 		case *dcrutil.AddressScriptHash:
-			fmt.Printf("Address Type: %+v \n", "ScriptHash")
 		default:
 			return nil, errors.New("Invalid address type")
 		}
@@ -82,4 +80,40 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 	}
 
 	return &Tx{inputs: inputs, recipients: recipients, msgTx: msgTx, signed: false}, nil
+}
+
+// Tx represents a simple Decred transaction
+type Tx struct {
+	inputs     []utxo.Input
+	recipients []utxo.Recipient
+
+	msgTx *wire.MsgTx
+
+	signed bool
+}
+
+// Inputs returns the UTXO inputs in the underlying transaction.
+func (tx *Tx) Inputs() ([]utxo.Input, error) {
+	return tx.inputs, nil
+}
+
+// Outputs returns the UTXO outputs in the underlying transaction.
+func (tx *Tx) Outputs() ([]utxo.Output, error) {
+	hash, err := tx.Hash()
+	if err != nil {
+		return nil, fmt.Errorf("bad hash: %v", err)
+	}
+	outputs := make([]utxo.Output, len(tx.msgTx.TxOut))
+	for i := range outputs {
+		outputs[i].Outpoint = utxo.Outpoint{
+			Hash:  hash,
+			Index: pack.NewU32(uint32(i)),
+		}
+		outputs[i].PubKeyScript = pack.Bytes(tx.msgTx.TxOut[i].PkScript)
+		if tx.msgTx.TxOut[i].Value < 0 {
+			return nil, fmt.Errorf("bad output %v: value is less than zero", i)
+		}
+		outputs[i].Value = pack.NewU256FromU64(pack.NewU64(uint64(tx.msgTx.TxOut[i].Value)))
+	}
+	return outputs, nil
 }
