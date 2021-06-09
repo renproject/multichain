@@ -117,3 +117,35 @@ func (tx *Tx) Outputs() ([]utxo.Output, error) {
 	}
 	return outputs, nil
 }
+
+// Sighashes returns the digests that must be signed before the transaction
+// can be submitted by the client.
+func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
+	sighashes := make([]pack.Bytes32, len(tx.inputs))
+
+	for i, txin := range tx.inputs {
+		pubKeyScript := txin.PubKeyScript
+		sigScript := txin.SigScript
+		value := txin.Value.Int().Int64()
+		if value < 0 {
+			return []pack.Bytes32{}, fmt.Errorf("expected value >= 0, got value %v", value)
+		}
+
+		var hash []byte
+		var err error
+		if sigScript == nil {
+			hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i, nil)
+		} else {
+			hash, err = txscript.CalcSignatureHash(sigScript, txscript.SigHashAll, tx.msgTx, i, nil)
+		}
+		if err != nil {
+			return []pack.Bytes32{}, err
+		}
+
+		sighash := [32]byte{}
+		copy(sighash[:], hash)
+		sighashes[i] = pack.NewBytes32(sighash)
+	}
+
+	return sighashes, nil
+}
