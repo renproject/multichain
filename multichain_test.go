@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/btcsuite/btcutil/hdkeychain"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/tyler-smith/go-bip39"
 	"math/big"
 	"math/rand"
 	"os"
@@ -467,15 +469,32 @@ var _ = Describe("Multichain", func() {
 		}{
 			{
 				func() (id.PrivKey, *id.PubKey, multichain.Address) {
-					pkEnv := os.Getenv("ETH_PK")
-					if pkEnv == "" {
-						panic("ETH_PK is undefined")
+					mnemonic := os.Getenv("ETHEREUM_MNEMONIC")
+					if mnemonic == "" {
+						panic("ETHEREUM_MNEMONIC is undefined")
 					}
-					key, err := crypto.HexToECDSA(pkEnv)
+					const ZERO uint32 = 0x80000000
+					path := []uint32{ZERO + 44, ZERO + 60, ZERO, 0, 0}
+					path[len(path)-1] = uint32(0)
+					seed := bip39.NewSeed(mnemonic, "")
+					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 					Expect(err).NotTo(HaveOccurred())
-					privKey := (*id.PrivKey)(key)
-					address := multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
-					return *privKey, privKey.PubKey(), address
+					for _, val := range path {
+						key, err = key.Child(val)
+						if err != nil {
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+					privKey, err := key.ECPrivKey()
+					if err != nil {
+						Expect(err).NotTo(HaveOccurred())
+					}
+
+					newKey := privKey.ToECDSA()
+					Expect(err).NotTo(HaveOccurred())
+					pk := (*id.PrivKey)(newKey)
+					address := multichain.Address(crypto.PubkeyToAddress(pk.PublicKey).Hex())
+					return *pk, pk.PubKey(), address
 				},
 				func(privKey id.PrivKey) multichain.Address {
 					return multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
@@ -488,7 +507,7 @@ var _ = Describe("Multichain", func() {
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := ethereum.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
-					txBuilder := ethereum.NewTxBuilder(big.NewInt(3))
+					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
 
 					return client, txBuilder
 				},
@@ -702,7 +721,7 @@ var _ = Describe("Multichain", func() {
 					for {
 						// Loop until the transaction has at least a few confirmations.
 						tx, confs, err := accountClient.Tx(ctx, txHash)
-						if err == nil {
+						if err == nil && confs > 0 {
 							Expect(confs.Uint64()).To(BeNumerically(">", 0))
 							Expect(tx.Value()).To(Equal(amount))
 							Expect(tx.From()).To(Equal(senderAddr))
@@ -710,7 +729,6 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.Value()).To(Equal(amount))
 							break
 						}
-
 						// wait and retry querying for the transaction
 						time.Sleep(5 * time.Second)
 					}

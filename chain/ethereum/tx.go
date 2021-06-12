@@ -32,16 +32,13 @@ func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address
 	}
 	addr := common.Address(toAddr)
 	return &Tx{
-		ethTx: types.NewTx(&types.AccessListTx{
-			ChainID:  txBuilder.ChainID,
-			Nonce:    nonce.Int().Uint64(),
-			GasPrice: gasPrice.Int(),
-			Gas:      gasLimit.Int().Uint64(),
-			To:       &addr,
-			Value:    value.Int(),
-			Data:     payload,
-		}),
-		signer: types.NewEIP155Signer(txBuilder.ChainID),
+		ethTx: types.NewTransaction(nonce.Int().Uint64(),
+			addr, value.Int(),
+			gasLimit.Int().Uint64(),
+			gasPrice.Int(),
+			payload,
+		),
+		signer: types.LatestSignerForChainID(txBuilder.ChainID),
 	}, nil
 }
 

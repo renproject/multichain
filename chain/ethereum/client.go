@@ -59,7 +59,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 
 	// If the transaction is still pending, use default EIP-155 signer.
 	pendingTx := Tx{
-		ethTx: tx,
+		ethTx:  tx,
 		signer: types.NewEIP155Signer(chainID),
 	}
 	if pending {
@@ -77,16 +77,43 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	}
 
 	// reverted tx
-	if receipt.Status==0{
+	if receipt.Status == 0 {
 		return nil, pack.NewU64(0), fmt.Errorf("tx %v reverted, reciept status 0", txID)
 	}
 
 	// tx confirmed
 	confirmedTx := Tx{
 		tx,
-		types.MakeSigner(&params.ChainConfig{
-			ChainID: chainID,
-		},receipt.BlockNumber),
+		types.LatestSignerForChainID(chainID),
+	}
+
+	// select signer for chain
+	switch chainID.Uint64() {
+	case 0:
+		confirmedTx = Tx{
+			tx,
+			types.MakeSigner(params.YoloV3ChainConfig, receipt.BlockNumber),
+		}
+	case 1:
+		confirmedTx = Tx{
+			tx,
+			types.MakeSigner(params.MainnetChainConfig, receipt.BlockNumber),
+		}
+	case 3:
+		confirmedTx = Tx{
+			tx,
+			types.MakeSigner(params.RopstenChainConfig, receipt.BlockNumber),
+		}
+	case 4:
+		confirmedTx = Tx{
+			tx,
+			types.MakeSigner(params.RinkebyChainConfig, receipt.BlockNumber),
+		}
+	case 5:
+		confirmedTx = Tx{
+			tx,
+			types.MakeSigner(params.GoerliChainConfig, receipt.BlockNumber),
+		}
 	}
 
 	header, err := client.ethClient.HeaderByNumber(ctx, nil)
