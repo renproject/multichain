@@ -64,7 +64,7 @@ func (tx Tx) Hash() pack.Bytes {
 func (tx Tx) From() address.Address {
 	addr, err := types.Sender(tx.signer, tx.ethTx)
 	if err != nil {
-		return ""
+		return address.Address("")
 	}
 	return address.Address(addr.Hex())
 }
