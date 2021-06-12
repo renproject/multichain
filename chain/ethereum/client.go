@@ -23,7 +23,7 @@ const (
 // Client holds rpc URL to connect to a ethereum node, and the underlying
 // RPC client instance.
 type Client struct {
-	rpcURl    string
+	rpcURL    string
 	ethClient *ethclient.Client
 }
 
