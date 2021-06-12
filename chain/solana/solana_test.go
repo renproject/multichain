@@ -58,7 +58,8 @@ var _ = Describe("Solana", func() {
 			// Mint some tokens.
 			time.Sleep(10 * time.Second)
 			mintAmount := uint64(1000000000) // 10 tokens.
-			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount)
+			nilSlice := make([]byte, 32)
+			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount, nilSlice, nilSlice)
 			logger.Debug("Mint", zap.String("tx signature", string(mintSig)))
 
 			// Burn some tokens.
