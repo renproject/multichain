@@ -20,10 +20,8 @@ const (
 	DefaultClientRPCURL = "http://127.0.0.1:8545/"
 )
 
-// Client holds rpc URL to connect to a ethereum node, and the underlying
-// RPC client instance.
+// Client holds the underlying RPC client instance.
 type Client struct {
-	rpcURL    string
 	ethClient *ethclient.Client
 }
 
@@ -31,10 +29,10 @@ type Client struct {
 func NewClient(rpcURL string) (*Client, error) {
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(fmt.Sprintf("dialing url: %v", rpcURL))
 	}
 	return &Client{
-		rpcURL, client,
+		client,
 	}, nil
 }
 
@@ -42,7 +40,7 @@ func NewClient(rpcURL string) (*Client, error) {
 func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 	header, err := client.ethClient.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return pack.NewU64(0), err
+		return pack.NewU64(0), fmt.Errorf("fetching header: %v", err)
 	}
 	return pack.NewU64(header.Number.Uint64()), nil
 }
@@ -52,40 +50,62 @@ func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
 	tx, pending, err := client.ethClient.TransactionByHash(ctx, common.BytesToHash(txID))
 	if err != nil {
-		return nil, pack.NewU64(0), err
+		return nil, pack.NewU64(0), fmt.Errorf(fmt.Sprintf("fetching tx by hash '%v': %v", txID, err))
 	}
 	chainID, err := client.ethClient.ChainID(ctx)
 	if err != nil {
-		return nil, pack.NewU64(0), err
+		return nil, pack.NewU64(0), fmt.Errorf("fetching chain ID: %v", err)
 	}
-	header, err := client.ethClient.HeaderByNumber(ctx, nil)
+
+	// If the transaction is still pending, use default EIP-155 signer.
+	pendingTx := Tx{
+		ethTx: tx,
+		signer: types.NewEIP155Signer(chainID),
+	}
+	if pending {
+		return &pendingTx, 0, nil
+	}
+
+	receipt, err := client.ethClient.TransactionReceipt(ctx, common.BytesToHash(txID))
 	if err != nil {
-		return nil, pack.NewU64(0), err
+		return nil, pack.NewU64(0), fmt.Errorf("fetching recipt for tx %v : %v", txID, err)
 	}
-	newTx := Tx{
+
+	// if no receipt, tx has 0 confirmations
+	if receipt == nil {
+		return &pendingTx, 0, nil
+	}
+
+	// reverted tx
+	if receipt.Status==0{
+		return nil, pack.NewU64(0), fmt.Errorf("tx %v reverted, reciept status 0", txID)
+	}
+
+	// tx confirmed
+	confirmedTx := Tx{
 		tx,
 		types.MakeSigner(&params.ChainConfig{
 			ChainID: chainID,
-		}, header.Number),
+		},receipt.BlockNumber),
 	}
-	if pending {
-		return &newTx, 0, nil
-	}
-	receipt, err := client.ethClient.TransactionReceipt(ctx, common.BytesToHash(txID))
+
+	header, err := client.ethClient.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return nil, pack.NewU64(0), err
+		return nil, pack.NewU64(0), fmt.Errorf("fetching header : %v", err)
 	}
-	if receipt == nil {
-		return &newTx, 0, nil
-	}
-	return &newTx, pack.NewU64(header.Number.Uint64() - receipt.BlockNumber.Uint64()), nil
+
+	return &confirmedTx, pack.NewU64(header.Number.Uint64() - receipt.BlockNumber.Uint64()), nil
 }
 
 // SubmitTx to the underlying blockchain network.
 func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	switch tx := tx.(type) {
 	case *Tx:
-		return client.ethClient.SendTransaction(ctx, tx.ethTx)
+		err := client.ethClient.SendTransaction(ctx, tx.ethTx)
+		if err != nil {
+			return fmt.Errorf(fmt.Sprintf("sending transaction '%v': %v", tx.Hash(), err))
+		}
+		return nil
 	default:
 		return fmt.Errorf("expected type %T, got type %T", new(Tx), tx)
 	}
@@ -100,7 +120,7 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 	}
 	nonce, err := client.ethClient.NonceAt(ctx, common.Address(targetAddr), nil)
 	if err != nil {
-		return pack.U256{}, err
+		return pack.U256{}, fmt.Errorf("failed to get nonce for '%v': %v", addr, err)
 	}
 
 	return pack.NewU256FromU64(pack.NewU64(nonce)), nil
@@ -114,7 +134,7 @@ func (client *Client) AccountBalance(ctx context.Context, addr address.Address) 
 	}
 	balance, err := client.ethClient.BalanceAt(ctx, common.Address(targetAddr), nil)
 	if err != nil {
-		return pack.U256{}, err
+		return pack.U256{}, fmt.Errorf("failed to get balance for '%v': %v", addr, err)
 	}
 
 	return pack.NewU256FromInt(balance), nil
@@ -127,7 +147,7 @@ func (client *Client) CallContract(ctx context.Context, program address.Address,
 		return nil, fmt.Errorf("bad to address '%v': %v", program, err)
 	}
 	addr := common.Address(targetAddr)
-	// TODO : check if from addr is needed
+
 	callMsg := ethereum.CallMsg{
 		To:   &addr,
 		Data: calldata,
