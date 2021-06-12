@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -242,7 +242,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -366,7 +366,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -490,7 +490,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -614,7 +614,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1d5f4405dd2fb89c96cde28db33051a6e992d607
+      SOLANA_FFI_COMMIT: d4c670dd402894b7e98a41bccf35d2d5066c573f
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
