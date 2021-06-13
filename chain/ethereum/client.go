@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
@@ -85,35 +84,6 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	confirmedTx := Tx{
 		tx,
 		types.LatestSignerForChainID(chainID),
-	}
-
-	// select signer for chain
-	switch chainID.Uint64() {
-	case 0:
-		confirmedTx = Tx{
-			tx,
-			types.MakeSigner(params.YoloV3ChainConfig, receipt.BlockNumber),
-		}
-	case 1:
-		confirmedTx = Tx{
-			tx,
-			types.MakeSigner(params.MainnetChainConfig, receipt.BlockNumber),
-		}
-	case 3:
-		confirmedTx = Tx{
-			tx,
-			types.MakeSigner(params.RopstenChainConfig, receipt.BlockNumber),
-		}
-	case 4:
-		confirmedTx = Tx{
-			tx,
-			types.MakeSigner(params.RinkebyChainConfig, receipt.BlockNumber),
-		}
-	case 5:
-		confirmedTx = Tx{
-			tx,
-			types.MakeSigner(params.GoerliChainConfig, receipt.BlockNumber),
-		}
 	}
 
 	header, err := client.ethClient.HeaderByNumber(ctx, nil)
