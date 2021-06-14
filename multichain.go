@@ -112,6 +112,7 @@ const (
 	LUNA  = Asset("LUNA")  // Luna
 	MATIC = Asset("MATIC") // Matic PoS (Polygon)
 	SOL   = Asset("SOL")   // Solana
+	ONE  = Asset("ONE")  // Harmony
 	ZEC   = Asset("ZEC")   // Zcash
 
 	// These assets are defined separately because they are mock assets. These
@@ -152,6 +153,8 @@ func (asset Asset) OriginChain() Chain {
 		return Polygon
 	case SOL:
 		return Solana
+	case ONE:
+		return Harmony
 	case ZEC:
 		return Zcash
 
@@ -175,7 +178,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC:
+	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC, ONE:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -223,6 +226,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Harmony           = Chain("Harmony")
 	Moonbeam          = Chain("Moonbeam")
 	Polygon           = Chain("Polygon")
 	Solana            = Chain("Solana")
@@ -261,7 +265,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case Avalanche, BinanceSmartChain, Ethereum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
+	case Avalanche, BinanceSmartChain, Ethereum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Harmony, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -315,6 +319,8 @@ func (chain Chain) NativeAsset() Asset {
 		return GLMR
 	case Polygon:
 		return MATIC
+	case Harmony:
+		return ONE
 	case Solana:
 		return SOL
 	case Terra:

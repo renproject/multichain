@@ -12,6 +12,7 @@ require (
 	github.com/filecoin-project/go-jsonrpc v0.1.4-0.20210217175800-45ea43ac2bec
 	github.com/filecoin-project/go-state-types v0.1.1-0.20210506134452-99b279731c48
 	github.com/filecoin-project/lotus v1.9.0
+	github.com/harmony-one/harmony v1.10.2
 	github.com/ipfs/go-cid v0.0.7
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/multiformats/go-varint v0.0.6
@@ -37,3 +38,4 @@ replace github.com/filecoin-project/filecoin-ffi => ./chain/filecoin/filecoin-ff
 replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
+
