@@ -10,16 +10,14 @@ import (
 // order to confirm transactions with an estimated maximum delay of one block.
 type GasEstimator struct {
 	client   *Client
-	gasLimit uint64
 }
 
 // NewGasEstimator returns a simple gas estimator that fetches the ideal gas
 // price for a ethereum transaction to be included in a block
 // with minimal delay.
-func NewGasEstimator(client *Client, gasLimit uint64) *GasEstimator {
+func NewGasEstimator(client *Client) *GasEstimator {
 	return &GasEstimator{
 		client:   client,
-		gasLimit: gasLimit,
 	}
 }
 
@@ -31,5 +29,5 @@ func (gasEstimator *GasEstimator) EstimateGas(ctx context.Context) (pack.U256, p
 	if err != nil {
 		return pack.NewU256([32]byte{}), pack.NewU256([32]byte{}), fmt.Errorf("failed to get eth suggested gas price: %v", err)
 	}
-	return pack.NewU256FromInt(gasPrice), pack.NewU256FromUint64(gasEstimator.gasLimit), nil
+	return pack.NewU256FromInt(gasPrice), pack.NewU256FromInt(gasPrice), nil
 }
