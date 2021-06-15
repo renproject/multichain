@@ -7,6 +7,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/btcsuite/btcutil/hdkeychain"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/tyler-smith/go-bip39"
+	"math/big"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -48,6 +53,7 @@ var (
 	testBCH  = flag.Bool("bch", false, "Pass this flag to test Bitcoincash")
 	testDOGE = flag.Bool("doge", false, "Pass this flag to test Dogecoin")
 	testFIL  = flag.Bool("fil", false, "Pass this flag to test Filecoin")
+	testETH  = flag.Bool("eth", false, "Pass this flag to test Ethereum")
 	testLUNA = flag.Bool("luna", false, "Pass this flag to test Terra")
 	testZEC  = flag.Bool("zec", false, "Pass this flag to test Zcash")
 )
@@ -71,6 +77,7 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.BitcoinCash] = *testBCH
 	testFlags[multichain.Dogecoin] = *testDOGE
 	testFlags[multichain.Filecoin] = *testFIL
+	testFlags[multichain.Ethereum] = *testETH
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
@@ -462,6 +469,60 @@ var _ = Describe("Multichain", func() {
 		}{
 			{
 				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+					mnemonic := os.Getenv("ETHEREUM_MNEMONIC")
+					if mnemonic == "" {
+						panic("ETHEREUM_MNEMONIC is undefined")
+					}
+					const ZERO uint32 = 0x80000000
+					path := []uint32{ZERO + 44, ZERO + 60, ZERO, 0, 0}
+					path[len(path)-1] = uint32(0)
+					seed := bip39.NewSeed(mnemonic, "")
+					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					for _, val := range path {
+						key, err = key.Child(val)
+						if err != nil {
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+					privKey, err := key.ECPrivKey()
+					if err != nil {
+						Expect(err).NotTo(HaveOccurred())
+					}
+
+					newKey := privKey.ToECDSA()
+					Expect(err).NotTo(HaveOccurred())
+					pk := (*id.PrivKey)(newKey)
+					address := multichain.Address(crypto.PubkeyToAddress(pk.PublicKey).Hex())
+					return *pk, pk.PubKey(), address
+				},
+				func(privKey id.PrivKey) multichain.Address {
+					return multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+				},
+				"http://127.0.0.1:8545",
+				func() multichain.Address {
+					recipientKey := id.NewPrivKey()
+					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
+				},
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+					client, err := ethereum.NewClient(string(rpcURL))
+					Expect(err).NotTo(HaveOccurred())
+					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
+
+					return client, txBuilder
+				},
+				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+					amount := pack.NewU256FromU64(pack.U64(2000000))
+					gasLimit := pack.NewU256FromU64(pack.U64(100000))
+					gasPrice := pack.NewU256FromU64(pack.U64(1))
+					gasCap := pack.NewU256FromInt(gasPrice.Int())
+					payload := pack.NewBytes([]byte("multichain"))
+					return amount, gasLimit, gasPrice, gasCap, payload
+				},
+				multichain.Ethereum,
+			},
+			{
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
 					pkEnv := os.Getenv("TERRA_PK")
 					if pkEnv == "" {
 						panic("TERRA_PK is undefined")
@@ -660,7 +721,7 @@ var _ = Describe("Multichain", func() {
 					for {
 						// Loop until the transaction has at least a few confirmations.
 						tx, confs, err := accountClient.Tx(ctx, txHash)
-						if err == nil {
+						if err == nil && confs > 0 {
 							Expect(confs.Uint64()).To(BeNumerically(">", 0))
 							Expect(tx.Value()).To(Equal(amount))
 							Expect(tx.From()).To(Equal(senderAddr))
@@ -668,7 +729,6 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.Value()).To(Equal(amount))
 							break
 						}
-
 						// wait and retry querying for the transaction
 						time.Sleep(5 * time.Second)
 					}
