@@ -9,7 +9,7 @@ import (
 // A GasEstimator returns the gas price and the provide gas limit that is needed in
 // order to confirm transactions with an estimated maximum delay of one block.
 type GasEstimator struct {
-	client   *Client
+	client *Client
 }
 
 // NewGasEstimator returns a simple gas estimator that fetches the ideal gas
@@ -17,7 +17,7 @@ type GasEstimator struct {
 // with minimal delay.
 func NewGasEstimator(client *Client) *GasEstimator {
 	return &GasEstimator{
-		client:   client,
+		client: client,
 	}
 }
 
