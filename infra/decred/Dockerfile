@@ -34,6 +34,6 @@ RUN chmod +x /root/run.sh
 RUN cd /root/ && rm -rf /tmp/*
 
 # PEER & RPC PORTS
-EXPOSE 19556 18555
+EXPOSE 19556 18555 19557
 
 ENTRYPOINT ["./root/run.sh"]
