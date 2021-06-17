@@ -9,4 +9,6 @@ ganache-cli                     \
   -i 420                        \
   -m "$MNEMONIC"                \
   -p 8575                       \
-  -u $ADDRESS
+  -u $ADDRESS                   \
+  -b 10                         \
+  --chainId 1337

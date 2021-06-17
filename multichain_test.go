@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcutil/hdkeychain"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/renproject/multichain/chain/bsc"
 	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/fantom"
 	"github.com/tyler-smith/go-bip39"
 	"math/big"
 	"math/rand"
@@ -54,6 +56,8 @@ var (
 	testDOGE = flag.Bool("doge", false, "Pass this flag to test Dogecoin")
 	testFIL  = flag.Bool("fil", false, "Pass this flag to test Filecoin")
 	testETH  = flag.Bool("eth", false, "Pass this flag to test Ethereum")
+	testBSC  = flag.Bool("bsc", false, "Pass this flag to test Binance Smart Chain")
+	testFTM  = flag.Bool("ftm", false, "Pass this flag to test Fantom")
 	testLUNA = flag.Bool("luna", false, "Pass this flag to test Terra")
 	testZEC  = flag.Bool("zec", false, "Pass this flag to test Zcash")
 )
@@ -78,6 +82,8 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.Dogecoin] = *testDOGE
 	testFlags[multichain.Filecoin] = *testFIL
 	testFlags[multichain.Ethereum] = *testETH
+	testFlags[multichain.BinanceSmartChain] = *testBSC
+	testFlags[multichain.Fantom] = *testFTM
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
@@ -101,6 +107,14 @@ var _ = Describe("Multichain", func() {
 				{
 					multichain.Filecoin,
 					multichain.FIL,
+				},
+				{
+					multichain.Ethereum,
+					multichain.ETH,
+				},
+				{
+					multichain.BinanceSmartChain,
+					multichain.BNB,
 				},
 				{
 					multichain.Moonbeam,
@@ -499,7 +513,7 @@ var _ = Describe("Multichain", func() {
 				func(privKey id.PrivKey) multichain.Address {
 					return multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
 				},
-				"http://127.0.0.1:8545",
+				ethereum.DefaultClientRPCURL,
 				func() multichain.Address {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
@@ -520,6 +534,97 @@ var _ = Describe("Multichain", func() {
 					return amount, gasLimit, gasPrice, gasCap, payload
 				},
 				multichain.Ethereum,
+			},
+			{
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+					mnemonic := os.Getenv("BINANCE_MNEMONIC")
+					if mnemonic == "" {
+						panic("BINANCE_MNEMONIC is undefined")
+					}
+					const ZERO uint32 = 0x80000000
+					path := []uint32{ZERO + 44, ZERO + 60, ZERO, 0, 0}
+					path[len(path)-1] = uint32(0)
+					seed := bip39.NewSeed(mnemonic, "")
+					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+					Expect(err).NotTo(HaveOccurred())
+					for _, val := range path {
+						key, err = key.Child(val)
+						if err != nil {
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+					privKey, err := key.ECPrivKey()
+					if err != nil {
+						Expect(err).NotTo(HaveOccurred())
+					}
+
+					newKey := privKey.ToECDSA()
+					Expect(err).NotTo(HaveOccurred())
+					pk := (*id.PrivKey)(newKey)
+					address := multichain.Address(crypto.PubkeyToAddress(pk.PublicKey).Hex())
+					return *pk, pk.PubKey(), address
+				},
+				func(privKey id.PrivKey) multichain.Address {
+					return multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+				},
+				bsc.DefaultClientRPCURL,
+				func() multichain.Address {
+					recipientKey := id.NewPrivKey()
+					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
+				},
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+					client, err := bsc.NewClient(string(rpcURL))
+					Expect(err).NotTo(HaveOccurred())
+					txBuilder := bsc.NewTxBuilder(big.NewInt(1337))
+
+					return client, txBuilder
+				},
+				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+					amount := pack.NewU256FromU64(pack.U64(2000000))
+					gasLimit := pack.NewU256FromU64(pack.U64(100000))
+					gasPrice := pack.NewU256FromU64(pack.U64(1))
+					gasCap := pack.NewU256FromInt(gasPrice.Int())
+					payload := pack.NewBytes([]byte("multichain"))
+					return amount, gasLimit, gasPrice, gasCap, payload
+				},
+				multichain.BinanceSmartChain,
+			},
+			{
+				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+					pk := os.Getenv("FANTOM_PK")
+					if pk == "" {
+						panic("FANTOM_PK is undefined")
+					}
+					key, err := crypto.HexToECDSA(pk)
+					privKey := (*id.PrivKey)(key)
+					Expect(err).NotTo(HaveOccurred())
+					address := multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+					return *privKey, privKey.PubKey(), address
+				},
+				func(privKey id.PrivKey) multichain.Address {
+					return multichain.Address(crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+				},
+				fantom.DefaultClientRPCURL,
+				func() multichain.Address {
+					recipientKey := id.NewPrivKey()
+					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
+				},
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+					client, err := fantom.NewClient(string(rpcURL))
+					Expect(err).NotTo(HaveOccurred())
+					txBuilder := fantom.NewTxBuilder(big.NewInt(1337))
+
+					return client, txBuilder
+				},
+				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+					amount := pack.NewU256FromU64(pack.U64(2000000))
+					gasLimit := pack.NewU256FromU64(pack.U64(100000))
+					gasPrice := pack.NewU256FromU64(pack.U64(1))
+					gasCap := pack.NewU256FromInt(gasPrice.Int())
+					payload := pack.NewBytes([]byte("multichain"))
+					return amount, gasLimit, gasPrice, gasCap, payload
+				},
+				multichain.Fantom,
 			},
 			{
 				func() (id.PrivKey, *id.PubKey, multichain.Address) {
