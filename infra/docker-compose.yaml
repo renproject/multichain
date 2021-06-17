@@ -57,7 +57,8 @@ services:
     build:
       context: ./decred
     ports:
-      - "0.0.0.0:19555:19555"
+      - "0.0.0.0:19556:19556"
+      - "0.0.0.0:19557:19557"
     entrypoint:
       - "./root/run.sh"
       - "${DECRED_ADDRESS}"
