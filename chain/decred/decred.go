@@ -34,7 +34,7 @@ const (
 	DefaultClientHost = "https://127.0.0.1:19556"
 	// DefaultWalletHost used by dcrwallet. This should only be used for local
 	// deployments of the multichain.
-	DefaultWalletHost = "https://127.0.0.1:9110"
+	DefaultWalletHost = "https://127.0.0.1:19557"
 	// DefaultClientUser used by the Client. This is insecure, and should only
 	// be used for local — or publicly accessible — deployments of the
 	// multichain.
@@ -84,7 +84,7 @@ func DefaultClientOptions() ClientOptions {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defaultCertFile := dir + "/decred/" + DefaultClientCert
+	defaultCertFile := dir + "/../../infra/decred/" + DefaultClientCert
 
 	return ClientOptions{
 		Timeout:       DefaultClientTimeout,
@@ -97,6 +97,7 @@ func DefaultClientOptions() ClientOptions {
 		TLSSkipVerify: DefaultClientTLSSkipVerify,
 		AuthType:      DefaultClientAuthTypeBasic,
 		RPCCert:       defaultCertFile,
+		WalletRPCCert: defaultCertFile,
 	}
 }
 
@@ -159,13 +160,16 @@ func NewClient(opts ClientOptions) *client {
 			serverCAs := x509.NewCertPool()
 			serverCert, err := ioutil.ReadFile(opts.RPCCert)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 			if !serverCAs.AppendCertsFromPEM(serverCert) {
+				fmt.Println("Cannot Append Sever cert")
 				return nil
 			}
 			keypair, err := tls.LoadX509KeyPair(opts.ClientCert, opts.ClientKey)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 
@@ -176,6 +180,7 @@ func NewClient(opts ClientOptions) *client {
 		if !opts.TLSSkipVerify && opts.RPCCert != "" {
 			pem, err := ioutil.ReadFile(opts.RPCCert)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 
@@ -203,8 +208,9 @@ func NewClient(opts ClientOptions) *client {
 		}
 		if !opts.TLSSkipVerify && opts.AuthType == DefaultClientAuthTypeClientCert {
 			serverCAs := x509.NewCertPool()
-			serverCert, err := ioutil.ReadFile(opts.RPCCert)
+			serverCert, err := ioutil.ReadFile(opts.WalletRPCCert)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 			if !serverCAs.AppendCertsFromPEM(serverCert) {
@@ -212,6 +218,7 @@ func NewClient(opts ClientOptions) *client {
 			}
 			keypair, err := tls.LoadX509KeyPair(opts.ClientCert, opts.ClientKey)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 
@@ -222,6 +229,7 @@ func NewClient(opts ClientOptions) *client {
 		if !opts.TLSSkipVerify && opts.WalletRPCCert != "" {
 			pem, err := ioutil.ReadFile(opts.WalletRPCCert)
 			if err != nil {
+				fmt.Printf("Error: %s \n", err)
 				return nil
 			}
 
@@ -300,6 +308,7 @@ func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64
 		return []utxo.Output{}, fmt.Errorf("bad \"listunspent\": %v", err)
 	}
 
+	//fmt.Printf("Unspent Output: %+v \n", resp)
 	for _, v := range result {
 		amount, err := dcrutil.NewAmount(v.Amount)
 		if err != nil {
@@ -558,11 +567,11 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	if err := client.send(ctx, &resp, "sendrawtransaction", hex.EncodeToString(serial), true); err != nil {
 		return fmt.Errorf("bad \"sendrawtransaction\": %v", err)
 	}
-	fmt.Printf("Response: %+v \n", resp)
+	fmt.Printf("Response: %+v \n", string(resp.Result))
 	return nil
 }
 
-func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
+/*func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
 	resp := btcjson.EstimateSmartFeeResult{}
 
 	if err := client.send(ctx, &resp, "estimatesmartfee", numBlocks); err != nil {
@@ -592,3 +601,4 @@ func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (f
 
 	return resp, nil
 }
+*/
