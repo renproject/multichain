@@ -602,3 +602,31 @@ func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (f
 	return resp, nil
 }
 */
+
+// Confirmations of a transaction in the decred network.
+func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error) {
+	var resp dcrjson.Response
+
+	size := len(txHash)
+	txHashReversed := make([]byte, size)
+	copy(txHashReversed[:], txHash[:])
+	for i := 0; i < size/2; i++ {
+		txHashReversed[i], txHashReversed[size-1-i] = txHashReversed[size-1-i], txHashReversed[i]
+	}
+
+	if err := client.send(ctx, &resp, "gettransaction", hex.EncodeToString(txHashReversed)); err != nil {
+		return 0, fmt.Errorf("bad \"gettransaction\": %v", err)
+	}
+
+	result := types.TxRawResult{}
+	err := json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return 0, fmt.Errorf("bad \"gettransaction\": %v", err)
+	}
+
+	confirmations := result.Confirmations
+	if confirmations < 0 {
+		confirmations = 0
+	}
+	return confirmations, nil
+}

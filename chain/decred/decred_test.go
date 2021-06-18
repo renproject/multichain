@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/decred/dcrd/chaincfg/v3"
 	"github.com/decred/dcrd/dcrec"
@@ -105,6 +106,28 @@ var _ = Describe("Decred", func() {
 				err = client.SubmitTx(context.Background(), tx)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("TXID               %v", txHash)
+
+				for {
+					// Loop until the transaction has at least a few
+					// confirmations. This implies that the transaction is
+					// definitely valid, and the test has passed. We were
+					// successfully able to use the multichain to construct and
+					// submit a Bitcoin transaction!
+					confs, err := client.Confirmations(context.Background(), txHash)
+					Expect(err).ToNot(HaveOccurred())
+					log.Printf("                   %v/3 confirmations", confs)
+					if confs >= 1 {
+						break
+					}
+					time.Sleep(10 * time.Second)
+				}
+
+				// Check that we can load the output and that it is equal.
+				// Otherwise, something strange is happening with the RPC
+				// client.
+				output2, _, err = client.Output(context.Background(), output.Outpoint)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
 			})
 		})
 	})
