@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
@@ -430,7 +431,8 @@ func (client *client) send(ctx context.Context, resp *dcrjson.Response, method s
 
 	var clSetting *ClientSetting
 	switch method {
-	case "getbestblock", "getrawtransaction", "gettxout", "sendrawtransaction":
+	case "getbestblock", "getrawtransaction", "gettxout",
+		"sendrawtransaction", "estimatesmartfee", "estimatefee":
 		clSetting = &ClientSetting{
 			user:       client.opts.User,
 			password:   client.opts.Password,
@@ -571,37 +573,43 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	return nil
 }
 
-/*func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
-	resp := btcjson.EstimateSmartFeeResult{}
+func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
+	resp := dcrjson.Response{}
 
 	if err := client.send(ctx, &resp, "estimatesmartfee", numBlocks); err != nil {
 		return 0.0, fmt.Errorf("estimating smart fee: %v", err)
 	}
 
-	if resp.Errors != nil && len(resp.Errors) > 0 {
-		return 0.0, fmt.Errorf("estimating smart fee: %v", resp.Errors[0])
+	if resp.Error != nil {
+		return 0.0, resp.Error
 	}
 
-	return *resp.FeeRate, nil
+	result, err := strconv.ParseFloat(string(resp.Result), 10)
+	if err != nil {
+		return 0.0, err
+	}
+
+	return result, nil
 }
 
 func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error) {
-	var resp float64
+	resp := dcrjson.Response{}
 
-	switch numBlocks {
-	case int64(0):
-		if err := client.send(ctx, &resp, "estimatefee"); err != nil {
-			return 0.0, fmt.Errorf("estimating fee: %v", err)
-		}
-	default:
-		if err := client.send(ctx, &resp, "estimatefee", numBlocks); err != nil {
-			return 0.0, fmt.Errorf("estimating fee: %v", err)
-		}
+	if err := client.send(ctx, &resp, "estimatefee", numBlocks); err != nil {
+		return 0.0, fmt.Errorf("estimating fee: %v", err)
 	}
 
-	return resp, nil
+	if resp.Error != nil {
+		return 0.0, resp.Error
+	}
+
+	result, err := strconv.ParseFloat(string(resp.Result), 10)
+	if err != nil {
+		return 0.0, err
+	}
+
+	return result, nil
 }
-*/
 
 // Confirmations of a transaction in the decred network.
 func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error) {
