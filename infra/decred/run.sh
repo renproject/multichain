@@ -5,10 +5,12 @@ PRIV_KEY=PsUQEpYDXVwphd9xNXUMj63LyxSWPTor3RDgfw9DMdH9tDkJaosyp
 # Start
 screen -dm /decred/dcrd --simnet --miningaddr=$ADDRESS
 screen -dm /decred/dcrwallet --simnet --createtemp
-sleep 2
+sleep 10
 
 # Print setup
 echo "DECRED_ADDRESS=$ADDRESS"
+
+/decred/dcrctl --simnet --wallet importprivkey $PRIV_KEY
 
 /decred/dcrctl --simnet generate 101
 
