@@ -140,6 +140,20 @@ func (opts ClientOptions) WithPassword(password string) ClientOptions {
 	return opts
 }
 
+// A Client interacts with an instance of the decred network using the RPC
+// interface exposed by a dcrd/dcrwallet node.
+type Client interface {
+	utxo.Client
+	// UnspentOutputs spendable by the given address.
+	UnspentOutputs(ctx context.Context, minConf, maxConf int64, address address.Address) ([]utxo.Output, error)
+	// Confirmations of a transaction in the Bitcoin network.
+	Confirmations(ctx context.Context, txHash pack.Bytes) (int64, error)
+	// EstimateSmartFee
+	EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error)
+	// EstimateFeeLegacy
+	EstimateFeeLegacy(ctx context.Context, numBlocks int64) (float64, error)
+}
+
 type client struct {
 	opts         ClientOptions
 	httpClient   http.Client
