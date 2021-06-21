@@ -1,6 +1,6 @@
 #!/bin/bash
-ADDRESS=SsaGEEZu2L8x93qvKzzahtzQ7yzkec3i8wL
-PRIV_KEY=PsUQEpYDXVwphd9xNXUMj63LyxSWPTor3RDgfw9DMdH9tDkJaosyp
+ADDRESS=$1
+PRIV_KEY=$2
 
 # Start
 screen -dm /decred/dcrd --simnet --miningaddr=$ADDRESS
