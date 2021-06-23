@@ -17,7 +17,6 @@ import (
 	"github.com/renproject/multichain/chain/polygon"
 	"github.com/tyler-smith/go-bip39"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"math/rand"
 	"os"
@@ -662,8 +661,6 @@ var _ = Describe("Multichain", func() {
 					client, err := avalanche.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := avalanche.NewTxBuilder(big.NewInt(43112))
-					x, y, z := avalanche.NewGasEstimator(client).EstimateGas(context.Background())
-					log.Print("gas: ", x, y, z)
 					return client, txBuilder
 				},
 				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
@@ -866,47 +863,53 @@ var _ = Describe("Multichain", func() {
 					// Initialise the account chain's client, and possibly get a nonce for
 					// the sender.
 					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL)
+					sendTx := func() (pack.Bytes, pack.U256) {
+						// Get the appropriate nonce for sender.
+						nonce, err := accountClient.AccountNonce(ctx, senderAddr)
+						Expect(err).NotTo(HaveOccurred())
 
-					// Get the appropriate nonce for sender.
-					nonce, err := accountClient.AccountNonce(ctx, senderAddr)
-					Expect(err).NotTo(HaveOccurred())
+						// Build a transaction.
+						amount, gasLimit, gasPrice, gasCap, payload := accountChain.txParams(accountClient)
 
-					// Build a transaction.
-					amount, gasLimit, gasPrice, gasCap, payload := accountChain.txParams(accountClient)
+						accountTx, err := txBuilder.BuildTx(
+							ctx,
+							multichain.Address(senderAddr),
+							recipientAddr,
+							amount, nonce, gasLimit, gasPrice, gasCap,
+							payload,
+						)
+						Expect(err).NotTo(HaveOccurred())
 
-					accountTx, err := txBuilder.BuildTx(
-						ctx,
-						multichain.Address(senderAddr),
-						recipientAddr,
-						amount, nonce, gasLimit, gasPrice, gasCap,
-						payload,
-					)
-					Expect(err).NotTo(HaveOccurred())
+						// Get the transaction bytes and sign them.
+						sighashes, err := accountTx.Sighashes()
+						Expect(err).NotTo(HaveOccurred())
+						hash := id.Hash(sighashes[0])
+						sig, err := senderPrivKey.Sign(&hash)
+						Expect(err).NotTo(HaveOccurred())
+						sigBytes, err := surge.ToBinary(sig)
+						Expect(err).NotTo(HaveOccurred())
+						txSignature := pack.Bytes65{}
+						copy(txSignature[:], sigBytes)
+						senderPubKeyBytes, err := surge.ToBinary(senderPubKey)
+						Expect(err).NotTo(HaveOccurred())
+						err = accountTx.Sign(
+							[]pack.Bytes65{txSignature},
+							pack.NewBytes(senderPubKeyBytes),
+						)
+						Expect(err).NotTo(HaveOccurred())
 
-					// Get the transaction bytes and sign them.
-					sighashes, err := accountTx.Sighashes()
-					Expect(err).NotTo(HaveOccurred())
-					hash := id.Hash(sighashes[0])
-					sig, err := senderPrivKey.Sign(&hash)
-					Expect(err).NotTo(HaveOccurred())
-					sigBytes, err := surge.ToBinary(sig)
-					Expect(err).NotTo(HaveOccurred())
-					txSignature := pack.Bytes65{}
-					copy(txSignature[:], sigBytes)
-					senderPubKeyBytes, err := surge.ToBinary(senderPubKey)
-					Expect(err).NotTo(HaveOccurred())
-					err = accountTx.Sign(
-						[]pack.Bytes65{txSignature},
-						pack.NewBytes(senderPubKeyBytes),
-					)
-					Expect(err).NotTo(HaveOccurred())
-
-					// Submit the transaction to the account chain.
-					txHash := accountTx.Hash()
-					err = accountClient.SubmitTx(ctx, accountTx)
-					Expect(err).NotTo(HaveOccurred())
-					logger.Debug("submit tx", zap.String("from", string(senderAddr)), zap.String("to", string(recipientAddr)), zap.Any("txHash", txHash))
-
+						// Submit the transaction to the account chain.
+						txHash := accountTx.Hash()
+						err = accountClient.SubmitTx(ctx, accountTx)
+						Expect(err).NotTo(HaveOccurred())
+						logger.Debug("submit tx", zap.String("from", string(senderAddr)), zap.String("to", string(recipientAddr)), zap.Any("txHash", txHash))
+						return txHash, amount
+					}
+					txHash, amount := sendTx()
+					if accountChain.chain == multichain.Avalanche {
+						time.Sleep(5 * time.Second)
+						sendTx()
+					}
 					// Wait slightly before we query the chain's node.
 					time.Sleep(time.Second)
 
