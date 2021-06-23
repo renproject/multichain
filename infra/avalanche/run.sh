@@ -35,6 +35,9 @@ avalanchego \
 
 # create a new user
 sleep 10
+echo ""
+echo "---create new user---"
+echo ""
 curl -X POST --data '{
     "jsonrpc":"2.0",
     "id"     :1,
@@ -47,6 +50,9 @@ curl -X POST --data '{
 
 # import private key that contains AVAX into X-chain
 sleep 1
+echo ""
+echo "---import private key that contains AVAX into X-chain---"
+echo ""
 curl -X POST --data '{
     "jsonrpc":"2.0",
     "id"     :1,
@@ -60,6 +66,9 @@ curl -X POST --data '{
 
 # import private key into C-chain
 sleep 1
+echo ""
+echo "---import private key into C-chain---"
+echo ""
 curl -X POST --data '{
     "jsonrpc":"2.0",
     "id"     :1,
@@ -73,6 +82,9 @@ curl -X POST --data '{
 
 # export the AVAX to C-chain
 sleep 1
+echo ""
+echo "---export the AVAX to C-chain---"
+echo ""
 curl -X POST --data '{
     "jsonrpc":"2.0",
     "id"     :1,
@@ -88,6 +100,9 @@ curl -X POST --data '{
 
 # import AVAX to the hex address
 sleep 1
+echo ""
+echo "---import AVAX to the hex address---"
+echo ""
 curl -X POST --data '{
     "jsonrpc":"2.0",
     "id"     :1,
