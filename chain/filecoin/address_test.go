@@ -94,4 +94,18 @@ var _ = Describe("Address", func() {
 			})
 		})
 	})
+
+	Context("when encoding empty address", func() {
+		It("should fail", func() {
+			_, err := encoderDecoder.EncodeAddress(address.RawAddress(pack.Bytes([]byte{})))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when decoding empty address", func() {
+		It("should fail", func() {
+			_, err := encoderDecoder.DecodeAddress(address.Address(""))
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })
