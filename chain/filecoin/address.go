@@ -1,6 +1,8 @@
 package filecoin
 
 import (
+	"fmt"
+
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/renproject/multichain/api/address"
 )
@@ -32,6 +34,9 @@ func (encoder AddressEncoder) EncodeAddress(raw address.RawAddress) (address.Add
 	if err != nil {
 		return address.Address(""), err
 	}
+	if addr == filaddress.Undef {
+		return address.Address(""), fmt.Errorf("encoding address: undefined address=%v", raw)
+	}
 	return address.Address(addr.String()), nil
 }
 
@@ -41,6 +46,9 @@ func (addrDecoder AddressDecoder) DecodeAddress(addr address.Address) (address.R
 	rawAddr, err := filaddress.NewFromString(string(addr))
 	if err != nil {
 		return nil, err
+	}
+	if rawAddr == filaddress.Undef {
+		return nil, fmt.Errorf("decoding address: undefined address=%v", addr)
 	}
 	return address.RawAddress(rawAddr.Bytes()), nil
 }
