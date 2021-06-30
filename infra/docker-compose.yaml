@@ -151,6 +151,19 @@ services:
     ports:
       - "0.0.0.0:8899-8900:8899-8900"
 
+  #
+  # ThunderCore
+  #
+  thundercore:
+    build:
+      context: ./thundercore
+    ports:
+      - "0.0.0.0:8565:8565"
+    entrypoint:
+      - "./root/run.sh"
+      - "${THUNDERCORE_MNEMONIC}"
+      - "${THUNDERCORE_ADDRESS}"
+
   ##
   ## Moonbeam
   ##

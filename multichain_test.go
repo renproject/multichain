@@ -141,6 +141,10 @@ var _ = Describe("Multichain", func() {
 					multichain.Terra,
 					multichain.LUNA,
 				},
+				{
+					multichain.ThunderCore,
+					multichain.TT,
+				},
 			}
 			utxoChains := []struct {
 				chain multichain.Chain
