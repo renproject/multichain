@@ -99,20 +99,21 @@ type Asset string
 // from an existing chain, you must add a human-readable string to this set of
 // enumerated values. Assets must be listed in alphabetical order.
 const (
-	AVAX  = Asset("AVAX")  // Avalanche
-	BCH   = Asset("BCH")   // Bitcoin Cash
-	BNB   = Asset("BNB")   // Binance Coin
-	BTC   = Asset("BTC")   // Bitcoin
-	DGB   = Asset("DGB")   // DigiByte
-	DOGE  = Asset("DOGE")  // Dogecoin
-	ETH   = Asset("ETH")   // Ether
-	FIL   = Asset("FIL")   // Filecoin
-	FTM   = Asset("FTM")   // Fantom
-	GLMR  = Asset("GLMR")  // Glimmer
-	LUNA  = Asset("LUNA")  // Luna
-	MATIC = Asset("MATIC") // Matic PoS (Polygon)
-	SOL   = Asset("SOL")   // Solana
-	ZEC   = Asset("ZEC")   // Zcash
+	AVAX    = Asset("AVAX")    // Avalanche
+	BCH     = Asset("BCH")     // Bitcoin Cash
+	BNB     = Asset("BNB")     // Binance Coin
+	BTC     = Asset("BTC")     // Bitcoin
+	DGB     = Asset("DGB")     // DigiByte
+	DOGE    = Asset("DOGE")    // Dogecoin
+	ETH     = Asset("ETH")     // Ether
+	ARB_ETH = Asset("ARB_ETH") // Arbitrum Ether
+	FIL     = Asset("FIL")     // Filecoin
+	FTM     = Asset("FTM")     // Fantom
+	GLMR    = Asset("GLMR")    // Glimmer
+	LUNA    = Asset("LUNA")    // Luna
+	MATIC   = Asset("MATIC")   // Matic PoS (Polygon)
+	SOL     = Asset("SOL")     // Solana
+	ZEC     = Asset("ZEC")     // Zcash
 
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -154,6 +155,8 @@ func (asset Asset) OriginChain() Chain {
 		return Solana
 	case ZEC:
 		return Zcash
+	case ARB_ETH:
+		return Arbitrum
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -175,7 +178,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC:
+	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC, ARB_ETH:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -215,6 +218,7 @@ type Chain string
 // in alphabetical order.
 const (
 	Avalanche         = Chain("Avalanche")
+	Arbitrum          = Chain("Arbitrum")
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
@@ -261,7 +265,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case Avalanche, BinanceSmartChain, Ethereum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
+	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -321,6 +325,8 @@ func (chain Chain) NativeAsset() Asset {
 		return LUNA
 	case Zcash:
 		return ZEC
+	case Arbitrum:
+		return ARB_ETH
 
 	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.
