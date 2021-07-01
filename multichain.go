@@ -99,21 +99,21 @@ type Asset string
 // from an existing chain, you must add a human-readable string to this set of
 // enumerated values. Assets must be listed in alphabetical order.
 const (
-	AVAX    = Asset("AVAX")    // Avalanche
-	BCH     = Asset("BCH")     // Bitcoin Cash
-	BNB     = Asset("BNB")     // Binance Coin
-	BTC     = Asset("BTC")     // Bitcoin
-	DGB     = Asset("DGB")     // DigiByte
-	DOGE    = Asset("DOGE")    // Dogecoin
-	ETH     = Asset("ETH")     // Ether
-	ARB_ETH = Asset("ARB_ETH") // Arbitrum Ether
-	FIL     = Asset("FIL")     // Filecoin
-	FTM     = Asset("FTM")     // Fantom
-	GLMR    = Asset("GLMR")    // Glimmer
-	LUNA    = Asset("LUNA")    // Luna
-	MATIC   = Asset("MATIC")   // Matic PoS (Polygon)
-	SOL     = Asset("SOL")     // Solana
-	ZEC     = Asset("ZEC")     // Zcash
+	AVAX   = Asset("AVAX")   // Avalanche
+	BCH    = Asset("BCH")    // Bitcoin Cash
+	BNB    = Asset("BNB")    // Binance Coin
+	BTC    = Asset("BTC")    // Bitcoin
+	DGB    = Asset("DGB")    // DigiByte
+	DOGE   = Asset("DOGE")   // Dogecoin
+	ETH    = Asset("ETH")    // Ether
+	ArbETH = Asset("ArbETH") // Arbitrum Ether
+	FIL    = Asset("FIL")    // Filecoin
+	FTM    = Asset("FTM")    // Fantom
+	GLMR   = Asset("GLMR")   // Glimmer
+	LUNA   = Asset("LUNA")   // Luna
+	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
+	SOL    = Asset("SOL")    // Solana
+	ZEC    = Asset("ZEC")    // Zcash
 
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -155,7 +155,7 @@ func (asset Asset) OriginChain() Chain {
 		return Solana
 	case ZEC:
 		return Zcash
-	case ARB_ETH:
+	case ArbETH:
 		return Arbitrum
 
 	// These assets are handled separately because they are mock assets. These
@@ -178,7 +178,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC, ARB_ETH:
+	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC, ArbETH:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -326,7 +326,7 @@ func (chain Chain) NativeAsset() Asset {
 	case Zcash:
 		return ZEC
 	case Arbitrum:
-		return ARB_ETH
+		return ArbETH
 
 	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.
