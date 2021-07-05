@@ -6,9 +6,9 @@ ganache-cli      \
   -h 0.0.0.0     \
   -a 105         \
   -k muirGlacier \
-  -l 14969745    \
+  -l 15000000    \
   -i 420         \
-  -b 10          \
+  -b 1           \
   -m "$MNEMONIC" \
   -u $ADDRESS    \
   --chainId 1337

@@ -626,7 +626,7 @@ var _ = Describe("Multichain", func() {
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := bsc.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
-					txBuilder := bsc.NewTxBuilder(big.NewInt(1337))
+					txBuilder := bsc.NewTxBuilder(big.NewInt(420))
 
 					return client, txBuilder
 				},
