@@ -178,7 +178,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case AVAX, BNB, ETH, FIL, GLMR, LUNA, MATIC, ArbETH:
+	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, SOL:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -217,8 +217,8 @@ type Chain string
 // human-readable string to this set of enumerated values. Chains must be listed
 // in alphabetical order.
 const (
-	Avalanche         = Chain("Avalanche")
 	Arbitrum          = Chain("Arbitrum")
+	Avalanche         = Chain("Avalanche")
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")

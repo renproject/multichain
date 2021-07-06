@@ -176,7 +176,9 @@ var _ = Describe("Multichain", func() {
 				accountChain := accountChain
 				Specify(fmt.Sprintf("Chain=%v, Asset=%v should be supported", accountChain.chain, accountChain.asset), func() {
 					Expect(accountChain.chain.IsAccountBased()).To(BeTrue())
+					Expect(accountChain.chain.ChainType()).To(Equal(multichain.ChainTypeAccountBased))
 					Expect(accountChain.chain.NativeAsset()).To(Equal(accountChain.asset))
+					Expect(accountChain.asset.ChainType()).To(Equal(multichain.ChainTypeAccountBased))
 					Expect(accountChain.asset.OriginChain()).To(Equal(accountChain.chain))
 				})
 			}
@@ -184,7 +186,9 @@ var _ = Describe("Multichain", func() {
 				utxoChain := utxoChain
 				Specify(fmt.Sprintf("Chain=%v, Asset=%v should be supported", utxoChain.chain, utxoChain.asset), func() {
 					Expect(utxoChain.chain.IsUTXOBased()).To(BeTrue())
+					Expect(utxoChain.chain.ChainType()).To(Equal(multichain.ChainTypeUTXOBased))
 					Expect(utxoChain.chain.NativeAsset()).To(Equal(utxoChain.asset))
+					Expect(utxoChain.asset.ChainType()).To(Equal(multichain.ChainTypeUTXOBased))
 					Expect(utxoChain.asset.OriginChain()).To(Equal(utxoChain.chain))
 				})
 			}
