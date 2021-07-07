@@ -193,6 +193,40 @@ var _ = Describe("Multichain", func() {
 				})
 			}
 		})
+
+		Context("Assets are declared appropriately", func() {
+			nativeAssets := []multichain.Asset{
+				multichain.ArbETH, multichain.AVAX, multichain.BNB, multichain.ETH,
+				multichain.FTM, multichain.GLMR, multichain.MATIC, multichain.SOL,
+			}
+			tokenAssets := []struct {
+				asset multichain.Asset
+				chain multichain.Chain
+			}{
+				{
+					multichain.REN,
+					multichain.Ethereum,
+				},
+				{
+					multichain.USDC,
+					multichain.Ethereum,
+				},
+			}
+
+			for _, asset := range nativeAssets {
+				asset := asset
+				Specify(fmt.Sprintf("Asset=%v should be supported", asset), func() {
+					Expect(asset.Type()).To(Equal(multichain.AssetTypeNative))
+				})
+			}
+			for _, asset := range tokenAssets {
+				asset := asset
+				Specify(fmt.Sprintf("Asset=%v should be supported", asset.asset), func() {
+					Expect(asset.asset.Type()).To(Equal(multichain.AssetTypeToken))
+					Expect(asset.asset.OriginChain()).To(Equal(asset.chain))
+				})
+			}
+		})
 	})
 
 	//

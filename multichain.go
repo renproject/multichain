@@ -115,6 +115,9 @@ const (
 	SOL    = Asset("SOL")    // Solana
 	ZEC    = Asset("ZEC")    // Zcash
 
+	REN  = Asset("REN")  // Ren
+	USDC = Asset("USDC") // Circle USD
+
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
 
@@ -123,10 +126,45 @@ const (
 	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
 )
 
+// AssetType represents the type of asset, whether native-asset of an account
+// chain or a token on an account chain.
+type AssetType string
+
+const (
+	// AssetTypeNative is an identifier for all the native assets of account based
+	// chains namely. For instance, ETH for Ethereum, BNB for BinanceSmartChain.
+	AssetTypeNative = AssetType("NativeAsset")
+
+	// AssetTypeToken is an identifier for all tokens (ERC20, BEP20) deployed on
+	// programmable account-based chains. For instance, REN is an ERC-20 token on
+	// Ethereum, USDC is an ERC-20 token on Ethereum.
+	AssetTypeToken = AssetType("TokenAsset")
+)
+
+// SizeHint returns the number of bytes required to represent the asset type in
+// binary.
+func (assetType AssetType) SizeHint() int {
+	return surge.SizeHintString(string(assetType))
+}
+
+// Marshal the asset type to binary. You should not call this function directly,
+// unless you are implementing marshalling for a container type.
+func (assetType AssetType) Marshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.MarshalString(string(assetType), buf, rem)
+}
+
+// Unmarshal the asset type from binary. You should not call this function
+// directly, unless you are implementing unmarshalling for a container type.
+func (assetType *AssetType) Unmarshal(buf []byte, rem int) ([]byte, int, error) {
+	return surge.UnmarshalString((*string)(assetType), buf, rem)
+}
+
 // OriginChain returns the chain upon which the asset originates. For example,
 // the origin chain of BTC is Bitcoin.
 func (asset Asset) OriginChain() Chain {
 	switch asset {
+	case ArbETH:
+		return Arbitrum
 	case AVAX:
 		return Avalanche
 	case BCH:
@@ -151,12 +189,14 @@ func (asset Asset) OriginChain() Chain {
 		return Terra
 	case MATIC:
 		return Polygon
+	case REN:
+		return Ethereum
 	case SOL:
 		return Solana
+	case USDC:
+		return Ethereum
 	case ZEC:
 		return Zcash
-	case ArbETH:
-		return Arbitrum
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -178,7 +218,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, REN, SOL, USDC:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -191,6 +231,25 @@ func (asset Asset) ChainType() ChainType {
 
 	default:
 		return ChainType("")
+	}
+}
+
+// Type returns the asset-type (Native or Token) for the given asset.
+func (asset Asset) Type() AssetType {
+	switch asset {
+	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, MATIC, SOL:
+		return AssetTypeNative
+	case REN, USDC:
+		return AssetTypeToken
+
+	// These assets are handled separately because they are mock assets. These
+	// assets should only be used for testing.
+
+	case AMOCK1, AMOCK2:
+		return AssetTypeNative
+
+	default:
+		return AssetType("")
 	}
 }
 
