@@ -123,6 +123,7 @@ const (
 
 	AMOCK1 = Asset("AMOCK1") // Account-based mock asset
 	AMOCK2 = Asset("AMOCK2") // Account-based mock asset
+	AMOCK3 = Asset("AMOCK3") // ERC-20 mock token asset on chain AccountMocker1
 	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
 )
 
@@ -201,7 +202,7 @@ func (asset Asset) OriginChain() Chain {
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
-	case AMOCK1:
+	case AMOCK1, AMOCK3:
 		return AccountMocker1
 	case AMOCK2:
 		return AccountMocker2
@@ -224,7 +225,7 @@ func (asset Asset) ChainType() ChainType {
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
-	case AMOCK1, AMOCK2:
+	case AMOCK1, AMOCK2, AMOCK3:
 		return ChainTypeAccountBased
 	case UMOCK:
 		return ChainTypeUTXOBased
@@ -247,6 +248,8 @@ func (asset Asset) Type() AssetType {
 
 	case AMOCK1, AMOCK2:
 		return AssetTypeNative
+	case AMOCK3:
+		return AssetTypeToken
 
 	default:
 		return AssetType("")
