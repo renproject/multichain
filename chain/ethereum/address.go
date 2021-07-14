@@ -59,8 +59,8 @@ func (addressDecoder) DecodeAddress(encoded address.Address) (address.RawAddress
 }
 
 func (addressEncoder) EncodeAddress(rawAddr address.RawAddress) (address.Address, error) {
-	encodedAddr := common.Bytes2Hex([]byte(rawAddr))
-	return address.Address(pack.NewString(encodedAddr)), nil
+	addr := common.BytesToAddress([]byte(rawAddr))
+	return address.Address(addr.Hex()), nil
 }
 
 // An Address represents a public address on the Ethereum blockchain. It can be
