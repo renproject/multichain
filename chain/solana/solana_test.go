@@ -6,11 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/near/borsh-go"
 	"github.com/renproject/multichain"
-	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/solana"
 	"github.com/renproject/pack"
 	"github.com/renproject/solana-ffi/cgo"
@@ -64,13 +62,11 @@ var _ = Describe("Solana", func() {
 
 			// Burn some tokens.
 			time.Sleep(10 * time.Second)
-			recipient := multichain.Address("mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4")
-			bitcoinAddrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
-			recipientRawAddr, err := bitcoinAddrEncodeDecoder.DecodeAddress(recipient)
+			recipient := []byte("mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4")
 			Expect(err).NotTo(HaveOccurred())
 			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
 			burnAmount := uint64(500000000) // 5 tokens.
-			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipientRawAddr)), []byte(recipientRawAddr))
+			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
 
 			// Fetch burn log.
@@ -81,13 +77,13 @@ var _ = Describe("Solana", func() {
 			data, err := client.CallContract(context.Background(), program, multichain.ContractCallData(calldata))
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(data)).To(Equal(65))
+			Expect(len(data)).To(Equal(97))
 			fetchedAmount := [32]byte{}
 			copy(fetchedAmount[:], data[0:32])
 			recipientLen := uint8(data[32:33][0])
 			fetchedRecipient := pack.Bytes(data[33 : 33+int(recipientLen)])
 			Expect(pack.NewU256(fetchedAmount)).To(Equal(pack.NewU256FromUint64(burnAmount)))
-			Expect([]byte(fetchedRecipient)).To(Equal([]byte(recipientRawAddr)))
+			Expect([]byte(fetchedRecipient)).To(Equal(recipient))
 		})
 	})
 
