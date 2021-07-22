@@ -45,6 +45,6 @@ RUN mkdir -p src/github.com/renproject
 WORKDIR $GOPATH/src/github.com/renproject
 RUN git clone https://github.com/renproject/solana-ffi
 WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
-RUN git checkout 1f85d47b5331a2146834bbd28a51654134aedd7d
+RUN git checkout 1428533377eb4ce00e81d04a53bad92f5339db00
 RUN make clean && make
 RUN go install ./...
