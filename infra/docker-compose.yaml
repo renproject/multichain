@@ -178,3 +178,12 @@ services:
       - "${C_AVAX_PK}"
       - "${C_AVAX_HEX_ADDRESS}"
       - "${C_AVAX_BECH32_ADDRESS}"
+
+  #
+  # Goerli (EIP-1559 compatible)
+  #
+  goerli:
+    build:
+      context: ./goerli
+    ports:
+      - "0.0.0.0:1545:8545"
