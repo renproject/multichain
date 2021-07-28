@@ -118,6 +118,12 @@ const (
 	REN  = Asset("REN")  // Ren
 	USDC = Asset("USDC") // Circle USD
 
+	// These assets are defined separately because their purpose it to help us
+	// differentiate between different testnets for the same blockchain.
+
+	KETH = Asset("KETH") // Kovan ETH
+	GETH = Asset("GETH") // Goerli ETH
+
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
 
@@ -199,6 +205,11 @@ func (asset Asset) OriginChain() Chain {
 	case ZEC:
 		return Zcash
 
+	case KETH:
+		return Kovan
+	case GETH:
+		return Goerli
+
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
@@ -222,6 +233,9 @@ func (asset Asset) ChainType() ChainType {
 	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, REN, SOL, USDC:
 		return ChainTypeAccountBased
 
+	case KETH, GETH:
+		return ChainTypeAccountBased
+
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
 
@@ -242,6 +256,9 @@ func (asset Asset) Type() AssetType {
 		return AssetTypeNative
 	case REN, USDC:
 		return AssetTypeToken
+
+	case KETH, GETH:
+		return AssetTypeNative
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -295,6 +312,9 @@ const (
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
 
+	Kovan  = Chain("Kovan")
+	Goerli = Chain("Goerli")
+
 	// These chains are defined separately because they are mock chains. These
 	// chains should only be used for testing.
 
@@ -328,6 +348,9 @@ func (chain Chain) ChainType() ChainType {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
 	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
+		return ChainTypeAccountBased
+
+	case Kovan, Goerli:
 		return ChainTypeAccountBased
 
 	// These chains are handled separately because they are mock chains. These
@@ -389,6 +412,11 @@ func (chain Chain) NativeAsset() Asset {
 		return ZEC
 	case Arbitrum:
 		return ArbETH
+
+	case Kovan:
+		return KETH
+	case Goerli:
+		return GETH
 
 	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.
