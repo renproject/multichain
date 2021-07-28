@@ -99,7 +99,7 @@ var _ = Describe("Multichain", func() {
 	//
 	// Multichain Configs
 	//
-	FContext("Multichain Declarations", func() {
+	Context("Multichain Declarations", func() {
 		Context("All supporting chains/assets are declared", func() {
 			accountChains := []struct {
 				chain multichain.Chain
