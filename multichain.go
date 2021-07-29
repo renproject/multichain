@@ -118,7 +118,7 @@ const (
 	REN  = Asset("REN")  // Ren
 	USDC = Asset("USDC") // Circle USD
 
-	// These assets are defined separately because their purpose it to help us
+	// These assets are defined separately because their purpose is to help us
 	// differentiate between different testnets for the same blockchain.
 
 	KETH = Asset("KETH") // Kovan ETH
