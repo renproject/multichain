@@ -1,33 +1,33 @@
 package fantom
 
 import (
-	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/evm"
 )
 
 type (
-	// AddressEncodeDecoder re-exports ethereum.AddressEncodeDecoder.
-	AddressEncodeDecoder = ethereum.AddressEncodeDecoder
+	// AddressEncodeDecoder re-exports evm.AddressEncodeDecoder.
+	AddressEncodeDecoder = evm.AddressEncodeDecoder
 
-	// AddressEncoder re-exports ethereum.AddressEncoder.
-	AddressEncoder = ethereum.AddressEncoder
+	// AddressEncoder re-exports evm.AddressEncoder.
+	AddressEncoder = evm.AddressEncoder
 
-	// AddressDecoder re-exports ethereum.AddressDecoder.
-	AddressDecoder = ethereum.AddressDecoder
+	// AddressDecoder re-exports evm.AddressDecoder.
+	AddressDecoder = evm.AddressDecoder
 
-	// Address re-exports ethereum.Address.
-	Address = ethereum.Address
+	// Address re-exports evm.Address.
+	Address = evm.Address
 )
 
 var (
-	// NewAddressEncodeDecoder re-exports ethereum.NewAddressEncodeDecoder.
-	NewAddressEncodeDecoder = ethereum.NewAddressEncodeDecoder
+	// NewAddressEncodeDecoder re-exports evm.NewAddressEncodeDecoder.
+	NewAddressEncodeDecoder = evm.NewAddressEncodeDecoder
 
-	// NewAddressDecoder re-exports ethereum.NewAddressDecoder.
-	NewAddressDecoder = ethereum.NewAddressDecoder
+	// NewAddressDecoder re-exports evm.NewAddressDecoder.
+	NewAddressDecoder = evm.NewAddressDecoder
 
-	// NewAddressEncoder re-exports ethereum.NewAddressEncoder.
-	NewAddressEncoder = ethereum.NewAddressEncoder
+	// NewAddressEncoder re-exports evm.NewAddressEncoder.
+	NewAddressEncoder = evm.NewAddressEncoder
 
-	// NewAddressFromHex re-exports ethereum.NewAddressFromHex.
-	NewAddressFromHex = ethereum.NewAddressFromHex
+	// NewAddressFromHex re-exports evm.NewAddressFromHex.
+	NewAddressFromHex = evm.NewAddressFromHex
 )

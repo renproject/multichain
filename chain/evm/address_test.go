@@ -1,13 +1,15 @@
-package ethereum_test
+package evm_test
 
 import (
 	"encoding/hex"
 	"encoding/json"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"testing/quick"
+
 	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/surge"
-	"testing/quick"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Address", func() {
