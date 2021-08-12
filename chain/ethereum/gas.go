@@ -10,20 +10,20 @@ import (
 )
 
 const (
-	// How many blocks to consider for priority fee estimation
-	FEE_HISTORY_BLOCKS = 10
-	// Which percentile of effective priority fees to include
-	FEE_HISTORY_PERCENTILE = 5
-
-	FALLBACK_MAX_FEE_PER_GAS = 20000000000
+	// FeeHistoryBlocks specifies how many blocks to consider for priority fee estimation
+	FeeHistoryBlocks = 10
+	// FeeHistoryPercentile specifies the percentile of effective priority fees to include
+	FeeHistoryPercentile = 5
+	// FallbackMaxFeePerGas is the fallback value used when MaxFeePerGas cannot be calculated
+	FallbackMaxFeePerGas = 20000000000
 )
 
 var (
-	// Which base fee to trigger priority fee estimation at
-	PRIORITY_FEE_ESTIMATION_TRIGGER = big.NewInt(100000000000) // WEI
-	// Returned if above trigger is not met
-	DEFAULT_PRIORITY_FEE           = big.NewInt(3000000000)
-	PRIORITY_FEE_INCREASE_BOUNDARY = big.NewInt(200) // %
+	// PriorityFeeEstimationTrigger specifies which base fee to trigger priority fee estimation at
+	PriorityFeeEstimationTrigger = big.NewInt(100000000000) // WEI
+	// DefaultPriorityFee is returned if above trigger is not met
+	DefaultPriorityFee          = big.NewInt(3000000000)
+	PriorityFeeIncreaseBoundary = big.NewInt(200) // %
 )
 
 type feeHistoryResult struct {
@@ -60,12 +60,12 @@ func NewGasEstimator(client *Client, opts *GasOptions) *GasEstimator {
 	return &GasEstimator{
 		client: client,
 		options: &GasOptions{
-			FEE_HISTORY_BLOCKS,
-			FEE_HISTORY_PERCENTILE,
-			FALLBACK_MAX_FEE_PER_GAS,
-			PRIORITY_FEE_ESTIMATION_TRIGGER,
-			DEFAULT_PRIORITY_FEE,
-			PRIORITY_FEE_INCREASE_BOUNDARY,
+			FeeHistoryBlocks,
+			FeeHistoryPercentile,
+			FallbackMaxFeePerGas,
+			PriorityFeeEstimationTrigger,
+			DefaultPriorityFee,
+			PriorityFeeIncreaseBoundary,
 		},
 	}
 }
