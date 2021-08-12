@@ -3,9 +3,10 @@ package bsc_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/renproject/multichain/chain/bsc"
 	"math"
 	"testing/quick"
+
+	"github.com/renproject/multichain/chain/bsc"
 
 	"github.com/renproject/pack"
 

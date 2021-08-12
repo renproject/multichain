@@ -3,9 +3,10 @@ package avalanche_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/renproject/multichain/chain/avalanche"
 	"math"
 	"testing/quick"
+
+	"github.com/renproject/multichain/chain/avalanche"
 
 	"github.com/renproject/pack"
 

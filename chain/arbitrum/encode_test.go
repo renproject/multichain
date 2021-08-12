@@ -3,9 +3,10 @@ package arbitrum_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/renproject/multichain/chain/arbitrum"
 	"math"
 	"testing/quick"
+
+	"github.com/renproject/multichain/chain/arbitrum"
 
 	"github.com/renproject/pack"
 
