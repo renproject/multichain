@@ -580,15 +580,15 @@ var _ = Describe("Multichain", func() {
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := ethereum.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
-					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
+					txBuilder := ethereum.NewTxBuilder(big.NewInt(5))
 
 					return client, txBuilder
 				},
 				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
-					gasLimit := pack.NewU256FromU64(pack.U64(100000))
-					gasPrice := pack.NewU256FromU64(pack.U64(1))
-					gasCap := pack.NewU256FromInt(gasPrice.Int())
+					gasLimit := pack.NewU256FromU64(pack.U64(1000000))
+					gasPrice := pack.NewU256FromU64(pack.U64(3000000000))
+					gasCap := pack.NewU256FromU64(pack.U64(100000000000))
 					payload := pack.NewBytes([]byte("multichain"))
 					return amount, gasLimit, gasPrice, gasCap, payload
 				},

@@ -25,7 +25,7 @@ func NewGasEstimator(client *Client) *GasEstimator {
 // and returns the gas limit provided. These numbers change with congestion. These estimates
 // are often a little bit off, and this should be considered when using them.
 func (gasEstimator *GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
-	gasPrice, err := gasEstimator.client.ethClient.SuggestGasPrice(ctx)
+	gasPrice, err := gasEstimator.client.EthClient.SuggestGasPrice(ctx)
 	if err != nil {
 		return pack.NewU256([32]byte{}), pack.NewU256([32]byte{}), fmt.Errorf("failed to get eth suggested gas price: %v", err)
 	}

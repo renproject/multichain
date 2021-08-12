@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
@@ -21,23 +22,26 @@ const (
 
 // Client holds the underlying RPC client instance.
 type Client struct {
-	ethClient *ethclient.Client
+	EthClient *ethclient.Client
+	RpcClient *rpc.Client
 }
 
 // NewClient creates and returns a new JSON-RPC client to the Ethereum node
 func NewClient(rpcURL string) (*Client, error) {
-	client, err := ethclient.Dial(rpcURL)
+	c, err := rpc.DialContext(context.Background(), rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("dialing url: %v", rpcURL))
 	}
+	client := ethclient.NewClient(c)
 	return &Client{
 		client,
+		c,
 	}, nil
 }
 
 // LatestBlock returns the block number at the current chain head.
 func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
-	header, err := client.ethClient.HeaderByNumber(ctx, nil)
+	header, err := client.EthClient.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return pack.NewU64(0), fmt.Errorf("fetching header: %v", err)
 	}
@@ -47,25 +51,25 @@ func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 // Tx returns the transaction uniquely identified by the given transaction
 // hash. It also returns the number of confirmations for the transaction.
 func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack.U64, error) {
-	tx, pending, err := client.ethClient.TransactionByHash(ctx, common.BytesToHash(txID))
+	tx, pending, err := client.EthClient.TransactionByHash(ctx, common.BytesToHash(txID))
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf(fmt.Sprintf("fetching tx by hash '%v': %v", txID, err))
 	}
-	chainID, err := client.ethClient.ChainID(ctx)
+	chainID, err := client.EthClient.ChainID(ctx)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("fetching chain ID: %v", err)
 	}
 
-	// If the transaction is still pending, use default EIP-155 signer.
+	// If the transaction is still pending, use default EIP-155 Signer.
 	pendingTx := Tx{
-		ethTx:  tx,
-		signer: types.NewEIP155Signer(chainID),
+		EthTx:  tx,
+		Signer: types.NewEIP155Signer(chainID),
 	}
 	if pending {
 		return &pendingTx, 0, nil
 	}
 
-	receipt, err := client.ethClient.TransactionReceipt(ctx, common.BytesToHash(txID))
+	receipt, err := client.EthClient.TransactionReceipt(ctx, common.BytesToHash(txID))
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("fetching recipt for tx %v : %v", txID, err)
 	}
@@ -86,7 +90,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 		types.LatestSignerForChainID(chainID),
 	}
 
-	header, err := client.ethClient.HeaderByNumber(ctx, nil)
+	header, err := client.EthClient.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf("fetching header : %v", err)
 	}
@@ -98,7 +102,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 	switch tx := tx.(type) {
 	case *Tx:
-		err := client.ethClient.SendTransaction(ctx, tx.ethTx)
+		err := client.EthClient.SendTransaction(ctx, tx.EthTx)
 		if err != nil {
 			return fmt.Errorf(fmt.Sprintf("sending transaction '%v': %v", tx.Hash(), err))
 		}
@@ -115,7 +119,7 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad to address '%v': %v", addr, err)
 	}
-	nonce, err := client.ethClient.NonceAt(ctx, common.Address(targetAddr), nil)
+	nonce, err := client.EthClient.NonceAt(ctx, common.Address(targetAddr), nil)
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("failed to get nonce for '%v': %v", addr, err)
 	}
@@ -129,7 +133,7 @@ func (client *Client) AccountBalance(ctx context.Context, addr address.Address) 
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("bad to address '%v': %v", addr, err)
 	}
-	balance, err := client.ethClient.BalanceAt(ctx, common.Address(targetAddr), nil)
+	balance, err := client.EthClient.BalanceAt(ctx, common.Address(targetAddr), nil)
 	if err != nil {
 		return pack.U256{}, fmt.Errorf("failed to get balance for '%v': %v", addr, err)
 	}
@@ -149,5 +153,5 @@ func (client *Client) CallContract(ctx context.Context, program address.Address,
 		To:   &addr,
 		Data: calldata,
 	}
-	return client.ethClient.CallContract(ctx, callMsg, nil)
+	return client.EthClient.CallContract(ctx, callMsg, nil)
 }
