@@ -23,7 +23,9 @@ var (
 	PriorityFeeEstimationTrigger = big.NewInt(100000000000) // WEI
 	// DefaultPriorityFee is returned if above trigger is not met
 	DefaultPriorityFee          = big.NewInt(3000000000)
-	PriorityFeeIncreaseBoundary = big.NewInt(200) // %
+	// PriorityFeeIncreaseBoundary signifies a big bump in fee history priority reward, due to which we choose
+	// not to consider values under it while calculating the median priority fee.
+	PriorityFeeIncreaseBoundary = big.NewInt(200)
 )
 
 type feeHistoryResult struct {
@@ -31,6 +33,8 @@ type feeHistoryResult struct {
 	Reward      [][]string `json:"reward"`
 }
 
+// GasOptions allow a user to configure the parameters used while heuristically recommending
+// fees for EIP-1559 compatible transactions.
 type GasOptions struct {
 	FeeHistoryBlocks             uint64
 	FeeHistoryPercentile         uint64
@@ -49,14 +53,18 @@ type GasEstimator struct {
 
 // NewGasEstimator returns a simple gas estimator that fetches the ideal gas
 // price for an ethereum transaction to be included in a block
-// with minimal delay. If opts is nil it uses the default gas settings
-func NewGasEstimator(client *Client, opts *GasOptions) *GasEstimator {
-	if opts != nil {
+// with minimal delay.
+func NewGasEstimator(client *Client, opts GasOptions) *GasEstimator {
 		return &GasEstimator{
 			client:  client,
-			options: opts,
+			options: &opts,
 		}
-	}
+}
+
+// NewDefaultGasEstimator returns a simple gas estimator with default gas options
+// that fetches the ideal gas price for an ethereum transaction to be included
+// in a block with minimal delay.
+func NewDefaultGasEstimator(client *Client) *GasEstimator {
 	return &GasEstimator{
 		client: client,
 		options: &GasOptions{
@@ -72,7 +80,7 @@ func NewGasEstimator(client *Client, opts *GasOptions) *GasEstimator {
 
 // EstimateGas returns an estimate of the current gas price
 // and returns the gas limit provided. These numbers change with congestion. These estimates
-// are often a little bit off, and this should be considered when using them.
+// are often a little off, and this should be considered when using them.
 func (gasEstimator *GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
 	latest, err := gasEstimator.client.EthClient.HeaderByNumber(ctx, nil)
 	if err != nil {
