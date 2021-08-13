@@ -3,9 +3,10 @@ package polygon_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/renproject/multichain/chain/polygon"
 	"math"
 	"testing/quick"
+
+	"github.com/renproject/multichain/chain/polygon"
 
 	"github.com/renproject/pack"
 

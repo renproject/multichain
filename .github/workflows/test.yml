@@ -1,5 +1,5 @@
 name: go
-on: [push]
+on: [pull_request]
 jobs:
   test-solana:
     runs-on: ubuntu-latest
@@ -1331,7 +1331,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/infra
           source .env
-          docker-compose up -d --build ethereum
+          docker-compose up -d --build goerli
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master

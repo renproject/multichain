@@ -1,4 +1,4 @@
-package bsc_test
+package evm_test
 
 import (
 	"encoding/hex"
@@ -6,8 +6,7 @@ import (
 	"math"
 	"testing/quick"
 
-	"github.com/renproject/multichain/chain/bsc"
-
+	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -21,7 +20,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x []byte) bool {
 				arg := pack.NewBytes(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 
 				expectedBytes := make([]byte, int(math.Ceil(float64(len(x))/32)*32))
@@ -44,7 +43,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [32]byte) bool {
 				arg := pack.NewBytes32(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := hex.EncodeToString(x[:])
 
@@ -62,7 +61,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint8) bool {
 				arg := pack.NewU8(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -80,7 +79,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint16) bool {
 				arg := pack.NewU16(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -98,7 +97,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint32) bool {
 				arg := pack.NewU32(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -116,7 +115,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint64) bool {
 				arg := pack.NewU64(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -134,7 +133,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [16]byte) bool {
 				arg := pack.NewU128(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -152,7 +151,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [32]byte) bool {
 				arg := pack.NewU256(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -168,9 +167,9 @@ var _ = Describe("Encoding", func() {
 	Context("when encoding Ethereum addresses", func() {
 		It("should return the correct result", func() {
 			f := func(x [20]byte) bool {
-				arg := bsc.Address(x)
+				arg := ethereum.Address(x)
 
-				resBytes := bsc.Encode(arg)
+				resBytes := ethereum.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 
 				expectedBytes := make([]byte, 32)
@@ -190,7 +189,7 @@ var _ = Describe("Encoding", func() {
 		It("should panic", func() {
 			f := func(x bool) bool {
 				arg := pack.NewBool(x)
-				Expect(func() { bsc.Encode(arg) }).To(Panic())
+				Expect(func() { ethereum.Encode(arg) }).To(Panic())
 				return true
 			}
 
@@ -232,7 +231,7 @@ var _ = Describe("Encoding", func() {
 			addrBytes, err := hex.DecodeString(test.addr)
 			Expect(err).ToNot(HaveOccurred())
 
-			var addr bsc.Address
+			var addr ethereum.Address
 			copy(addr[:], addrBytes)
 
 			hashBytes32 := [32]byte{}
@@ -245,7 +244,7 @@ var _ = Describe("Encoding", func() {
 				pack.NewU64(test.amount),
 				pack.NewBytes32(hashBytes32),
 			}
-			result := bsc.Encode(args...)
+			result := ethereum.Encode(args...)
 			Expect(hex.EncodeToString(result)).To(Equal(test.result))
 		},
 

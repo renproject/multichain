@@ -3,9 +3,10 @@ package fantom_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/renproject/multichain/chain/fantom"
 	"math"
 	"testing/quick"
+
+	"github.com/renproject/multichain/chain/fantom"
 
 	"github.com/renproject/pack"
 

@@ -1,11 +1,11 @@
 package fantom
 
 import (
-	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/evm"
 )
 
-// GasEstimator re-exports ethereum.GasEstimator.
-type GasEstimator = ethereum.GasEstimator
+// GasEstimator re-exports evm.GasEstimator.
+type GasEstimator = evm.GasEstimator
 
-// NewGasEstimator re-exports ethereum.NewGasEstimator.
-var NewGasEstimator = ethereum.NewGasEstimator
+// NewGasEstimator re-exports evm.NewGasEstimator.
+var NewGasEstimator = evm.NewGasEstimator

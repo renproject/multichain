@@ -1,11 +1,11 @@
 package avalanche
 
 import (
-	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/evm"
 )
 
-// Payload re-exports ethereum.Payload.
-type Payload = ethereum.Payload
+// Payload re-exports evm.Payload.
+type Payload = evm.Payload
 
-// Encode re-exports ethereum.Encode.
-var Encode = ethereum.Encode
+// Encode re-exports evm.Encode.
+var Encode = evm.Encode

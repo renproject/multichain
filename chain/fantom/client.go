@@ -1,7 +1,7 @@
 package fantom
 
 import (
-	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/evm"
 )
 
 const (
@@ -10,8 +10,8 @@ const (
 	DefaultClientRPCURL = "http://127.0.0.1:18545/"
 )
 
-// Client re-exports ethereum.Client.
-type Client = ethereum.Client
+// Client re-exports evm.Client.
+type Client = evm.Client
 
-// NewClient re-exports ethereum.NewClient.
-var NewClient = ethereum.NewClient
+// NewClient re-exports evm.NewClient.
+var NewClient = evm.NewClient

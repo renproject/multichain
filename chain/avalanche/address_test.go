@@ -3,11 +3,12 @@ package avalanche_test
 import (
 	"encoding/hex"
 	"encoding/json"
+	"testing/quick"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/renproject/multichain/chain/avalanche"
 	"github.com/renproject/surge"
-	"testing/quick"
 )
 
 var _ = Describe("Address", func() {

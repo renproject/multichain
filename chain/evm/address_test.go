@@ -1,27 +1,28 @@
-package arbitrum_test
+package evm_test
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"testing/quick"
 
+	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/surge"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/renproject/multichain/chain/arbitrum"
-	"github.com/renproject/surge"
 )
 
 var _ = Describe("Address", func() {
 	Context("when unmarshaling and unmarshaling", func() {
 		It("should equal itself", func() {
 			f := func(x [20]byte) bool {
-				addr := arbitrum.Address(x)
+				addr := ethereum.Address(x)
 				Expect(addr.SizeHint()).To(Equal(20))
 
 				bytes, err := surge.ToBinary(addr)
 				Expect(err).ToNot(HaveOccurred())
 
-				var newAddr arbitrum.Address
+				var newAddr ethereum.Address
 				err = surge.FromBinary(&newAddr, bytes)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -37,12 +38,12 @@ var _ = Describe("Address", func() {
 	Context("when unmarshaling and unmarshaling to/from JSON", func() {
 		It("should equal itself", func() {
 			f := func(x [20]byte) bool {
-				addr := arbitrum.Address(x)
+				addr := ethereum.Address(x)
 
 				bytes, err := json.Marshal(addr)
 				Expect(err).ToNot(HaveOccurred())
 
-				var newAddr arbitrum.Address
+				var newAddr ethereum.Address
 				err = json.Unmarshal(bytes, &newAddr)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -60,7 +61,7 @@ var _ = Describe("Address", func() {
 					bytes, err := json.Marshal(string(x[:]))
 					Expect(err).ToNot(HaveOccurred())
 
-					var newAddr arbitrum.Address
+					var newAddr ethereum.Address
 					err = json.Unmarshal(bytes, &newAddr)
 					Expect(err).To(HaveOccurred())
 					return true
@@ -78,7 +79,7 @@ var _ = Describe("Address", func() {
 					bytes, err := json.Marshal(addr)
 					Expect(err).ToNot(HaveOccurred())
 
-					var newAddr arbitrum.Address
+					var newAddr ethereum.Address
 					err = json.Unmarshal(bytes, &newAddr)
 					Expect(err).To(HaveOccurred())
 					return true
@@ -93,7 +94,7 @@ var _ = Describe("Address", func() {
 	Context("when unmarshalling random data", func() {
 		It("should not panic", func() {
 			f := func(x []byte) bool {
-				var addr arbitrum.Address
+				var addr ethereum.Address
 				Expect(func() { addr.Unmarshal(x, surge.MaxBytes) }).ToNot(Panic())
 				Expect(func() { json.Unmarshal(x, &addr) }).ToNot(Panic())
 				return true

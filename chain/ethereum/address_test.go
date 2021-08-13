@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"testing/quick"
 
-	"github.com/renproject/multichain/chain/ethereum"
-	"github.com/renproject/surge"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/surge"
 )
 
 var _ = Describe("Address", func() {

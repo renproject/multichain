@@ -3,11 +3,12 @@ package fantom_test
 import (
 	"encoding/hex"
 	"encoding/json"
+	"testing/quick"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/renproject/multichain/chain/fantom"
 	"github.com/renproject/surge"
-	"testing/quick"
 )
 
 var _ = Describe("Address", func() {
