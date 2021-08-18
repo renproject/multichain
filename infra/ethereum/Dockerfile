@@ -1,15 +1,14 @@
-FROM ubuntu:xenial
+FROM node:alpine
 
-RUN apt-get update --fix-missing
-RUN apt-get install --yes curl
+WORKDIR /root/app
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
-RUN apt-get install --yes nodejs
-RUN npm install -g ganache-cli
+COPY package.json .
+RUN npm install
 
-COPY run.sh /root/run.sh
-RUN chmod +x /root/run.sh
+COPY hardhat.config.js .
+COPY run.sh .
+RUN chmod +x run.sh
 
 EXPOSE 8545
 
-ENTRYPOINT ["./root/run.sh"]
+ENTRYPOINT ["./run.sh"]

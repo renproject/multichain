@@ -76,17 +76,13 @@ services:
       - "${DOGECOIN_ADDRESS}"
 
   #
-  # Ethereum
+  # Ethereum (EIP-1559 compatible)
   #
   ethereum:
     build:
       context: ./ethereum
     ports:
       - "0.0.0.0:8545:8545"
-    entrypoint:
-      - "./root/run.sh"
-      - "${ETHEREUM_MNEMONIC}"
-      - "${ETHEREUM_ADDRESS}"
 
   #
   # Fantom
