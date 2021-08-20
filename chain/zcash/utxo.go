@@ -8,7 +8,7 @@ import (
 	"math"
 	"math/big"
 
-	blake2 "golang.org/x/crypto/blake2b"
+	blake2 "github.com/dchest/blake2b"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -484,7 +484,7 @@ func calculateSighash(
 }
 
 func blake2b(data, key []byte) (h chainhash.Hash, err error) {
-	hash, err := blake2.New256(key)
+	hash, err := blake2.New(&blake2.Config{Person: key, Size: 32})
 	if err != nil {
 		return h, err
 	}
