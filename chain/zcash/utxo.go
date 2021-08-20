@@ -8,11 +8,12 @@ import (
 	"math"
 	"math/big"
 
+	blake2 "golang.org/x/crypto/blake2b"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/codahale/blake2"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/pack"
@@ -483,16 +484,12 @@ func calculateSighash(
 }
 
 func blake2b(data, key []byte) (h chainhash.Hash, err error) {
-	bHash := blake2.New(&blake2.Config{
-		Size:     32,
-		Personal: key,
-	})
-
-	if _, err = bHash.Write(data); err != nil {
+	hash, err := blake2.New256(key)
+	if err != nil {
 		return h, err
 	}
 
-	err = (&h).SetBytes(bHash.Sum(nil))
+	err = (&h).SetBytes(hash.Sum(data))
 	return h, err
 }
 
