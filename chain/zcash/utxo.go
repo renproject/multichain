@@ -488,8 +488,11 @@ func blake2b(data, key []byte) (h chainhash.Hash, err error) {
 	if err != nil {
 		return h, err
 	}
+	if _, err = hash.Write(data); err != nil {
+		return h, err
+	}
 
-	err = (&h).SetBytes(hash.Sum(data))
+	err = (&h).SetBytes(hash.Sum(nil))
 	return h, err
 }
 
