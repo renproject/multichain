@@ -5,8 +5,8 @@ go 1.14
 require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/codahale/blake2 v0.0.0-20150924215134-8d10d0420cbf
 	github.com/cosmos/cosmos-sdk v0.39.1
+	github.com/dchest/blake2b v1.0.0
 	github.com/ethereum/go-ethereum v1.10.6
 	github.com/filecoin-project/go-address v0.0.5
 	github.com/filecoin-project/go-jsonrpc v0.1.4-0.20210217175800-45ea43ac2bec

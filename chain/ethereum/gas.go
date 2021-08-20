@@ -22,7 +22,7 @@ var (
 	// PriorityFeeEstimationTrigger specifies which base fee to trigger priority fee estimation at
 	PriorityFeeEstimationTrigger = big.NewInt(100000000000) // WEI
 	// DefaultPriorityFee is returned if above trigger is not met
-	DefaultPriorityFee          = big.NewInt(3000000000)
+	DefaultPriorityFee = big.NewInt(3000000000)
 	// PriorityFeeIncreaseBoundary signifies a big bump in fee history priority reward, due to which we choose
 	// not to consider values under it while calculating the median priority fee.
 	PriorityFeeIncreaseBoundary = big.NewInt(200)
@@ -55,10 +55,10 @@ type GasEstimator struct {
 // price for an ethereum transaction to be included in a block
 // with minimal delay.
 func NewGasEstimator(client *Client, opts GasOptions) *GasEstimator {
-		return &GasEstimator{
-			client:  client,
-			options: &opts,
-		}
+	return &GasEstimator{
+		client:  client,
+		options: &opts,
+	}
 }
 
 // NewDefaultGasEstimator returns a simple gas estimator with default gas options
