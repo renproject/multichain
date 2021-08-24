@@ -52,7 +52,7 @@ type Tx interface {
 
 	// ReceiptLogs returns the data representating the EVM events logged as a
 	// result of this transaction.
-	ReceiptLogs() []pack.Bytes
+	ReceiptLogs() ([]address.Address, [][]pack.Bytes32, []pack.Bytes)
 }
 
 // The TxBuilder interface defines the functionality required to build

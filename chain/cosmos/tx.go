@@ -340,9 +340,9 @@ func (tx StdTx) Serialize() (pack.Bytes, error) {
 
 // ReceiptLogs returns the data representating the EVM events logged as a
 // result of this transaction. In the case of Cosmos these are not applicable
-// hence we mark them as `nil`
-func (tx StdTx) ReceiptLogs() []pack.Bytes {
-	return nil
+// hence we mark them as `nil`.
+func (tx StdTx) ReceiptLogs() ([]address.Address, [][]pack.Bytes32, []pack.Bytes) {
+	return nil, nil, nil
 }
 
 // parseStdTx parse auth.StdTx to StdTx

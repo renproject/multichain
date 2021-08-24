@@ -143,7 +143,7 @@ func (tx Tx) Serialize() (pack.Bytes, error) {
 
 // ReceiptLogs returns the data representating the EVM events logged as a result
 // of this transaction. In the case of Filecoin, these are not applicable hence
-// we mark them as `nil`
-func (tx Tx) ReceiptLogs() []pack.Bytes {
-	return nil
+// we mark them as `nil`.
+func (tx Tx) ReceiptLogs() ([]address.Address, [][]pack.Bytes32, []pack.Bytes) {
+	return nil, nil, nil
 }

@@ -118,10 +118,20 @@ func (tx Tx) Serialize() (pack.Bytes, error) {
 	return tx.EthTx.MarshalBinary()
 }
 
-func (tx Tx) ReceiptLogs() []pack.Bytes {
+// ReceiptLogs returns the data representating the EVM events logged as a
+// result of this transaction. Returned values include the address of the
+// contract that emitted the log, the topics and the log data.
+func (tx Tx) ReceiptLogs() ([]address.Address, [][]pack.Bytes32, []pack.Bytes) {
 	logs := make([]pack.Bytes, len(tx.Receipt.Logs))
+	topics := make([][]pack.Bytes32, len(tx.Receipt.Logs))
+	addresses := make([]address.Address, len(tx.Receipt.Logs))
 	for i := range tx.Receipt.Logs {
 		logs[i] = pack.NewBytes(tx.Receipt.Logs[i].Data)
+		topics[i] = []pack.Bytes32{}
+		for j := range tx.Receipt.Logs[i].Topics {
+			topics[i] = append(topics[i], pack.Bytes32(tx.Receipt.Logs[i].Topics[j]))
+		}
+		addresses[i] = address.Address(tx.Receipt.Logs[i].Address.Hex())
 	}
-	return logs
+	return addresses, topics, logs
 }
