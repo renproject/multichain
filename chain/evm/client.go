@@ -89,6 +89,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	confirmedTx := Tx{
 		tx,
 		types.LatestSignerForChainID(chainID),
+		receipt,
 	}
 
 	header, err := client.EthClient.HeaderByNumber(ctx, nil)

@@ -39,15 +39,17 @@ func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address
 			gasPrice.Int(),
 			payload,
 		),
-		Signer: types.LatestSignerForChainID(txBuilder.ChainID),
+		Signer:  types.LatestSignerForChainID(txBuilder.ChainID),
+		Receipt: nil,
 	}, nil
 }
 
 // Tx represents a ethereum transaction, encapsulating a payload/data and its
 // Signer.
 type Tx struct {
-	EthTx  *types.Transaction
-	Signer types.Signer
+	EthTx   *types.Transaction
+	Signer  types.Signer
+	Receipt *types.Receipt
 }
 
 // Hash returns the hash that uniquely identifies the transaction.
@@ -114,4 +116,12 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubkey pack.Bytes) error {
 // which the transaction will be submitted by the client.
 func (tx Tx) Serialize() (pack.Bytes, error) {
 	return tx.EthTx.MarshalBinary()
+}
+
+func (tx Tx) ReceiptLogs() []pack.Bytes {
+	logs := make([]pack.Bytes, len(tx.Receipt.Logs))
+	for i := range tx.Receipt.Logs {
+		logs[i] = pack.NewBytes(tx.Receipt.Logs[i].Data)
+	}
+	return logs
 }

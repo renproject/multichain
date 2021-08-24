@@ -49,6 +49,10 @@ type Tx interface {
 	// Serialize the transaction into bytes. This is the format in which the
 	// transaction will be submitted by the client.
 	Serialize() (pack.Bytes, error)
+
+	// ReceiptLogs returns the data representating the EVM events logged as a
+	// result of this transaction.
+	ReceiptLogs() []pack.Bytes
 }
 
 // The TxBuilder interface defines the functionality required to build
