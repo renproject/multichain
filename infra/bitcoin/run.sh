@@ -9,8 +9,8 @@ sleep 20
 # Print setup
 echo "BITCOIN_ADDRESS=$ADDRESS"
 
-# Create wallet
 /app/bin/bitcoin-cli createwallet "testwallet"
+
 
 # Import the address
 /app/bin/bitcoin-cli -regtest importaddress $ADDRESS
@@ -28,6 +28,6 @@ do
     /app/bin/bitcoin-cli -regtest generatetoaddress 1 $ADDRESS
     sleep 5
     # send tx to own address while paying fee to the miner
-    /app/bin/bitcoin-cli -regtest sendtoaddress $ADDRESS 1 "" "" true
+    /app/bin/bitcoin-cli -regtest -named sendtoaddress address=$ADDRESS amount=0.1 subtractfeefromamount=true fee_rate=1
     sleep 5
 done
