@@ -11,7 +11,6 @@ echo "BITCOIN_ADDRESS=$ADDRESS"
 
 /app/bin/bitcoin-cli createwallet "testwallet"
 
-sleep 10
 
 # Import the address
 /app/bin/bitcoin-cli -regtest importaddress $ADDRESS
