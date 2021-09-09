@@ -115,6 +115,7 @@ const (
 	SOL    = Asset("SOL")    // Solana
 	ZEC    = Asset("ZEC")    // Zcash
 
+	DAI  = Asset("DAI")  // Dai
 	REN  = Asset("REN")  // Ren
 	USDC = Asset("USDC") // Circle USD
 
@@ -138,13 +139,14 @@ const (
 type AssetType string
 
 const (
-	// AssetTypeNative is an identifier for all the native assets of account based
-	// chains namely. For instance, ETH for Ethereum, BNB for BinanceSmartChain.
+	// AssetTypeNative is an identifier for all the native assets of account
+	// based chains namely. For instance, ETH for Ethereum, BNB for
+	// BinanceSmartChain.
 	AssetTypeNative = AssetType("NativeAsset")
 
 	// AssetTypeToken is an identifier for all tokens (ERC20, BEP20) deployed on
-	// programmable account-based chains. For instance, REN is an ERC-20 token on
-	// Ethereum, USDC is an ERC-20 token on Ethereum.
+	// programmable account-based chains. For instance, REN and USDC are ERC-20
+	// tokens on Ethereum.
 	AssetTypeToken = AssetType("TokenAsset")
 )
 
@@ -180,6 +182,8 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
+	case DAI:
+		return Ethereum
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -230,7 +234,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, REN, SOL, USDC:
+	case ArbETH, AVAX, BNB, ETH, DAI, FIL, FTM, GLMR, LUNA, MATIC, REN, SOL, USDC:
 		return ChainTypeAccountBased
 
 	case KETH, GETH:
@@ -254,7 +258,7 @@ func (asset Asset) Type() AssetType {
 	switch asset {
 	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, MATIC, SOL:
 		return AssetTypeNative
-	case REN, USDC:
+	case DAI, REN, USDC:
 		return AssetTypeToken
 
 	case KETH, GETH:
