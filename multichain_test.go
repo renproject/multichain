@@ -213,6 +213,10 @@ var _ = Describe("Multichain", func() {
 				chain multichain.Chain
 			}{
 				{
+					multichain.DAI,
+					multichain.Ethereum,
+				},
+				{
 					multichain.REN,
 					multichain.Ethereum,
 				},
