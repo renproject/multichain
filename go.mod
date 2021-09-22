@@ -3,9 +3,9 @@ module github.com/renproject/multichain
 go 1.14
 
 require (
-	github.com/btcsuite/btcd v0.21.0-beta
-	github.com/btcsuite/btcutil v1.0.2
-	github.com/cosmos/cosmos-sdk v0.39.1
+	github.com/btcsuite/btcd v0.22.0-beta
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/cosmos/cosmos-sdk v0.44.0
 	github.com/dchest/blake2b v1.0.0
 	github.com/ethereum/go-ethereum v1.10.6
 	github.com/filecoin-project/go-address v0.0.5
@@ -22,16 +22,18 @@ require (
 	github.com/renproject/pack v0.2.5
 	github.com/renproject/solana-ffi v0.1.2
 	github.com/renproject/surge v1.2.6
-	github.com/tendermint/tendermint v0.33.8
+	github.com/tendermint/tendermint v0.34.12
 	github.com/terra-project/core v0.4.0-rc.4
 	github.com/tyler-smith/go-bip39 v1.1.0
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 )
 
-replace github.com/cosmos/ledger-cosmos-go => github.com/terra-project/ledger-terra-go v0.11.1-terra
+replace github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 
-replace github.com/CosmWasm/go-cosmwasm => github.com/terra-project/go-cosmwasm v0.10.1-terra
+replace github.com/CosmWasm/go-cosmwasm => github.com/terra-project/go-cosmwasm v0.10.5
+
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 replace github.com/filecoin-project/filecoin-ffi => ./chain/filecoin/filecoin-ffi
 

@@ -558,7 +558,7 @@ var _ = Describe("Multichain", func() {
 					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					for _, val := range path {
-						key, err = key.Child(val)
+						key, err = key.DeriveNonStandard(val)
 						if err != nil {
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -650,7 +650,7 @@ var _ = Describe("Multichain", func() {
 					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					for _, val := range path {
-						key, err = key.Child(val)
+						key, err = key.DeriveNonStandard(val)
 						if err != nil {
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -773,7 +773,7 @@ var _ = Describe("Multichain", func() {
 					}
 					pkBytes, err := hex.DecodeString(pkEnv)
 					Expect(err).NotTo(HaveOccurred())
-					var pk secp256k1.PrivKeySecp256k1
+					var pk secp256k1.PrivKey
 					copy(pk[:], pkBytes)
 					addrEncoder := terra.NewAddressEncoder()
 					senderAddr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
@@ -786,7 +786,7 @@ var _ = Describe("Multichain", func() {
 				func(privKey id.PrivKey) multichain.Address {
 					pkBytes, err := surge.ToBinary(privKey)
 					Expect(err).NotTo(HaveOccurred())
-					var pk secp256k1.PrivKeySecp256k1
+					var pk secp256k1.PrivKey
 					copy(pk[:], pkBytes)
 					addrEncoder := terra.NewAddressEncoder()
 					addr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
