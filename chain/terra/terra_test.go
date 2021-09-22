@@ -37,7 +37,7 @@ var _ = Describe("Terra", func() {
 				pkBz, err := hex.DecodeString(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
-				var pk secp256k1.PrivKeySecp256k1
+				var pk secp256k1.PrivKey
 				copy(pk[:], pkBz)
 
 				var privKey id.PrivKey
@@ -96,7 +96,7 @@ var _ = Describe("Terra", func() {
 				copy(sig65[:], sigBytes)
 
 				// attach the signature to the transaction
-				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
+				pubKey := pk.PubKey().(secp256k1.PubKey)
 				err = tx.Sign(
 					[]pack.Bytes65{sig65},
 					pack.NewBytes(pubKey[:]),
