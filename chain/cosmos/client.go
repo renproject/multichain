@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	"net/http"
 	"net/url"
 	"time"
 
+	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/pack"
@@ -48,6 +49,7 @@ type ClientOptions struct {
 	Host          pack.String
 	BroadcastMode pack.String
 	CoinDenom     pack.String
+	ChainID       pack.String
 }
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
@@ -60,6 +62,7 @@ func DefaultClientOptions() ClientOptions {
 		Host:          DefaultClientHost,
 		BroadcastMode: DefaultBroadcastMode,
 		CoinDenom:     DefaultCoinDenom,
+		ChainID:       DefaultChainID,
 	}
 }
 
@@ -94,17 +97,22 @@ func (opts ClientOptions) WithCoinDenom(coinDenom pack.String) ClientOptions {
 	return opts
 }
 
+// WithChainID sets the chain id used by the Client.
+func (opts ClientOptions) WithChainID(chainid pack.String) ClientOptions {
+	opts.ChainID = chainid
+	return opts
+}
+
 // Client interacts with an instance of the Cosmos based network using the REST
 // interface exposed by a lightclient node.
 type Client struct {
 	opts ClientOptions
 	ctx  cosmClient.Context
-	cdc  *codec.Codec
 	hrp  string
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
+func NewClient(opts ClientOptions, cdc codec.Codec, txConfig cosmClient.TxConfig, interfaceReg types2.InterfaceRegistry, amino *codec.LegacyAmino, hrp string) *Client {
 	httpClient, err := rpchttp.NewWithClient(
 		string(opts.Host),
 		"websocket",
@@ -119,13 +127,11 @@ func NewClient(opts ClientOptions, cdc *codec.Codec, hrp string) *Client {
 	if err != nil {
 		panic(err)
 	}
-
-	cliCtx := cosmClient.GetClientContextFromCmd(config.Cmd()).WithCodec(*cdc).WithClient(httpClient)
+	cliCtx := cosmClient.Context{}.WithCodec(cdc).WithClient(httpClient).WithTxConfig(txConfig).WithInterfaceRegistry(interfaceReg).WithAccountRetriever(authTypes.AccountRetriever{}).WithLegacyAmino(amino).WithChainID(string(opts.ChainID))
 
 	return &Client{
 		opts: opts,
 		ctx:  cliCtx,
-		cdc:  cdc,
 		hrp:  hrp,
 	}
 }
@@ -147,20 +153,14 @@ func (client *Client) LatestBlock(ctx context.Context) (pack.U64, error) {
 func (client *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pack.U64, error) {
 	res, err := cosmTx.QueryTx(client.ctx, hex.EncodeToString(txHash[:]))
 	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("query fail: %v", err)
+		return &Tx{}, pack.NewU64(0), fmt.Errorf("query fail: %v", err)
 	}
 
 	authStdTx := res.Tx.GetCachedValue().(*tx.Tx)
 	if res.Code != 0 {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("tx failed code: %v, log: %v", res.Code, res.RawLog)
+		return &Tx{}, pack.NewU64(0), fmt.Errorf("tx failed code: %v, log: %v", res.Code, res.RawLog)
 	}
-
-	stdTx, err := parseStdTx(authStdTx)
-	if err != nil {
-		return &StdTx{}, pack.NewU64(0), fmt.Errorf("parse tx failed: %v", err)
-	}
-
-	return &stdTx, pack.NewU64(1), nil
+	return &Tx{originalTx: authStdTx, encoder: client.ctx.TxConfig.TxEncoder()}, pack.NewU64(1), nil
 }
 
 // SubmitTx to the Cosmos based network.
@@ -172,7 +172,7 @@ func (client *Client) SubmitTx(ctx context.Context, tx account.Tx) error {
 
 	res, err := client.ctx.WithBroadcastMode(client.opts.BroadcastMode.String()).BroadcastTx(txBytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to broadcast tx : %w", err)
 	}
 
 	if res.Code != 0 {
@@ -190,21 +190,12 @@ func (client *Client) AccountNonce(ctx context.Context, addr address.Address) (p
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return pack.U256{}, ctx.Err()
-		default:
-		}
-
-		acc, err := client.ctx.AccountRetriever.GetAccount(client.ctx, Address(cosmosAddr).AccAddress())
-		if err != nil {
-			time.Sleep(client.opts.TimeoutRetry)
-			continue
-		}
-
-		return pack.NewU256FromU64(pack.NewU64(acc.GetSequence())), nil
+	acc, err := client.ctx.AccountRetriever.GetAccount(client.ctx, Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("failed to get account nonce : '%v': %v", addr, err)
 	}
+
+	return pack.NewU256FromU64(pack.NewU64(acc.GetSequence())), nil
 }
 
 // AccountNumber returns the account number for a given address.
@@ -214,20 +205,11 @@ func (client *Client) AccountNumber(ctx context.Context, addr address.Address) (
 		return 0, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return 0, ctx.Err()
-		default:
-		}
-
-		acc, err := client.ctx.AccountRetriever.GetAccount(client.ctx, Address(cosmosAddr).AccAddress())
-		if err != nil {
-			time.Sleep(client.opts.TimeoutRetry)
-			continue
-		}
-		return pack.U64(acc.GetAccountNumber()), nil
+	acc, err := client.ctx.AccountRetriever.GetAccount(client.ctx, Address(cosmosAddr).AccAddress())
+	if err != nil {
+		return 0, fmt.Errorf("failed to get account : '%v': %w", addr, err)
 	}
+	return pack.U64(acc.GetAccountNumber()), nil
 }
 
 // AccountBalance returns the account balancee for a given address.
@@ -237,26 +219,18 @@ func (client *Client) AccountBalance(ctx context.Context, addr address.Address) 
 		return pack.U256{}, fmt.Errorf("bad address: '%v': %v", addr, err)
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return pack.U256{}, ctx.Err()
-		default:
-		}
-
-		balResp, err := bankType.NewQueryClient(client.ctx).Balance(ctx, bankType.NewQueryBalanceRequest(Address(cosmosAddr).AccAddress(), string(client.opts.CoinDenom)))
-		if err != nil {
-			return pack.U256{}, ctx.Err()
-		}
-		balance := balResp.GetBalance().Amount.BigInt()
-
-		// If the balance exceeds `MaxU256`, return an error.
-		if pack.MaxU256.Int().Cmp(balance) == -1 {
-			return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
-		}
-
-		return pack.NewU256FromInt(balance), nil
+	balResp, err := bankType.NewQueryClient(client.ctx).Balance(ctx, bankType.NewQueryBalanceRequest(Address(cosmosAddr).AccAddress(), string(client.opts.CoinDenom)))
+	if err != nil {
+		return pack.U256{}, fmt.Errorf("failed to get account balance : '%v': %v", addr, err)
 	}
+	balance := balResp.GetBalance().Amount.BigInt()
+
+	// If the balance exceeds `MaxU256`, return an error.
+	if pack.MaxU256.Int().Cmp(balance) == -1 {
+		return pack.U256{}, fmt.Errorf("balance %v for %v exceeds MaxU256", balance.String(), addr)
+	}
+
+	return pack.NewU256FromInt(balance), nil
 }
 
 type transport struct {
