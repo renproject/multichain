@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
@@ -112,7 +112,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ClientOptions, cdc codec.Codec, txConfig cosmClient.TxConfig, interfaceReg types2.InterfaceRegistry, amino *codec.LegacyAmino, hrp string) *Client {
+func NewClient(opts ClientOptions, cdc codec.Codec, txConfig cosmClient.TxConfig, interfaceReg codecTypes.InterfaceRegistry, amino *codec.LegacyAmino, hrp string) *Client {
 	httpClient, err := rpchttp.NewWithClient(
 		string(opts.Host),
 		"websocket",

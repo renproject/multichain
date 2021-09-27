@@ -1,6 +1,6 @@
 module github.com/renproject/multichain
 
-go 1.14
+go 1.16
 
 require (
 	github.com/btcsuite/btcd v0.22.0-beta
@@ -23,7 +23,7 @@ require (
 	github.com/renproject/solana-ffi v0.1.2
 	github.com/renproject/surge v1.2.6
 	github.com/tendermint/tendermint v0.34.12
-	github.com/terra-project/core v0.4.0-rc.4
+	github.com/terra-money/core v0.5.4
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
