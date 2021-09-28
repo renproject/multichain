@@ -7,10 +7,10 @@ RUN tar -C /usr/local -xzf go1.16.8.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /app
-RUN git clone https://github.com/terra-project/core.git
+RUN git clone https://github.com/terra-money/core.git
 WORKDIR /app/core
 RUN git fetch --all -p
-RUN git checkout v0.5.4
+RUN git checkout v0.5.5
 RUN make install
 
 COPY run.sh /root/run.sh

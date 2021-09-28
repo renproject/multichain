@@ -1835,8 +1835,8 @@ github.com/tendermint/tm-db v0.5.1/go.mod h1:g92zWjHpCYlEvQXvy9M168Su8V1IBEeawpX
 github.com/tendermint/tm-db v0.6.3/go.mod h1:lfA1dL9/Y/Y8wwyPp2NMLyn5P5Ptr/gvDFNWtrCWSf8=
 github.com/tendermint/tm-db v0.6.4 h1:3N2jlnYQkXNQclQwd/eKV/NzlqPlfK21cpRRIx80XXQ=
 github.com/tendermint/tm-db v0.6.4/go.mod h1:dptYhIpJ2M5kUuenLr+Yyf3zQOv1SgBZcl8/BmWlMBw=
-github.com/terra-money/core v0.5.4 h1:tDPd89pnk5j367W9HoxvLqGoIg3am22HqRsVk2S/SDg=
-github.com/terra-money/core v0.5.4/go.mod h1:hC15x6CgPCbV6b8NQybzaPTq2gy0MYMbcm4oQON1T9w=
+github.com/terra-money/core v0.5.5 h1:wgNUa0yNHkhtECF7w45uOvlzWMeKuefmE/fW0imM4Qc=
+github.com/terra-money/core v0.5.5/go.mod h1:hC15x6CgPCbV6b8NQybzaPTq2gy0MYMbcm4oQON1T9w=
 github.com/terra-money/ledger-terra-go v0.11.2 h1:BVXZl+OhJOri6vFNjjVaTabRLApw9MuG7mxWL4V718c=
 github.com/terra-money/ledger-terra-go v0.11.2/go.mod h1:ClJ2XMj1ptcnONzKH+GhVPi7Y8pXIT+UzJ0TNt0tfZE=
 github.com/texttheater/golang-levenshtein v0.0.0-20180516184445-d188e65d659e/go.mod h1:XDKHRm5ThF8YJjx001LtgelzsoaEcvnA7lVWz9EeX3g=
