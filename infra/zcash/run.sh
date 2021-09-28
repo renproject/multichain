@@ -9,7 +9,7 @@ zcashd \
   -nuparams=2bb40e60:30  \
   -nuparams=f5b9230b:40  \
   -nuparams=e9ff75a6:50
-sleep 10
+sleep 20
 
 echo "ZCASH_ADDRESS=$ADDRESS"
 
