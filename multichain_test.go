@@ -774,7 +774,9 @@ var _ = Describe("Multichain", func() {
 					pkBytes, err := hex.DecodeString(pkEnv)
 					Expect(err).NotTo(HaveOccurred())
 					pk := secp256k1.PrivKey{Key: pkBytes}
-					senderAddr := multichain.Address(cosmossdk.AccAddress(pk.PubKey().Address()).String())
+					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
+					senderAddr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
+					Expect(err).NotTo(HaveOccurred())
 					senderPrivKey := id.PrivKey{}
 					err = surge.FromBinary(&senderPrivKey, pkBytes)
 					Expect(err).NotTo(HaveOccurred())
@@ -784,7 +786,9 @@ var _ = Describe("Multichain", func() {
 					pkBytes, err := surge.ToBinary(privKey)
 					Expect(err).NotTo(HaveOccurred())
 					pk := secp256k1.PrivKey{Key: pkBytes}
-					addr := multichain.Address(cosmossdk.AccAddress(pk.PubKey().Address()).String())
+					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
+					addr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
+					Expect(err).NotTo(HaveOccurred())
 					return addr
 				},
 				rpcURL: "http://127.0.0.1:26657",
