@@ -41,6 +41,7 @@ import (
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	// "github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/filecoin"
@@ -48,7 +49,6 @@ import (
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -541,7 +541,7 @@ var _ = Describe("Multichain", func() {
 			privKeyToAddr       func(pk id.PrivKey) multichain.Address
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
-			initialise          func(pack.String) (multichain.AccountClient, multichain.AccountTxBuilder)
+			initialise          func(pack.String, []byte) (multichain.AccountClient, multichain.AccountTxBuilder)
 			txParams            func(multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
@@ -558,7 +558,7 @@ var _ = Describe("Multichain", func() {
 					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					for _, val := range path {
-						key, err = key.Child(val)
+						key, err = key.DeriveNonStandard(val)
 						if err != nil {
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -582,7 +582,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := ethereum.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
@@ -620,7 +620,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := polygon.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := polygon.NewTxBuilder(big.NewInt(15001))
@@ -650,7 +650,7 @@ var _ = Describe("Multichain", func() {
 					key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					for _, val := range path {
-						key, err = key.Child(val)
+						key, err = key.DeriveNonStandard(val)
 						if err != nil {
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -674,7 +674,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := bsc.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := bsc.NewTxBuilder(big.NewInt(420))
@@ -712,7 +712,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := avalanche.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := avalanche.NewTxBuilder(big.NewInt(43112))
@@ -748,7 +748,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := fantom.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := fantom.NewTxBuilder(big.NewInt(4003))
@@ -766,42 +766,38 @@ var _ = Describe("Multichain", func() {
 				multichain.Fantom,
 			},
 			{
-				func() (id.PrivKey, *id.PubKey, multichain.Address) {
+				senderEnv: func() (id.PrivKey, *id.PubKey, multichain.Address) {
 					pkEnv := os.Getenv("TERRA_PK")
 					if pkEnv == "" {
 						panic("TERRA_PK is undefined")
 					}
 					pkBytes, err := hex.DecodeString(pkEnv)
 					Expect(err).NotTo(HaveOccurred())
-					var pk secp256k1.PrivKeySecp256k1
-					copy(pk[:], pkBytes)
-					addrEncoder := terra.NewAddressEncoder()
-					senderAddr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
+					pk := secp256k1.PrivKey{Key: pkBytes}
+					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
+					senderAddr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
 					Expect(err).NotTo(HaveOccurred())
 					senderPrivKey := id.PrivKey{}
 					err = surge.FromBinary(&senderPrivKey, pkBytes)
 					Expect(err).NotTo(HaveOccurred())
 					return senderPrivKey, senderPrivKey.PubKey(), senderAddr
 				},
-				func(privKey id.PrivKey) multichain.Address {
+				privKeyToAddr: func(privKey id.PrivKey) multichain.Address {
 					pkBytes, err := surge.ToBinary(privKey)
 					Expect(err).NotTo(HaveOccurred())
-					var pk secp256k1.PrivKeySecp256k1
-					copy(pk[:], pkBytes)
-					addrEncoder := terra.NewAddressEncoder()
-					addr, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(pk.PubKey().Address())))
+					pk := secp256k1.PrivKey{Key: pkBytes}
+					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
+					addr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
 					Expect(err).NotTo(HaveOccurred())
 					return addr
 				},
-				"http://127.0.0.1:26657",
-				func() multichain.Address {
+				rpcURL: "http://127.0.0.1:26657",
+				randomRecipientAddr: func() multichain.Address {
 					recipientKey := secp256k1.GenPrivKey()
-					addrEncoder := terra.NewAddressEncoder()
-					recipient, err := addrEncoder.EncodeAddress(multichain.RawAddress(pack.Bytes(recipientKey.PubKey().Address())))
-					Expect(err).NotTo(HaveOccurred())
+					recipient := multichain.Address(cosmossdk.AccAddress(recipientKey.PubKey().Address()).String())
 					return recipient
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				initialise: func(rpcURL pack.String, key []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client := terra.NewClient(
 						terra.DefaultClientOptions().
 							WithHost(rpcURL).
@@ -810,12 +806,12 @@ var _ = Describe("Multichain", func() {
 					txBuilder := terra.NewTxBuilder(
 						terra.DefaultTxBuilderOptions().
 							WithChainID("testnet"),
-						client,
+						client, key,
 					)
 
 					return client, txBuilder
 				},
-				func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
+				txParams: func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
 					amount := pack.NewU256FromU64(pack.U64(2000000))
 					gasLimit := pack.NewU256FromU64(pack.U64(100000))
 					gasPrice := pack.NewU256FromU64(pack.U64(1))
@@ -823,7 +819,7 @@ var _ = Describe("Multichain", func() {
 					payload := pack.NewBytes([]byte("multichain"))
 					return amount, gasLimit, gasPrice, gasCap, payload
 				},
-				multichain.Terra,
+				chain: multichain.Terra,
 			},
 			{
 				func() (id.PrivKey, *id.PubKey, multichain.Address) {
@@ -871,7 +867,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(pack.String(addr.String()))
 				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					// dirty hack to fetch auth token
 					client, err := filecoin.NewClient(
 						filecoin.DefaultClientOptions().
@@ -911,13 +907,15 @@ var _ = Describe("Multichain", func() {
 				Specify("build, broadcast and fetch tx", func() {
 					// Load private key and the associated address.
 					senderPrivKey, senderPubKey, senderAddr := accountChain.senderEnv()
+					senderPubKeyBytes, err := surge.ToBinary(senderPubKey)
+					Expect(err).NotTo(HaveOccurred())
 
 					// Get a random recipient address.
 					recipientAddr := accountChain.randomRecipientAddr()
 
 					// Initialise the account chain's client, and possibly get a nonce for
 					// the sender.
-					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL)
+					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL, pack.NewBytes(senderPubKeyBytes))
 					sendTx := func() (pack.Bytes, pack.U256) {
 						// Get the appropriate nonce for sender.
 						nonce, err := accountClient.AccountNonce(ctx, senderAddr)
@@ -945,8 +943,6 @@ var _ = Describe("Multichain", func() {
 						Expect(err).NotTo(HaveOccurred())
 						txSignature := pack.Bytes65{}
 						copy(txSignature[:], sigBytes)
-						senderPubKeyBytes, err := surge.ToBinary(senderPubKey)
-						Expect(err).NotTo(HaveOccurred())
 						err = accountTx.Sign(
 							[]pack.Bytes65{txSignature},
 							pack.NewBytes(senderPubKeyBytes),
@@ -986,7 +982,7 @@ var _ = Describe("Multichain", func() {
 
 				It("should be able to fetch the latest block", func() {
 					// Initialise client
-					accountClient, _ := accountChain.initialise(accountChain.rpcURL)
+					accountClient, _ := accountChain.initialise(accountChain.rpcURL, nil)
 
 					latestBlock, err := accountClient.LatestBlock(ctx)
 					Expect(err).NotTo(HaveOccurred())

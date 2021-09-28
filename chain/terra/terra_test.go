@@ -37,7 +37,7 @@ var _ = Describe("Terra", func() {
 				pkBz, err := hex.DecodeString(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
-				var pk secp256k1.PrivKeySecp256k1
+				var pk secp256k1.PrivKey
 				copy(pk[:], pkBz)
 
 				var privKey id.PrivKey
@@ -52,6 +52,9 @@ var _ = Describe("Terra", func() {
 				recipient, err := addrEncoder.EncodeAddress(address.RawAddress(pack.Bytes(pkRecipient.PubKey().Address())))
 				Expect(err).NotTo(HaveOccurred())
 
+				// attach the signature to the transaction
+				pubKey := pk.PubKey().(secp256k1.PubKey)
+
 				// instantiate a new client
 				client := terra.NewClient(
 					terra.DefaultClientOptions().
@@ -64,7 +67,7 @@ var _ = Describe("Terra", func() {
 				txBuilder := terra.NewTxBuilder(
 					terra.DefaultTxBuilderOptions().
 						WithChainID("testnet"),
-					client,
+					client, pubKey[:],
 				)
 
 				// build the transaction
@@ -95,8 +98,6 @@ var _ = Describe("Terra", func() {
 				sig65 := pack.Bytes65{}
 				copy(sig65[:], sigBytes)
 
-				// attach the signature to the transaction
-				pubKey := pk.PubKey().(secp256k1.PubKeySecp256k1)
 				err = tx.Sign(
 					[]pack.Bytes65{sig65},
 					pack.NewBytes(pubKey[:]),
