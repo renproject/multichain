@@ -67,7 +67,7 @@ var _ = Describe("Terra", func() {
 				txBuilder := terra.NewTxBuilder(
 					terra.DefaultTxBuilderOptions().
 						WithChainID("testnet"),
-					client, pubKey[:],
+					client,
 				)
 
 				// build the transaction
