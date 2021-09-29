@@ -7,19 +7,16 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/renproject/multichain"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-
 	"github.com/btcsuite/btcd/btcec"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankType "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
