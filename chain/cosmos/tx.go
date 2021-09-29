@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+
 	"github.com/btcsuite/btcd/btcec"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -307,7 +309,7 @@ func (t Tx) Serialize() (pack.Bytes, error) {
 	var txBytes []byte
 	var err error = nil
 	if t.originalTx != nil {
-		txBytes, err = t.encoder(t.originalTx)
+		txBytes, err = t.encoder(tx.WrapTx(t.originalTx).GetTx())
 	} else if t.sendMsg != nil {
 		txBytes, err = t.encoder(t.txBuilder.GetTx())
 	}
