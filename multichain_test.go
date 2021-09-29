@@ -933,6 +933,8 @@ var _ = Describe("Multichain", func() {
 							amount, nonce, gasLimit, gasPrice, gasCap,
 							payload,
 						)
+						// TODO: Temporarily use the public key in place of the
+						// from address for Terra.
 						if accountChain.chain == multichain.Terra {
 							accountTx, err = txBuilder.BuildTx(
 								ctx,

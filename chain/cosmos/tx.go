@@ -79,6 +79,8 @@ func (builder txBuilder) WithSignMode(signMode int32) txBuilder {
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
 func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+	// We assume the "from" address is a public key as it is required for
+	// setting the signature.
 	pubKeyBytes, err := hex.DecodeString(string(from))
 	if err != nil {
 		return nil, err
