@@ -3,18 +3,20 @@ package cosmos
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankType "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
@@ -48,7 +50,6 @@ func (opts TxBuilderOptions) WithChainID(chainID pack.String) TxBuilderOptions {
 }
 
 type txBuilder struct {
-	pubKey   []byte
 	client   *Client
 	chainID  pack.String
 	signMode int32
@@ -57,10 +58,9 @@ type txBuilder struct {
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Cosmos based transactions.
-func NewTxBuilder(options TxBuilderOptions, client *Client, key []byte) account.TxBuilder {
+func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 	return txBuilder{
 		signMode: DefaultSignMode,
-		pubKey:   key,
 		client:   client,
 		chainID:  options.ChainID,
 	}
@@ -76,6 +76,15 @@ func (builder txBuilder) WithSignMode(signMode int32) txBuilder {
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
 func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+	// We assume the "from" address is a public key as it is required for
+	// setting the signature.
+	pubKeyBytes, err := hex.DecodeString(string(from))
+	if err != nil {
+		return nil, err
+	}
+	pubKey := secp256k1.PubKey{Key: pubKeyBytes}
+	from = multichain.Address(types.AccAddress(pubKey.Address()).String())
+
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {
 		return nil, err
@@ -86,7 +95,6 @@ func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, 
 		return nil, err
 	}
 
-	var pubKey = secp256k1.PubKey{Key: builder.pubKey}
 	sendMsg := MsgSend{
 		FromAddress: Address(fromAddr),
 		ToAddress:   Address(toAddr),
@@ -211,7 +219,7 @@ func (t Tx) From() address.Address {
 	}
 
 	if t.sendMsg != nil {
-		return address.Address(t.sendMsg.FromAddress)
+		return address.Address(t.sendMsg.FromAddress.String())
 	}
 	return address.Address("")
 }
@@ -224,7 +232,7 @@ func (t Tx) To() address.Address {
 	}
 
 	if t.sendMsg != nil {
-		return address.Address(t.sendMsg.ToAddress)
+		return address.Address(t.sendMsg.ToAddress.String())
 	}
 	return address.Address("")
 }
@@ -307,7 +315,7 @@ func (t Tx) Serialize() (pack.Bytes, error) {
 	var txBytes []byte
 	var err error = nil
 	if t.originalTx != nil {
-		txBytes, err = t.encoder(t.originalTx)
+		txBytes, err = t.encoder(tx.WrapTx(t.originalTx).GetTx())
 	} else if t.sendMsg != nil {
 		txBytes, err = t.encoder(t.txBuilder.GetTx())
 	}

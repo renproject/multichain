@@ -51,6 +51,6 @@ func NewClient(opts ClientOptions) *Client {
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Terra transactions.
-func NewTxBuilder(opts TxBuilderOptions, client *Client, key []byte) account.TxBuilder {
-	return cosmos.NewTxBuilder(opts, client, key)
+func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
+	return cosmos.NewTxBuilder(opts, client)
 }

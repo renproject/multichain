@@ -18,37 +18,35 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/btcsuite/btcutil/hdkeychain"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/renproject/multichain/chain/avalanche"
-	"github.com/renproject/multichain/chain/bsc"
-	"github.com/renproject/multichain/chain/ethereum"
-	"github.com/renproject/multichain/chain/fantom"
-	"github.com/renproject/multichain/chain/polygon"
-	"github.com/tyler-smith/go-bip39"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcutil/hdkeychain"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cosmossdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
+	"github.com/renproject/multichain/api/account"
+	"github.com/renproject/multichain/chain/avalanche"
 	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	// "github.com/renproject/multichain/chain/digibyte"
+	"github.com/renproject/multichain/chain/bsc"
 	"github.com/renproject/multichain/chain/dogecoin"
+	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/fantom"
 	"github.com/renproject/multichain/chain/filecoin"
+	"github.com/renproject/multichain/chain/polygon"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
+	"github.com/tyler-smith/go-bip39"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -541,7 +539,7 @@ var _ = Describe("Multichain", func() {
 			privKeyToAddr       func(pk id.PrivKey) multichain.Address
 			rpcURL              pack.String
 			randomRecipientAddr func() multichain.Address
-			initialise          func(pack.String, []byte) (multichain.AccountClient, multichain.AccountTxBuilder)
+			initialise          func(pack.String) (multichain.AccountClient, multichain.AccountTxBuilder)
 			txParams            func(multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes)
 			chain               multichain.Chain
 		}{
@@ -582,7 +580,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := ethereum.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
@@ -620,7 +618,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := polygon.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := polygon.NewTxBuilder(big.NewInt(15001))
@@ -674,7 +672,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := bsc.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := bsc.NewTxBuilder(big.NewInt(420))
@@ -712,7 +710,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := avalanche.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := avalanche.NewTxBuilder(big.NewInt(43112))
@@ -748,7 +746,7 @@ var _ = Describe("Multichain", func() {
 					recipientKey := id.NewPrivKey()
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client, err := fantom.NewClient(string(rpcURL))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := fantom.NewTxBuilder(big.NewInt(4003))
@@ -797,7 +795,7 @@ var _ = Describe("Multichain", func() {
 					recipient := multichain.Address(cosmossdk.AccAddress(recipientKey.PubKey().Address()).String())
 					return recipient
 				},
-				initialise: func(rpcURL pack.String, key []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				initialise: func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					client := terra.NewClient(
 						terra.DefaultClientOptions().
 							WithHost(rpcURL).
@@ -806,7 +804,7 @@ var _ = Describe("Multichain", func() {
 					txBuilder := terra.NewTxBuilder(
 						terra.DefaultTxBuilderOptions().
 							WithChainID("testnet"),
-						client, key,
+						client,
 					)
 
 					return client, txBuilder
@@ -867,7 +865,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 					return multichain.Address(pack.String(addr.String()))
 				},
-				func(rpcURL pack.String, _ []byte) (multichain.AccountClient, multichain.AccountTxBuilder) {
+				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
 					// dirty hack to fetch auth token
 					client, err := filecoin.NewClient(
 						filecoin.DefaultClientOptions().
@@ -915,8 +913,8 @@ var _ = Describe("Multichain", func() {
 
 					// Initialise the account chain's client, and possibly get a nonce for
 					// the sender.
-					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL, pack.NewBytes(senderPubKeyBytes))
-					sendTx := func() (pack.Bytes, pack.U256) {
+					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL)
+					sendTx := func() (pack.Bytes, account.Tx) {
 						// Get the appropriate nonce for sender.
 						nonce, err := accountClient.AccountNonce(ctx, senderAddr)
 						Expect(err).NotTo(HaveOccurred())
@@ -931,6 +929,17 @@ var _ = Describe("Multichain", func() {
 							amount, nonce, gasLimit, gasPrice, gasCap,
 							payload,
 						)
+						// TODO: Temporarily use the public key in place of the
+						// from address for Terra.
+						if accountChain.chain == multichain.Terra {
+							accountTx, err = txBuilder.BuildTx(
+								ctx,
+								multichain.Address(hex.EncodeToString(senderPubKeyBytes)),
+								recipientAddr,
+								amount, nonce, gasLimit, gasPrice, gasCap,
+								payload,
+							)
+						}
 						Expect(err).NotTo(HaveOccurred())
 
 						// Get the transaction bytes and sign them.
@@ -954,9 +963,9 @@ var _ = Describe("Multichain", func() {
 						err = accountClient.SubmitTx(ctx, accountTx)
 						Expect(err).NotTo(HaveOccurred())
 						logger.Debug("submit tx", zap.String("from", string(senderAddr)), zap.String("to", string(recipientAddr)), zap.Any("txHash", txHash))
-						return txHash, amount
+						return txHash, accountTx
 					}
-					txHash, amount := sendTx()
+					txHash, accountTx := sendTx()
 					if accountChain.chain == multichain.Avalanche {
 						time.Sleep(5 * time.Second)
 						sendTx()
@@ -969,10 +978,13 @@ var _ = Describe("Multichain", func() {
 						tx, confs, err := accountClient.Tx(ctx, txHash)
 						if err == nil && confs > 0 {
 							Expect(confs.Uint64()).To(BeNumerically(">", 0))
-							Expect(tx.Value()).To(Equal(amount))
-							Expect(tx.From()).To(Equal(senderAddr))
-							Expect(tx.To()).To(Equal(recipientAddr))
-							Expect(tx.Value()).To(Equal(amount))
+							Expect(tx.Value()).To(Equal(accountTx.Value()))
+							Expect(tx.From()).To(Equal(accountTx.From()))
+							Expect(tx.To()).To(Equal(accountTx.To()))
+							// FIXME: Filecoin signed message hash is different, so we ignore this check for filecoin. Appropriate check should be added for Filecoin.
+							if accountChain.chain != multichain.Filecoin {
+								Expect(tx.Hash()).To(Equal(accountTx.Hash()))
+							}
 							break
 						}
 						// wait and retry querying for the transaction
@@ -982,7 +994,7 @@ var _ = Describe("Multichain", func() {
 
 				It("should be able to fetch the latest block", func() {
 					// Initialise client
-					accountClient, _ := accountChain.initialise(accountChain.rpcURL, nil)
+					accountClient, _ := accountChain.initialise(accountChain.rpcURL)
 
 					latestBlock, err := accountClient.LatestBlock(ctx)
 					Expect(err).NotTo(HaveOccurred())
