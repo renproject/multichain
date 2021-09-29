@@ -973,6 +973,7 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.From()).To(Equal(senderAddr))
 							Expect(tx.To()).To(Equal(recipientAddr))
 							Expect(tx.Value()).To(Equal(amount))
+							Expect(tx.Hash()).To(Equal(txHash))
 							break
 						}
 						// wait and retry querying for the transaction
