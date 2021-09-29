@@ -30,8 +30,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
 	filtypes "github.com/filecoin-project/lotus/chain/types"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
@@ -51,6 +49,9 @@ import (
 	"github.com/tyler-smith/go-bip39"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var (
