@@ -18,6 +18,8 @@ import (
 	"testing/quick"
 	"time"
 
+	"github.com/renproject/multichain/api/account"
+
 	"github.com/btcsuite/btcutil/hdkeychain"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -916,7 +918,7 @@ var _ = Describe("Multichain", func() {
 					// Initialise the account chain's client, and possibly get a nonce for
 					// the sender.
 					accountClient, txBuilder := accountChain.initialise(accountChain.rpcURL, pack.NewBytes(senderPubKeyBytes))
-					sendTx := func() (pack.Bytes, pack.U256) {
+					sendTx := func() (pack.Bytes, account.Tx) {
 						// Get the appropriate nonce for sender.
 						nonce, err := accountClient.AccountNonce(ctx, senderAddr)
 						Expect(err).NotTo(HaveOccurred())
@@ -963,9 +965,9 @@ var _ = Describe("Multichain", func() {
 						err = accountClient.SubmitTx(ctx, accountTx)
 						Expect(err).NotTo(HaveOccurred())
 						logger.Debug("submit tx", zap.String("from", string(senderAddr)), zap.String("to", string(recipientAddr)), zap.Any("txHash", txHash))
-						return txHash, amount
+						return txHash, accountTx
 					}
-					txHash, amount := sendTx()
+					txHash, accountTx := sendTx()
 					if accountChain.chain == multichain.Avalanche {
 						time.Sleep(5 * time.Second)
 						sendTx()
@@ -978,11 +980,10 @@ var _ = Describe("Multichain", func() {
 						tx, confs, err := accountClient.Tx(ctx, txHash)
 						if err == nil && confs > 0 {
 							Expect(confs.Uint64()).To(BeNumerically(">", 0))
-							Expect(tx.Value()).To(Equal(amount))
-							Expect(tx.From()).To(Equal(senderAddr))
-							Expect(tx.To()).To(Equal(recipientAddr))
-							Expect(tx.Value()).To(Equal(amount))
-							Expect(tx.Hash()).To(Equal(txHash))
+							Expect(tx.Value()).To(Equal(accountTx.Value()))
+							Expect(tx.From()).To(Equal(accountTx.From()))
+							Expect(tx.To()).To(Equal(accountTx.To()))
+							Expect(tx.Hash()).To(Equal(accountTx.Hash()))
 							break
 						}
 						// wait and retry querying for the transaction

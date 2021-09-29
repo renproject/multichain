@@ -222,7 +222,7 @@ func (t Tx) From() address.Address {
 	}
 
 	if t.sendMsg != nil {
-		return address.Address(t.sendMsg.FromAddress)
+		return address.Address(t.sendMsg.FromAddress.String())
 	}
 	return address.Address("")
 }
@@ -235,7 +235,7 @@ func (t Tx) To() address.Address {
 	}
 
 	if t.sendMsg != nil {
-		return address.Address(t.sendMsg.ToAddress)
+		return address.Address(t.sendMsg.ToAddress.String())
 	}
 	return address.Address("")
 }
