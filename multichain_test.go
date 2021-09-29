@@ -931,6 +931,15 @@ var _ = Describe("Multichain", func() {
 							amount, nonce, gasLimit, gasPrice, gasCap,
 							payload,
 						)
+						if accountChain.chain == multichain.Terra {
+							accountTx, err = txBuilder.BuildTx(
+								ctx,
+								multichain.Address(hex.EncodeToString(senderPubKeyBytes)),
+								recipientAddr,
+								amount, nonce, gasLimit, gasPrice, gasCap,
+								payload,
+							)
+						}
 						Expect(err).NotTo(HaveOccurred())
 
 						// Get the transaction bytes and sign them.

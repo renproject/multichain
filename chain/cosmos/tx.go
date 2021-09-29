@@ -3,8 +3,11 @@ package cosmos
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math/big"
+
+	"github.com/renproject/multichain"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
@@ -78,6 +81,13 @@ func (builder txBuilder) WithSignMode(signMode int32) txBuilder {
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
 func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+	pubKeyBytes, err := hex.DecodeString(string(from))
+	if err != nil {
+		return nil, err
+	}
+	pubKey := secp256k1.PubKey{Key: pubKeyBytes}
+	from = multichain.Address(types.AccAddress(pubKey.Address()).String())
+
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {
 		return nil, err
@@ -88,7 +98,6 @@ func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, 
 		return nil, err
 	}
 
-	var pubKey = secp256k1.PubKey{Key: builder.pubKey}
 	sendMsg := MsgSend{
 		FromAddress: Address(fromAddr),
 		ToAddress:   Address(toAddr),
