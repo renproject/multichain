@@ -53,7 +53,6 @@ func (opts TxBuilderOptions) WithChainID(chainID pack.String) TxBuilderOptions {
 }
 
 type txBuilder struct {
-	pubKey   []byte
 	client   *Client
 	chainID  pack.String
 	signMode int32
@@ -62,10 +61,9 @@ type txBuilder struct {
 // NewTxBuilder returns an implementation of the transaction builder interface
 // from the Cosmos Compat API, and exposes the functionality to build simple
 // Cosmos based transactions.
-func NewTxBuilder(options TxBuilderOptions, client *Client, key []byte) account.TxBuilder {
+func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 	return txBuilder{
 		signMode: DefaultSignMode,
-		pubKey:   key,
 		client:   client,
 		chainID:  options.ChainID,
 	}
