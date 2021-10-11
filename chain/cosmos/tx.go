@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/renproject/id"
-	"github.com/renproject/surge"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -18,11 +15,13 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankType "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
+	"github.com/renproject/surge"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
@@ -78,8 +77,6 @@ func (builder txBuilder) WithSignMode(signMode int32) txBuilder {
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
 func (builder txBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
-	// We assume the "from" address is a public key as it is required for
-	// setting the signature.
 	pubKeyBytes, err := surge.ToBinary(fromPubKey)
 	if err != nil {
 		return nil, err

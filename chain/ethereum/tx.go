@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/renproject/id"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/evm"
@@ -29,9 +28,6 @@ func NewTxBuilder(chainID *big.Int) TxBuilder {
 
 // BuildTx receives transaction fields and constructs a new transaction.
 func (txBuilder TxBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gas, gasTipCap, gasFeeCap pack.U256, payload pack.Bytes) (account.Tx, error) {
-
-	//_ = multichain.Address(crypto.PubkeyToAddress(ecdsa.PublicKey(fromPubKey)).Hex())
-
 	toAddr, err := NewAddressFromHex(string(pack.String(to)))
 	if err != nil {
 		return nil, fmt.Errorf("bad to address '%v': %v", to, err)
