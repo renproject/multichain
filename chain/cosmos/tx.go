@@ -3,9 +3,11 @@ package cosmos
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"math/big"
+
+	"github.com/renproject/id"
+	"github.com/renproject/surge"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -75,15 +77,15 @@ func (builder txBuilder) WithSignMode(signMode int32) txBuilder {
 // BuildTx consumes a list of MsgSend to build and return a cosmos transaction.
 // This transaction is unsigned, and must be signed before submitting to the
 // cosmos chain.
-func (builder txBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+func (builder txBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
 	// We assume the "from" address is a public key as it is required for
 	// setting the signature.
-	pubKeyBytes, err := hex.DecodeString(string(from))
+	pubKeyBytes, err := surge.ToBinary(fromPubKey)
 	if err != nil {
 		return nil, err
 	}
 	pubKey := secp256k1.PubKey{Key: pubKeyBytes}
-	from = multichain.Address(types.AccAddress(pubKey.Address()).String())
+	from := multichain.Address(types.AccAddress(pubKey.Address()).String())
 
 	fromAddr, err := types.AccAddressFromBech32(string(from))
 	if err != nil {

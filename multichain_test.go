@@ -924,22 +924,11 @@ var _ = Describe("Multichain", func() {
 
 						accountTx, err := txBuilder.BuildTx(
 							ctx,
-							multichain.Address(senderAddr),
+							senderPubKey,
 							recipientAddr,
 							amount, nonce, gasLimit, gasPrice, gasCap,
 							payload,
 						)
-						// TODO: Temporarily use the public key in place of the
-						// from address for Terra.
-						if accountChain.chain == multichain.Terra {
-							accountTx, err = txBuilder.BuildTx(
-								ctx,
-								multichain.Address(hex.EncodeToString(senderPubKeyBytes)),
-								recipientAddr,
-								amount, nonce, gasLimit, gasPrice, gasCap,
-								payload,
-							)
-						}
 						Expect(err).NotTo(HaveOccurred())
 
 						// Get the transaction bytes and sign them.

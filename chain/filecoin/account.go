@@ -3,8 +3,12 @@ package filecoin
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"fmt"
 
+	"github.com/renproject/id"
+
+	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
@@ -29,10 +33,11 @@ func NewTxBuilder() TxBuilder {
 }
 
 // BuildTx receives transaction fields and constructs a new transaction.
-func (txBuilder TxBuilder) BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
-	filfrom, err := filaddress.NewFromString(string(from))
+func (txBuilder TxBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
+	pubKeyUncompressed := eth_crypto.FromECDSAPub((*ecdsa.PublicKey)(fromPubKey))
+	filfrom, err := filaddress.NewSecp256k1Address(pubKeyUncompressed)
 	if err != nil {
-		return nil, fmt.Errorf("bad from address '%v': %v", from, err)
+		return nil, fmt.Errorf("bad from pubkey address '%v': %v", fromPubKey, err)
 	}
 	filto, err := filaddress.NewFromString(string(to))
 	if err != nil {
