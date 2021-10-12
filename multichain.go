@@ -99,6 +99,7 @@ type Asset string
 // from an existing chain, you must add a human-readable string to this set of
 // enumerated values. Assets must be listed in alphabetical order.
 const (
+	ArbETH = Asset("ArbETH") // Arbitrum Ether
 	AVAX   = Asset("AVAX")   // Avalanche
 	BCH    = Asset("BCH")    // Bitcoin Cash
 	BNB    = Asset("BNB")    // Binance Coin
@@ -106,7 +107,6 @@ const (
 	DGB    = Asset("DGB")    // DigiByte
 	DOGE   = Asset("DOGE")   // Dogecoin
 	ETH    = Asset("ETH")    // Ether
-	ArbETH = Asset("ArbETH") // Arbitrum Ether
 	FIL    = Asset("FIL")    // Filecoin
 	FTM    = Asset("FTM")    // Fantom
 	GLMR   = Asset("GLMR")   // Glimmer
@@ -115,9 +115,21 @@ const (
 	SOL    = Asset("SOL")    // Solana
 	ZEC    = Asset("ZEC")    // Zcash
 
-	DAI  = Asset("DAI")  // Dai
-	REN  = Asset("REN")  // Ren
-	USDC = Asset("USDC") // Circle USD
+	BADGER = Asset("BADGER") // Badger DAO
+	BUSD   = Asset("BUSD")   // Binance USD
+	CRV    = Asset("CRV")    // Curve
+	DAI    = Asset("DAI")    // Dai
+	EURT   = Asset("EURT")   // Euro Tether
+	FTT    = Asset("FTT")    // FTX
+	KNC    = Asset("KNC")    // Kyber Network
+	LINK   = Asset("LINK")   // Chainlink
+	MIM    = Asset("MIM")    // Magic Internet Money
+	REN    = Asset("REN")    // Ren
+	ROOK   = Asset("ROOK")   // KeeperDAO
+	SUSHI  = Asset("SUSHI")  // Sushiswap
+	UNI    = Asset("UNI")    // Uniswap
+	USDC   = Asset("USDC")   // Circle USD
+	USDT   = Asset("USDT")   // Tether
 
 	// These assets are defined separately because their purpose is to help us
 	// differentiate between different testnets for the same blockchain.
@@ -182,8 +194,6 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
-	case DAI:
-		return Ethereum
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -192,22 +202,22 @@ func (asset Asset) OriginChain() Chain {
 		return Ethereum
 	case FIL:
 		return Filecoin
-	case GLMR:
-		return Moonbeam
 	case FTM:
 		return Fantom
+	case GLMR:
+		return Moonbeam
 	case LUNA:
 		return Terra
 	case MATIC:
 		return Polygon
-	case REN:
-		return Ethereum
 	case SOL:
 		return Solana
-	case USDC:
-		return Ethereum
 	case ZEC:
 		return Zcash
+
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
+		UNI, USDC, USDT:
+		return Ethereum
 
 	case KETH:
 		return Kovan
@@ -234,7 +244,11 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, ETH, DAI, FIL, FTM, GLMR, LUNA, MATIC, REN, SOL, USDC:
+	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, SOL:
+		return ChainTypeAccountBased
+
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
+		UNI, USDC, USDT:
 		return ChainTypeAccountBased
 
 	case KETH, GETH:
@@ -258,7 +272,9 @@ func (asset Asset) Type() AssetType {
 	switch asset {
 	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, MATIC, SOL:
 		return AssetTypeNative
-	case DAI, REN, USDC:
+
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
+		UNI, USDC, USDT:
 		return AssetTypeToken
 
 	case KETH, GETH:
