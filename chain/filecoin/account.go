@@ -6,7 +6,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 
-	eth_crypto "github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	filaddress "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
@@ -33,10 +33,10 @@ func NewTxBuilder() TxBuilder {
 
 // BuildTx receives transaction fields and constructs a new transaction.
 func (txBuilder TxBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (account.Tx, error) {
-	pubKeyUncompressed := eth_crypto.FromECDSAPub((*ecdsa.PublicKey)(fromPubKey))
+	pubKeyUncompressed := ethcrypto.FromECDSAPub((*ecdsa.PublicKey)(fromPubKey))
 	filfrom, err := filaddress.NewSecp256k1Address(pubKeyUncompressed)
 	if err != nil {
-		return nil, fmt.Errorf("bad from pubkey address '%v': %v", fromPubKey, err)
+		return nil, fmt.Errorf("bad from pubkey: %v", err)
 	}
 	filto, err := filaddress.NewFromString(string(to))
 	if err != nil {

@@ -82,7 +82,7 @@ var _ = Describe("Filecoin", func() {
 
 			tx, err := filTxBuilder.BuildTx(
 				ctx,
-				sender,
+				senderPrivKey.PubKey(),
 				multichain.Address(pack.String(recipientFilAddr.String())),
 				amount, // amount
 				nonce,  // nonce
