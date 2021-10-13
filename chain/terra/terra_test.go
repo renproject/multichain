@@ -75,7 +75,7 @@ var _ = Describe("Terra", func() {
 				amount := pack.NewU256FromU64(pack.U64(2000000))
 				tx, err := txBuilder.BuildTx(
 					ctx,
-					multichain.Address(addr.String()),     // from
+					privKey.PubKey(),                      // fromPubKey
 					recipient,                             // to
 					amount,                                // amount
 					nonce,                                 // nonce

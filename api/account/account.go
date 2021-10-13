@@ -6,6 +6,7 @@ package account
 import (
 	"context"
 
+	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"
@@ -56,7 +57,7 @@ type Tx interface {
 // information, and this should be accepted during the construction of the
 // chain-specific transaction builder.
 type TxBuilder interface {
-	BuildTx(ctx context.Context, from, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (Tx, error)
+	BuildTx(ctx context.Context, fromPubKey *id.PubKey, to address.Address, value, nonce, gasLimit, gasPrice, gasCap pack.U256, payload pack.Bytes) (Tx, error)
 }
 
 // The Client interface defines the functionality required to interact with a
