@@ -3,6 +3,7 @@ package terra
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/renproject/multichain/api/account"
@@ -54,6 +55,8 @@ func NewClient(opts ClientOptions) *Client {
 	interfaceRegistry := codecTypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+	std.RegisterLegacyAminoCodec(amino)
+	std.RegisterInterfaces(interfaceRegistry)
 	return cosmos.NewClient(opts, marshaler, txConfig, interfaceRegistry, amino, "terra")
 }
 
