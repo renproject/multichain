@@ -3,8 +3,12 @@ package terra
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/cosmos"
 )
@@ -54,6 +58,12 @@ func NewClient(opts ClientOptions) *Client {
 	interfaceRegistry := codecTypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+
+	std.RegisterLegacyAminoCodec(amino)
+	std.RegisterInterfaces(interfaceRegistry)
+	ModuleBasics.RegisterLegacyAminoCodec(amino)
+	ModuleBasics.RegisterInterfaces(interfaceRegistry)
+
 	return cosmos.NewClient(opts, marshaler, txConfig, interfaceRegistry, amino, "terra")
 }
 
@@ -63,3 +73,8 @@ func NewClient(opts ClientOptions) *Client {
 func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
 	return cosmos.NewTxBuilder(opts, client)
 }
+
+var ModuleBasics = module.NewBasicManager(
+	auth.AppModuleBasic{},
+	bank.AppModuleBasic{},
+)
