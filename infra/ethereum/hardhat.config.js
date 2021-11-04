@@ -7,6 +7,7 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 1337,
+      initialBaseFeePerGas: 30000000,
       blockGasLimit: 15000000,
       hardfork: "london",
       mining: {
