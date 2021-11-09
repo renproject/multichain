@@ -4,8 +4,8 @@ jobs:
   test-solana:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -51,14 +51,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -86,39 +86,39 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Setup environment for Solana tests
         run: |
-            sh -c "$(curl -sSfL https://release.solana.com/v1.7.12/install)"
-            cd $GITHUB_WORKSPACE
-            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
-            docker run -d -h 0.0.0.0 -p 8899:8899 -p 8900:8900 renbot/ren-solana:latest
+          sh -c "$(curl -sSfL https://release.solana.com/v1.7.12/install)"
+          cd $GITHUB_WORKSPACE
+          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+          echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
+          docker run -d -h 0.0.0.0 -p 8899:8899 -p 8900:8900 renbot/ren-solana:latest
 
       - name: Sleep until the node is up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
 
       - name: Run tests for Solana
         run: |
-            export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-            cd $GITHUB_WORKSPACE/chain/solana
-            go test -timeout 100s
+          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+          cd $GITHUB_WORKSPACE/chain/solana
+          go test -timeout 100s
 
   test-filecoin:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -165,14 +165,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -200,30 +200,30 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Run linting
         run: |
-            cd $GITHUB_WORKSPACE
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go get -u golang.org/x/lint/golint
-            golint $(go list ./... | grep -v filecoin-ffi)
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u golang.org/x/lint/golint
+          golint $(go list ./... | grep -v filecoin-ffi)
 
       - name: Run multichain infrastructure
         run: |
-            cd $GITHUB_WORKSPACE/infra
-            source .env
-            docker run -d -p 1234:1234 -h 0.0.0.0 \
-              --name infra_filecoin_1 rohitnarurkar/multichain_filecoin:latest
+          cd $GITHUB_WORKSPACE/infra
+          source .env
+          docker run -d -p 1234:1234 -h 0.0.0.0 \
+            --name infra_filecoin_1 rohitnarurkar/multichain_filecoin:latest
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '10m'
+          time: "10m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -232,18 +232,18 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source ./infra/.env
-            cd $GITHUB_WORKSPACE
-            go test \
-              -fil=true \
-              -timeout 1500s
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source ./infra/.env
+          cd $GITHUB_WORKSPACE
+          go test \
+            -fil=true \
+            -timeout 1500s
 
   test-zcash:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -290,14 +290,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -325,29 +325,29 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Run linting
         run: |
-            cd $GITHUB_WORKSPACE
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go get -u golang.org/x/lint/golint
-            golint $(go list ./... | grep -v filecoin-ffi)
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u golang.org/x/lint/golint
+          golint $(go list ./... | grep -v filecoin-ffi)
 
       - name: Run multichain infrastructure
         run: |
-            cd $GITHUB_WORKSPACE/infra
-            source .env
-            docker-compose up -d --build zcash
+          cd $GITHUB_WORKSPACE/infra
+          source .env
+          docker-compose up -d --build zcash
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -356,18 +356,18 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source ./infra/.env
-            cd $GITHUB_WORKSPACE
-            go test \
-              -zec=true \
-              -timeout 1500s
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source ./infra/.env
+          cd $GITHUB_WORKSPACE
+          go test \
+            -zec=true \
+            -timeout 1500s
 
   test-terra:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -414,14 +414,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -449,29 +449,29 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Run linting
         run: |
-            cd $GITHUB_WORKSPACE
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go get -u golang.org/x/lint/golint
-            golint $(go list ./... | grep -v filecoin-ffi)
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u golang.org/x/lint/golint
+          golint $(go list ./... | grep -v filecoin-ffi)
 
       - name: Run multichain infrastructure
         run: |
-            cd $GITHUB_WORKSPACE/infra
-            source .env
-            docker-compose up -d --build terra
+          cd $GITHUB_WORKSPACE/infra
+          source .env
+          docker-compose up -d --build terra
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -480,18 +480,18 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source ./infra/.env
-            cd $GITHUB_WORKSPACE
-            go test \
-              -luna=true \
-              -timeout 1500s
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source ./infra/.env
+          cd $GITHUB_WORKSPACE
+          go test \
+            -luna=true \
+            -timeout 1500s
 
   test-dogecoin:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -538,14 +538,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -573,29 +573,29 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Run linting
         run: |
-            cd $GITHUB_WORKSPACE
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go get -u golang.org/x/lint/golint
-            golint $(go list ./... | grep -v filecoin-ffi)
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u golang.org/x/lint/golint
+          golint $(go list ./... | grep -v filecoin-ffi)
 
       - name: Run multichain infrastructure
         run: |
-            cd $GITHUB_WORKSPACE/infra
-            source .env
-            docker-compose up -d --build dogecoin
+          cd $GITHUB_WORKSPACE/infra
+          source .env
+          docker-compose up -d --build dogecoin
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -604,18 +604,18 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source ./infra/.env
-            cd $GITHUB_WORKSPACE
-            go test \
-              -doge=true \
-              -timeout 1500s
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source ./infra/.env
+          cd $GITHUB_WORKSPACE
+          go test \
+            -doge=true \
+            -timeout 1500s
 
   test-btc-bch:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -662,14 +662,14 @@ jobs:
 
       - name: Get dependencies
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go get -u github.com/onsi/ginkgo/ginkgo
-            go get -u github.com/onsi/gomega/...
-            go get -u golang.org/x/lint/golint
-            go get -u github.com/loongy/covermerge
-            go get -u github.com/mattn/goveralls
-            go get -u github.com/xlab/c-for-go
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -697,31 +697,31 @@ jobs:
 
       - name: Run vetting
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source $HOME/.cargo/env
-            go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
-            go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
-            go vet ./...
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source $HOME/.cargo/env
+          go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
+          go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go vet ./...
 
       - name: Run linting
         run: |
-            cd $GITHUB_WORKSPACE
-            export PATH=$PATH:$(go env GOPATH)/bin
-            go get -u golang.org/x/lint/golint
-            golint $(go list ./... | grep -v filecoin-ffi)
+          cd $GITHUB_WORKSPACE
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get -u golang.org/x/lint/golint
+          golint $(go list ./... | grep -v filecoin-ffi)
 
       - name: Run multichain infrastructure
         run: |
-            cd $GITHUB_WORKSPACE/infra
-            source .env
-            docker-compose up -d --build \
-              bitcoin \
-              bitcoincash
+          cd $GITHUB_WORKSPACE/infra
+          source .env
+          docker-compose up -d --build \
+            bitcoin \
+            bitcoincash
 
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -730,18 +730,18 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            export PATH=$PATH:$(go env GOPATH)/bin
-            source ./infra/.env
-            cd $GITHUB_WORKSPACE
-            go test \
-              -btc=true \
-              -bch=true \
-              -timeout 1500s
+          export PATH=$PATH:$(go env GOPATH)/bin
+          source ./infra/.env
+          cd $GITHUB_WORKSPACE
+          go test \
+            -btc=true \
+            -bch=true \
+            -timeout 1500s
   test-avax:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -845,7 +845,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -863,8 +863,8 @@ jobs:
   test-ftm:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -968,7 +968,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -986,8 +986,8 @@ jobs:
   test-polygon:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -1091,7 +1091,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -1109,8 +1109,8 @@ jobs:
   test-bsc:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -1214,7 +1214,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a
@@ -1232,8 +1232,8 @@ jobs:
   test-eth:
     runs-on: ubuntu-latest
     env:
-      FILECOIN_FFI_COMMIT: 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
-      SOLANA_FFI_COMMIT: 1428533377eb4ce00e81d04a53bad92f5339db00
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: ca488a932fea16a4fc09456383c10aa22a6b8585
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -1337,7 +1337,7 @@ jobs:
       - name: Sleep until the nodes are up
         uses: jakejarvis/wait-action@master
         with:
-          time: '1m'
+          time: "1m"
 
       - name: Check on docker containers
         run: docker ps -a

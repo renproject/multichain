@@ -2,22 +2,22 @@ FROM golang
 
 # doing all updates and installs in a single step and removing the apt cache helps reduce the image size
 RUN apt-get update && \
-        apt-get install -y \
-        mesa-opencl-icd \
-        ocl-icd-opencl-dev \
-        libssl-dev \
-        libudev-dev \
-        hwloc \
-        libhwloc-dev \
-        gcc \
-        git \
-        bzr \
-        jq \
-        pkg-config \
-        curl \
-        wget && \
-        apt-get upgrade -y && \
-        rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+    mesa-opencl-icd \
+    ocl-icd-opencl-dev \
+    libssl-dev \
+    libudev-dev \
+    hwloc \
+    libhwloc-dev \
+    gcc \
+    git \
+    bzr \
+    jq \
+    pkg-config \
+    curl \
+    wget && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
@@ -35,7 +35,7 @@ RUN mkdir -p src/github.com/filecoin-project
 WORKDIR $GOPATH/src/github.com/filecoin-project
 RUN git clone https://github.com/filecoin-project/filecoin-ffi
 WORKDIR $GOPATH/src/github.com/filecoin-project/filecoin-ffi
-RUN git checkout 8b97bd8230b77bd32f4f27e4766a6d8a03b4e801
+RUN git checkout 7912389334e347bbb2eac0520c836830875c39de
 RUN make
 RUN go install
 
@@ -45,6 +45,6 @@ RUN mkdir -p src/github.com/renproject
 WORKDIR $GOPATH/src/github.com/renproject
 RUN git clone https://github.com/renproject/solana-ffi
 WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
-RUN git checkout 1428533377eb4ce00e81d04a53bad92f5339db00
+RUN git checkout ca488a932fea16a4fc09456383c10aa22a6b8585
 RUN make clean && make
 RUN go install ./...
