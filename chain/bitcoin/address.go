@@ -91,6 +91,13 @@ func NewAddressDecoder(params *chaincfg.Params) AddressDecoder {
 
 // DecodeAddress implements the address.Decoder interface
 func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
+	// The btcutil package assumes the address being decoded only contains
+	// valid ASCII characters between 0-255.
+	for _, c := range addr {
+		if c > 255 {
+			return nil, fmt.Errorf("invalid address: bad character %v", c)
+		}
+	}
 	decodedAddr, err := btcutil.DecodeAddress(string(addr), decoder.params)
 	if err != nil {
 		return nil, fmt.Errorf("decode address: %v", err)
