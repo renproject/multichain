@@ -29,7 +29,6 @@ var (
 )
 
 type feeHistoryResult struct {
-	OldestBlock int        `json:"oldestBlock"`
 	Reward      [][]string `json:"reward"`
 }
 
