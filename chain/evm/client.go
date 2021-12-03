@@ -67,7 +67,8 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 		Signer: types.NewEIP155Signer(chainID),
 	}
 	if pending {
-		return &pendingTx, 0, nil
+		// Transaction has not been included in a block yet.
+		return nil, 0, fmt.Errorf("tx %v is pending", txID)
 	}
 
 	receipt, err := client.EthClient.TransactionReceipt(ctx, common.BytesToHash(txID))
@@ -75,17 +76,17 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 		return nil, pack.NewU64(0), fmt.Errorf("fetching recipt for tx %v : %v", txID, err)
 	}
 
-	// if no receipt, tx has 0 confirmations
 	if receipt == nil {
+		// Transaction has 0 confirmations.
 		return &pendingTx, 0, nil
 	}
 
-	// reverted tx
 	if receipt.Status == 0 {
+		// Transaction has been reverted.
 		return nil, pack.NewU64(0), fmt.Errorf("tx %v reverted, reciept status 0", txID)
 	}
 
-	// tx confirmed
+	// Transaction has been confirmed.
 	confirmedTx := Tx{
 		tx,
 		types.LatestSignerForChainID(chainID),
