@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/btcsuite/btcd v0.22.0-beta
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/btcsuite/btcutil v1.0.3-0.20211129182920-9c4bbabe7acd
 	github.com/cosmos/cosmos-sdk v0.44.0
 	github.com/dchest/blake2b v1.0.0
 	github.com/ethereum/go-ethereum v1.10.6
@@ -26,7 +26,7 @@ require (
 	github.com/terra-money/core v0.5.5
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/zap v1.17.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 )
 
 replace github.com/filecoin-project/filecoin-ffi => ./chain/filecoin/filecoin-ffi
