@@ -1,4 +1,4 @@
-FROM ubuntu:groovy
+FROM ubuntu:bionic
 
 RUN apt update -y
 RUN apt-get install -y wget curl build-essential
