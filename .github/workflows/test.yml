@@ -90,11 +90,12 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Setup environment for Solana tests
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.7.12/install)"
+          sh -c "$(curl -sSfL https://release.solana.com/v1.8.14/install)"
           cd $GITHUB_WORKSPACE
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           echo ${{ secrets.SOLANA_KEY }} > ~/.config/solana/id.json
@@ -204,6 +205,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -329,6 +331,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -453,6 +456,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -577,6 +581,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -701,6 +706,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -827,6 +833,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -950,6 +957,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -1073,6 +1081,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -1196,6 +1205,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
@@ -1319,6 +1329,7 @@ jobs:
           source $HOME/.cargo/env
           go mod edit -replace=github.com/filecoin-project/filecoin-ffi=./.extern/filecoin-ffi
           go mod edit -replace=github.com/renproject/solana-ffi=./.extern/solana-ffi
+          go mod tidy
           go vet ./...
 
       - name: Run linting
