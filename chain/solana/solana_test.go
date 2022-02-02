@@ -40,7 +40,7 @@ var _ = Describe("Solana", func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	Context("When minting and burning", func() {
-		It("should succeed", func() {
+		It("should succeed when minting/burning utxo-based assets", func() {
 			// Base58 address of the Gateway program that is deployed to Solana.
 			program := multichain.Address("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif")
 
@@ -64,8 +64,100 @@ var _ = Describe("Solana", func() {
 			time.Sleep(10 * time.Second)
 			recipient := []byte("mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4")
 			Expect(err).NotTo(HaveOccurred())
-			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL, selector)
 			burnAmount := uint64(500000000) // 5 tokens.
+			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
+			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
+
+			// Fetch burn log.
+			time.Sleep(20 * time.Second)
+			client := solana.NewClient(solana.DefaultClientOptions())
+			calldata := make([]byte, 8)
+			binary.LittleEndian.PutUint64(calldata, burnCount)
+			data, err := client.CallContract(context.Background(), program, multichain.ContractCallData(calldata))
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(data)).To(Equal(97))
+			fetchedAmount := [32]byte{}
+			copy(fetchedAmount[:], data[0:32])
+			recipientLen := uint8(data[32:33][0])
+			fetchedRecipient := pack.Bytes(data[33 : 33+int(recipientLen)])
+			Expect(pack.NewU256(fetchedAmount)).To(Equal(pack.NewU256FromUint64(burnAmount)))
+			Expect([]byte(fetchedRecipient)).To(Equal(recipient))
+		})
+
+		It("should succeed when minting/burning account-based assets", func() {
+			// Base58 address of the Gateway program that is deployed to Solana.
+			program := multichain.Address("3zfUUYDVp68fk9Z8FoKxEcEFqSMhE5UZ3Mw8mGhm5WRt")
+
+			// Construct user's keypair path (~/.config/solana/id.json).
+			userHomeDir, err := os.UserHomeDir()
+			Expect(err).NotTo(HaveOccurred())
+			keypairPath := userHomeDir + "/.config/solana/id.json"
+
+			// RenVM secret and the selector for this gateway.
+			renVmSecret := "0000000000000000000000000000000000000000000000000000000000000001"
+			selector := "LUNA/toSolana"
+
+			// Mint some tokens.
+			time.Sleep(10 * time.Second)
+			mintAmount := uint64(10000000) // 10 tokens.
+			nilSlice := make([]byte, 32)
+			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount, nilSlice, nilSlice)
+			logger.Debug("Mint", zap.String("tx signature", string(mintSig)))
+
+			// Burn some tokens.
+			time.Sleep(10 * time.Second)
+			recipient := []byte("terra1ada0gd5d0jfktgylg3vz0w9xssteyaenn2ggp4")
+			Expect(err).NotTo(HaveOccurred())
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL, selector)
+			burnAmount := uint64(5000000) // 5 tokens.
+			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
+			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
+
+			// Fetch burn log.
+			time.Sleep(20 * time.Second)
+			client := solana.NewClient(solana.DefaultClientOptions())
+			calldata := make([]byte, 8)
+			binary.LittleEndian.PutUint64(calldata, burnCount)
+			data, err := client.CallContract(context.Background(), program, multichain.ContractCallData(calldata))
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(data)).To(Equal(97))
+			fetchedAmount := [32]byte{}
+			copy(fetchedAmount[:], data[0:32])
+			recipientLen := uint8(data[32:33][0])
+			fetchedRecipient := pack.Bytes(data[33 : 33+int(recipientLen)])
+			Expect(pack.NewU256(fetchedAmount)).To(Equal(pack.NewU256FromUint64(burnAmount)))
+			Expect([]byte(fetchedRecipient)).To(Equal(recipient))
+		})
+
+		It("should succeed when minting/burning token assets", func() {
+			// Base58 address of the Gateway program that is deployed to Solana.
+			program := multichain.Address("rZJ8SoJBNWq8Qi6QTNTdVv78DPW6mn2fJUw7CPUvSgA")
+
+			// Construct user's keypair path (~/.config/solana/id.json).
+			userHomeDir, err := os.UserHomeDir()
+			Expect(err).NotTo(HaveOccurred())
+			keypairPath := userHomeDir + "/.config/solana/id.json"
+
+			// RenVM secret and the selector for this gateway.
+			renVmSecret := "0000000000000000000000000000000000000000000000000000000000000001"
+			selector := "DAI/toSolana"
+
+			// Mint some tokens.
+			time.Sleep(10 * time.Second)
+			mintAmount := uint64(1e19) // 10 tokens.
+			nilSlice := make([]byte, 32)
+			mintSig := cgo.GatewayMint(keypairPath, solana.DefaultClientRPCURL, renVmSecret, selector, mintAmount, nilSlice, nilSlice)
+			logger.Debug("Mint", zap.String("tx signature", string(mintSig)))
+
+			// Burn some tokens.
+			time.Sleep(10 * time.Second)
+			recipient := []byte("0x9E3feAf5f0483b2e196dB31635734F627fdFd254")
+			Expect(err).NotTo(HaveOccurred())
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL, selector)
+			burnAmount := uint64(5e18) // 5 tokens.
 			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
 
