@@ -121,6 +121,7 @@ const (
 	DAI    = Asset("DAI")    // Dai
 	EURT   = Asset("EURT")   // Euro Tether
 	FTT    = Asset("FTT")    // FTX
+	ibBTC  = Asset("ibBTC")  // Interest Bearing Bitcoin
 	KNC    = Asset("KNC")    // Kyber Network
 	LINK   = Asset("LINK")   // Chainlink
 	MIM    = Asset("MIM")    // Magic Internet Money
@@ -215,8 +216,8 @@ func (asset Asset) OriginChain() Chain {
 	case ZEC:
 		return Zcash
 
-	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
-		UNI, USDC, USDT:
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
+		SUSHI, UNI, USDC, USDT:
 		return Ethereum
 
 	case KETH:
@@ -247,8 +248,8 @@ func (asset Asset) ChainType() ChainType {
 	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, SOL:
 		return ChainTypeAccountBased
 
-	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
-		UNI, USDC, USDT:
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
+		SUSHI, UNI, USDC, USDT:
 		return ChainTypeAccountBased
 
 	case KETH, GETH:
@@ -273,8 +274,8 @@ func (asset Asset) Type() AssetType {
 	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, MATIC, SOL:
 		return AssetTypeNative
 
-	case BADGER, BUSD, CRV, DAI, EURT, FTT, KNC, LINK, MIM, REN, ROOK, SUSHI,
-		UNI, USDC, USDT:
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
+		SUSHI, UNI, USDC, USDT:
 		return AssetTypeToken
 
 	case KETH, GETH:
