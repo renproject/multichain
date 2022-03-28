@@ -81,8 +81,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -198,8 +196,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -326,8 +322,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -454,8 +448,6 @@ jobs:
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
           eval `ssh-agent -s`
-          ssh-add
-          make clean
           make
 
       - name: Run vetting
@@ -580,8 +572,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -707,8 +697,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -836,8 +824,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -962,8 +948,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -1088,8 +1072,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -1214,8 +1196,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
@@ -1340,8 +1320,6 @@ jobs:
           git clone https://github.com/renproject/solana-ffi.git
           cd solana-ffi
           git checkout ${{ env.SOLANA_FFI_COMMIT }}
-          eval `ssh-agent -s`
-          ssh-add
           make clean
           make
 
