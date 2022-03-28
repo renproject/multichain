@@ -64,7 +64,7 @@ var _ = Describe("Solana", func() {
 			time.Sleep(10 * time.Second)
 			recipient := []byte("mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4")
 			Expect(err).NotTo(HaveOccurred())
-			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL, solana.DefaultClientRPCURL)
 			burnAmount := uint64(500000000) // 5 tokens.
 			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
