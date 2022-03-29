@@ -1,10 +1,16 @@
 package terra
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/cosmos"
-	"github.com/terra-money/core/app"
 )
 
 type (
@@ -44,8 +50,21 @@ func init() {
 
 // NewClient returns returns a new Client with Terra codec.
 func NewClient(opts ClientOptions) *Client {
-	cfg := app.MakeEncodingConfig()
-	return cosmos.NewClient(opts, cfg.Marshaler, cfg.TxConfig, cfg.InterfaceRegistry, cfg.Amino, "terra")
+	// This config construction is based on app.MakeEncodingConfig in
+	// https://github.com/terra-money/core. We do not import this method
+	// directly as the repo is dependent on CosmWasm which fails to compile on
+	// M1 architecture.
+	amino := codec.NewLegacyAmino()
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	txConfig := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+
+	std.RegisterLegacyAminoCodec(amino)
+	std.RegisterInterfaces(interfaceRegistry)
+	ModuleBasics.RegisterLegacyAminoCodec(amino)
+	ModuleBasics.RegisterInterfaces(interfaceRegistry)
+
+	return cosmos.NewClient(opts, marshaler, txConfig, interfaceRegistry, amino, "terra")
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
@@ -54,3 +73,8 @@ func NewClient(opts ClientOptions) *Client {
 func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
 	return cosmos.NewTxBuilder(opts, client)
 }
+
+var ModuleBasics = module.NewBasicManager(
+	auth.AppModuleBasic{},
+	bank.AppModuleBasic{},
+)
