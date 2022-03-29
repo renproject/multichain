@@ -115,7 +115,7 @@ var _ = Describe("Solana", func() {
 			addrEncodeDecoder := solana.NewAddressEncodeDecoder()
 			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif"))
 
-			Expect(registry.Count).To(Equal(uint64(1)))
+			Expect(registry.Count).To(Equal(uint64(3)))
 			Expect(registry.Selectors[0]).To(Equal(btcSelectorHash))
 			Expect(registry.Selectors[1]).To(Equal(zero))
 			Expect(len(registry.Selectors)).To(Equal(32))
