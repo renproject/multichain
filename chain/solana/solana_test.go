@@ -64,7 +64,7 @@ var _ = Describe("Solana", func() {
 			time.Sleep(10 * time.Second)
 			recipient := []byte("mwjUmhAW68zCtgZpW5b1xD5g7MZew6xPV4")
 			Expect(err).NotTo(HaveOccurred())
-			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL)
+			burnCount := cgo.GatewayGetBurnCount(solana.DefaultClientRPCURL, selector)
 			burnAmount := uint64(500000000) // 5 tokens.
 			burnSig := cgo.GatewayBurn(keypairPath, solana.DefaultClientRPCURL, selector, burnCount, burnAmount, uint32(len(recipient)), recipient)
 			logger.Debug("Burn", zap.String("tx signature", string(burnSig)))
@@ -108,19 +108,29 @@ var _ = Describe("Solana", func() {
 
 			// The registry (in the CI test environment) is pre-populated with gateway
 			// addresses for BTC/toSolana selector.
+			zero := pack.NewU256FromU8(pack.U8(0)).Bytes32()
 			btcSelectorHash := [32]byte{}
 			copy(btcSelectorHash[:], crypto.Keccak256([]byte("BTC/toSolana")))
-			zero := pack.NewU256FromU8(pack.U8(0)).Bytes32()
+			lunaSelectorHash := [32]byte{}
+			copy(lunaSelectorHash[:], crypto.Keccak256([]byte("LUNA/toSolana")))
+			daiSelectorHash := [32]byte{}
+			copy(daiSelectorHash[:], crypto.Keccak256([]byte("DAI/toSolana")))
 
 			addrEncodeDecoder := solana.NewAddressEncodeDecoder()
-			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress(multichain.Address("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif"))
+			expectedBtcGateway, _ := addrEncodeDecoder.DecodeAddress("FDdKRjbBeFtyu5c66cZghJsTTjDTT1aD3zsgTWMTpaif")
+			expectedLunaGateway, _ := addrEncodeDecoder.DecodeAddress("3zfUUYDVp68fk9Z8FoKxEcEFqSMhE5UZ3Mw8mGhm5WRt")
+			expectedDaiGateway, _ := addrEncodeDecoder.DecodeAddress("rZJ8SoJBNWq8Qi6QTNTdVv78DPW6mn2fJUw7CPUvSgA")
 
-			Expect(registry.Count).To(Equal(uint64(1)))
+			Expect(registry.Count).To(Equal(uint64(3)))
 			Expect(registry.Selectors[0]).To(Equal(btcSelectorHash))
-			Expect(registry.Selectors[1]).To(Equal(zero))
+			Expect(registry.Selectors[1]).To(Equal(lunaSelectorHash))
+			Expect(registry.Selectors[2]).To(Equal(daiSelectorHash))
+			Expect(registry.Selectors[3]).To(Equal(zero))
 			Expect(len(registry.Selectors)).To(Equal(32))
 			Expect(registry.Gateways[0][:]).To(Equal([]byte(expectedBtcGateway)))
-			Expect(registry.Gateways[1]).To(Equal(zero))
+			Expect(registry.Gateways[1][:]).To(Equal([]byte(expectedLunaGateway)))
+			Expect(registry.Gateways[2][:]).To(Equal([]byte(expectedDaiGateway)))
+			Expect(registry.Gateways[3]).To(Equal(zero))
 			Expect(len(registry.Gateways)).To(Equal(32))
 		})
 	})
