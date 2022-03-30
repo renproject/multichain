@@ -30,21 +30,26 @@ const (
 	DefaultChainID = pack.String("testnet")
 	// DefaultSignMode used in signing the tx
 	DefaultSignMode = 1
-	// DefaultDecimals used in calculating gas price
-	DefaultDecimals = 1
+	// DefaultDecimalsDivisor is used when estimating gas price for some cosmos
+	// chains, so that the result is an uint.
+	// i.e. recommended terra gas price is 0.01133 uluna the decimal divisor is
+	// 1e5, the gas estimator will return 1133 as the gas price. When terra
+	// txBuilder calculating the fees, it will need to div the decimal divisor,
+	// so it will be "gasLimit (15000) * gasPrice (1133) / decimalDivisor(1e5)"
+	DefaultDecimalsDivisor = 1
 )
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	ChainID  pack.String
-	Decimals pack.U256
+	ChainID         pack.String
+	DecimalsDivisor pack.U256
 }
 
 // DefaultTxBuilderOptions returns TxBuilderOptions with the default settings.
 func DefaultTxBuilderOptions() TxBuilderOptions {
 	return TxBuilderOptions{
-		ChainID:  DefaultChainID,
-		Decimals: pack.NewU256FromU64(DefaultDecimals),
+		ChainID:         DefaultChainID,
+		DecimalsDivisor: pack.NewU256FromU64(DefaultDecimalsDivisor),
 	}
 }
 
@@ -54,16 +59,16 @@ func (opts TxBuilderOptions) WithChainID(chainID pack.String) TxBuilderOptions {
 	return opts
 }
 
-func (opts TxBuilderOptions) WithDecimals(decimals pack.U256) TxBuilderOptions {
-	opts.Decimals = decimals
+func (opts TxBuilderOptions) WithDecimalsDivisor(decimalDivisor pack.U256) TxBuilderOptions {
+	opts.DecimalsDivisor = decimalDivisor
 	return opts
 }
 
 type txBuilder struct {
-	client   *Client
-	chainID  pack.String
-	signMode int32
-	decimals pack.U256
+	client          *Client
+	chainID         pack.String
+	signMode        int32
+	decimalsDivisor pack.U256
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
@@ -71,10 +76,10 @@ type txBuilder struct {
 // Cosmos based transactions.
 func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 	return txBuilder{
-		signMode: DefaultSignMode,
-		client:   client,
-		chainID:  options.ChainID,
-		decimals: options.Decimals,
+		signMode:        DefaultSignMode,
+		client:          client,
+		chainID:         options.ChainID,
+		decimalsDivisor: options.DecimalsDivisor,
 	}
 }
 
@@ -118,7 +123,7 @@ func (builder txBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to 
 
 	fees := Coins{Coin{
 		Denom:  builder.client.opts.CoinDenom,
-		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Div(builder.decimals).Int().Uint64()),
+		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Div(builder.decimalsDivisor).Int().Uint64()),
 	}}
 
 	accountNumber, err := builder.client.AccountNumber(ctx, from)
