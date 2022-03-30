@@ -63,35 +63,37 @@ func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
 }
 
 type GasEstimator struct {
-	url      string
-	decimals int
+	url         string
+	decimals    int
+	fallbackGas pack.U256
 }
 
-func NewHttpGasEstimator(url string, decimals int) GasEstimator {
+func NewHttpGasEstimator(url string, decimals int, fallbackGas pack.U256) GasEstimator {
 	return GasEstimator{
-		url:      url,
-		decimals: decimals,
+		url:         url,
+		decimals:    decimals,
+		fallbackGas: fallbackGas,
 	}
 }
 
 func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
 	response, err := http.Get(gasEstimator.url)
 	if err != nil {
-		return pack.U256{}, pack.U256{}, err
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, err
 	}
 	defer response.Body.Close()
 
 	var results map[string]string
 	if err := json.NewDecoder(response.Body).Decode(&results); err != nil {
-		return pack.U256{}, pack.U256{}, err
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, err
 	}
 	gasPriceStr, ok := results["uluna"]
 	if !ok {
-		return pack.U256{}, pack.U256{}, fmt.Errorf("no uluna in response")
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("no uluna in response")
 	}
 	gasPriceFloat, err := strconv.ParseFloat(gasPriceStr, 64)
 	if err != nil {
-		panic(err)
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("invalid gas price, %v", err)
 	}
 	gasPrice := uint64(gasPriceFloat * float64(gasEstimator.decimals))
 	return pack.NewU256FromUint64(gasPrice), pack.NewU256FromUint64(gasPrice), nil
