@@ -30,12 +30,13 @@ const (
 	DefaultChainID = pack.String("testnet")
 	// DefaultSignMode used in signing the tx
 	DefaultSignMode = 1
-	// DefaultDecimalsDivisor is used when estimating gas price for some cosmos
-	// chains, so that the result is an uint.
-	// i.e. recommended terra gas price is 0.01133 uluna the decimal divisor is
-	// 1e5, the gas estimator will return 1133 as the gas price. When terra
-	// txBuilder calculating the fees, it will need to div the decimal divisor,
-	// so it will be "gasLimit (15000) * gasPrice (1133) / decimalDivisor(1e5)"
+	// DefaultDecimalsDivisor is used when estimating gas prices for some Cosmos
+	// chains, so that the result is an integer.
+	// For example, the recommended Terra gas price is currently 0.01133 uluna.
+	// To ensure we're only dealing with integers, the value can be represented
+	// as 1133. When the transaction builder is calculating fees, it will divide
+	// the total by the divisor (in this case 1e5), to calculate the actual
+	// value.
 	DefaultDecimalsDivisor = 1
 )
 
