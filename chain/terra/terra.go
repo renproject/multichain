@@ -14,6 +14,8 @@ import (
 	"github.com/terra-money/core/app"
 )
 
+const DefaultTerraGasDecimals = 1e5
+
 type (
 	// Client re-exports cosmos.Client
 	Client = cosmos.Client
