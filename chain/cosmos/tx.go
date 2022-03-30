@@ -30,17 +30,21 @@ const (
 	DefaultChainID = pack.String("testnet")
 	// DefaultSignMode used in signing the tx
 	DefaultSignMode = 1
+	// DefaultDecimals used in calculating gas price
+	DefaultDecimals = 1
 )
 
 // TxBuilderOptions only contains necessary options to build tx from tx builder
 type TxBuilderOptions struct {
-	ChainID pack.String
+	ChainID  pack.String
+	Decimals pack.U256
 }
 
 // DefaultTxBuilderOptions returns TxBuilderOptions with the default settings.
 func DefaultTxBuilderOptions() TxBuilderOptions {
 	return TxBuilderOptions{
-		ChainID: DefaultChainID,
+		ChainID:  DefaultChainID,
+		Decimals: pack.NewU256FromU64(DefaultDecimals),
 	}
 }
 
@@ -50,10 +54,16 @@ func (opts TxBuilderOptions) WithChainID(chainID pack.String) TxBuilderOptions {
 	return opts
 }
 
+func (opts TxBuilderOptions) WithDecimals(decimals pack.U256) TxBuilderOptions {
+	opts.Decimals = decimals
+	return opts
+}
+
 type txBuilder struct {
 	client   *Client
 	chainID  pack.String
 	signMode int32
+	decimals pack.U256
 }
 
 // NewTxBuilder returns an implementation of the transaction builder interface
@@ -64,6 +74,7 @@ func NewTxBuilder(options TxBuilderOptions, client *Client) account.TxBuilder {
 		signMode: DefaultSignMode,
 		client:   client,
 		chainID:  options.ChainID,
+		decimals: options.Decimals,
 	}
 }
 
@@ -107,7 +118,7 @@ func (builder txBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to 
 
 	fees := Coins{Coin{
 		Denom:  builder.client.opts.CoinDenom,
-		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Int().Uint64()),
+		Amount: pack.NewU64(gasPrice.Mul(gasLimit).Div(builder.decimals).Int().Uint64()),
 	}}
 
 	accountNumber, err := builder.client.AccountNumber(ctx, from)

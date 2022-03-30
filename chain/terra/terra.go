@@ -1,9 +1,16 @@
 package terra
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/cosmos"
+	"github.com/renproject/pack"
 	"github.com/terra-money/core/app"
 )
 
@@ -53,4 +60,39 @@ func NewClient(opts ClientOptions) *Client {
 // Terra transactions.
 func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
 	return cosmos.NewTxBuilder(opts, client)
+}
+
+type GasEstimator struct {
+	url      string
+	decimals int
+}
+
+func NewHttpGasEstimator(url string, decimals int) GasEstimator {
+	return GasEstimator{
+		url:      url,
+		decimals: decimals,
+	}
+}
+
+func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
+	response, err := http.Get(gasEstimator.url)
+	if err != nil {
+		return pack.U256{}, pack.U256{}, err
+	}
+	defer response.Body.Close()
+
+	var results map[string]string
+	if err := json.NewDecoder(response.Body).Decode(&results); err != nil {
+		return pack.U256{}, pack.U256{}, err
+	}
+	gasPriceStr, ok := results["uluna"]
+	if !ok {
+		return pack.U256{}, pack.U256{}, fmt.Errorf("no uluna in response")
+	}
+	gasPriceFloat, err := strconv.ParseFloat(gasPriceStr, 64)
+	if err != nil {
+		panic(err)
+	}
+	gasPrice := uint64(gasPriceFloat * float64(gasEstimator.decimals))
+	return pack.NewU256FromUint64(gasPrice), pack.NewU256FromUint64(gasPrice), nil
 }

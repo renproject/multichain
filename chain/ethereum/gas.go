@@ -29,7 +29,7 @@ var (
 )
 
 type feeHistoryResult struct {
-	Reward      [][]string `json:"reward"`
+	Reward [][]string `json:"reward"`
 }
 
 // GasOptions allow a user to configure the parameters used while heuristically recommending
