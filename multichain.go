@@ -110,6 +110,7 @@ const (
 	FIL    = Asset("FIL")    // Filecoin
 	FTM    = Asset("FTM")    // Fantom
 	GLMR   = Asset("GLMR")   // Glimmer
+	KAVA   = Asset("KAVA")   // Kava
 	LUNA   = Asset("LUNA")   // Luna
 	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
 	SOL    = Asset("SOL")    // Solana
@@ -207,6 +208,8 @@ func (asset Asset) OriginChain() Chain {
 		return Fantom
 	case GLMR:
 		return Moonbeam
+	case KAVA:
+		return Kava
 	case LUNA:
 		return Terra
 	case MATIC:
@@ -245,7 +248,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, LUNA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL:
 		return ChainTypeAccountBased
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -271,7 +274,7 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, MATIC, SOL:
+	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, KAVA, MATIC, SOL:
 		return AssetTypeNative
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -327,6 +330,7 @@ const (
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
 	Filecoin          = Chain("Filecoin")
+	Kava              = Chain("Kava")
 	Moonbeam          = Chain("Moonbeam")
 	Polygon           = Chain("Polygon")
 	Solana            = Chain("Solana")
@@ -368,7 +372,8 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin, Moonbeam, Polygon, Solana, Terra:
+	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin,
+		Kava, Moonbeam, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	case Kovan, Goerli:
@@ -421,6 +426,8 @@ func (chain Chain) NativeAsset() Asset {
 		return FTM
 	case Filecoin:
 		return FIL
+	case Kava:
+		return KAVA
 	case Moonbeam:
 		return GLMR
 	case Polygon:
