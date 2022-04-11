@@ -333,6 +333,7 @@ const (
 	Kava              = Chain("Kava")
 	Moonbeam          = Chain("Moonbeam")
 	Polygon           = Chain("Polygon")
+	Ren               = Chain("Ren")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -373,7 +374,7 @@ func (chain Chain) ChainType() ChainType {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
 	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin,
-		Kava, Moonbeam, Polygon, Solana, Terra:
+		Kava, Moonbeam, Polygon, Ren, Solana, Terra:
 		return ChainTypeAccountBased
 
 	case Kovan, Goerli:
