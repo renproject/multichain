@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM debian:buster
 
 # Install zcashd.
 RUN apt-get update                                                                                    && \
