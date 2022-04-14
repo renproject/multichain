@@ -40,7 +40,7 @@ RUN make
 RUN go install
 
 WORKDIR $GOPATH
-RUN go get -u github.com/xlab/c-for-go
+RUN go install github.com/xlab/c-for-go@master
 RUN mkdir -p src/github.com/renproject
 WORKDIR $GOPATH/src/github.com/renproject
 RUN git clone https://github.com/renproject/solana-ffi
