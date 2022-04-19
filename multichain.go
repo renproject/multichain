@@ -104,6 +104,7 @@ const (
 	BCH    = Asset("BCH")    // Bitcoin Cash
 	BNB    = Asset("BNB")    // Binance Coin
 	BTC    = Asset("BTC")    // Bitcoin
+	CAT    = Asset("CAT")    // Catalog
 	DGB    = Asset("DGB")    // DigiByte
 	DOGE   = Asset("DOGE")   // Dogecoin
 	ETH    = Asset("ETH")    // Ether
@@ -196,6 +197,8 @@ func (asset Asset) OriginChain() Chain {
 		return BinanceSmartChain
 	case BTC:
 		return Bitcoin
+	case CAT:
+		return Catalog
 	case DGB:
 		return DigiByte
 	case DOGE:
@@ -248,7 +251,7 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL:
 		return ChainTypeAccountBased
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -274,7 +277,7 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, ETH, FTM, GLMR, KAVA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, SOL:
 		return AssetTypeNative
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -325,6 +328,7 @@ const (
 	BinanceSmartChain = Chain("BinanceSmartChain")
 	Bitcoin           = Chain("Bitcoin")
 	BitcoinCash       = Chain("BitcoinCash")
+	Catalog           = Chain("Catalog")
 	DigiByte          = Chain("DigiByte")
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
@@ -333,7 +337,6 @@ const (
 	Kava              = Chain("Kava")
 	Moonbeam          = Chain("Moonbeam")
 	Polygon           = Chain("Polygon")
-	Ren               = Chain("Ren")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
@@ -373,8 +376,8 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case Avalanche, BinanceSmartChain, Ethereum, Arbitrum, Fantom, Filecoin,
-		Kava, Moonbeam, Polygon, Ren, Solana, Terra:
+	case Avalanche, BinanceSmartChain, Catalog, Ethereum, Arbitrum, Fantom,
+		Filecoin, Kava, Moonbeam, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	case Kovan, Goerli:
@@ -417,6 +420,8 @@ func (chain Chain) NativeAsset() Asset {
 		return BCH
 	case Bitcoin:
 		return BTC
+	case Catalog:
+		return CAT
 	case DigiByte:
 		return DGB
 	case Dogecoin:
