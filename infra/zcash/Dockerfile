@@ -4,7 +4,7 @@ FROM debian:buster
 RUN apt-get update                                                                                    && \
     apt-get install -y --no-install-recommends apt-transport-https gnupg2 ca-certificates wget        && \
     wget -qO - https://apt.z.cash/zcash.asc | apt-key add -                                           && \
-    echo "deb [arch=amd64] https://apt.z.cash/ buster main" | tee /etc/apt/sources.list.d/zcash.list && \
+    echo "deb [arch=amd64] https://apt.z.cash/ buster main" | tee /etc/apt/sources.list.d/zcash.list  && \
     apt-get update && apt-get install -y --no-install-recommends zcash                                && \
     mkdir -p /root/.zcash-params && zcash-fetch-params
 
