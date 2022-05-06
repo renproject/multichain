@@ -66,13 +66,15 @@ func NewTxBuilder(opts TxBuilderOptions, client *Client) account.TxBuilder {
 
 type GasEstimator struct {
 	url         string
+	key         string
 	decimals    int
 	fallbackGas pack.U256
 }
 
-func NewHttpGasEstimator(url string, decimals int, fallbackGas pack.U256) GasEstimator {
+func NewHttpGasEstimator(url, key string, decimals int, fallbackGas pack.U256) GasEstimator {
 	return GasEstimator{
 		url:         url,
+		key:         key,
 		decimals:    decimals,
 		fallbackGas: fallbackGas,
 	}
@@ -89,9 +91,9 @@ func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pa
 	if err := json.NewDecoder(response.Body).Decode(&results); err != nil {
 		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, err
 	}
-	gasPriceStr, ok := results["uluna"]
+	gasPriceStr, ok := results[gasEstimator.key]
 	if !ok {
-		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("no uluna in response")
+		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("no %v in response", gasEstimator.key)
 	}
 	gasPriceFloat, err := strconv.ParseFloat(gasPriceStr, 64)
 	if err != nil {

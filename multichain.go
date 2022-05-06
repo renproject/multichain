@@ -115,6 +115,7 @@ const (
 	LUNA   = Asset("LUNA")   // Luna
 	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
 	SOL    = Asset("SOL")    // Solana
+	UST    = Asset("UST")    // TerraUSD
 	ZEC    = Asset("ZEC")    // Zcash
 
 	BADGER = Asset("BADGER") // Badger DAO
@@ -219,6 +220,8 @@ func (asset Asset) OriginChain() Chain {
 		return Polygon
 	case SOL:
 		return Solana
+	case UST:
+		return Terra
 	case ZEC:
 		return Zcash
 
@@ -251,7 +254,8 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL,
+		UST:
 		return ChainTypeAccountBased
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -277,7 +281,7 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, SOL, UST:
 		return AssetTypeNative
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
