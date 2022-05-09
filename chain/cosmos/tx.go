@@ -175,6 +175,7 @@ func (builder txBuilder) BuildTx(ctx context.Context, fromPubKey *id.PubKey, to 
 		txBuilder: txBuilder,
 		sendMsg:   &sendMsg,
 		memo:      string(payload),
+		denom:     string(builder.client.opts.CoinDenom),
 	}, nil
 }
 
@@ -219,13 +220,17 @@ func (msg MsgSend) Msg() types.Msg {
 
 // Tx is a tx.Tx wrapper
 type Tx struct {
+	// Always present
 	originalTx *txTypes.Tx
 	encoder    types.TxEncoder
-	sendMsg    *MsgSend
-	memo       string
-	signMsg    []byte
-	sigV2      signing.SignatureV2
-	txBuilder  client.TxBuilder
+	denom      string
+
+	// Fields only used when constucting with a tx builder
+	sendMsg   *MsgSend
+	memo      string
+	signMsg   []byte
+	sigV2     signing.SignatureV2
+	txBuilder client.TxBuilder
 }
 
 // From returns the sender of the transaction
@@ -261,7 +266,10 @@ func (t Tx) Value() pack.U256 {
 	if t.originalTx != nil {
 		msgs := t.originalTx.GetBody().Messages
 		for _, msg := range msgs {
-			value.AddAssign(pack.NewU64(msg.GetCachedValue().(*bankType.MsgSend).Amount[0].Amount.Uint64()))
+			amount := msg.GetCachedValue().(*bankType.MsgSend).Amount[0]
+			if amount.Denom == t.denom {
+				value.AddAssign(pack.NewU64(amount.Amount.Uint64()))
+			}
 		}
 	} else if t.sendMsg != nil {
 		value.AddAssign(pack.NewU64(t.sendMsg.Amount.Coins()[0].Amount.Uint64()))

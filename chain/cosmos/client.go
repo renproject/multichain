@@ -160,7 +160,7 @@ func (client *Client) Tx(ctx context.Context, txHash pack.Bytes) (account.Tx, pa
 	if res.Code != 0 {
 		return &Tx{}, pack.NewU64(0), fmt.Errorf("tx failed code: %v, log: %v", res.Code, res.RawLog)
 	}
-	return &Tx{originalTx: authStdTx, encoder: client.ctx.TxConfig.TxEncoder()}, pack.NewU64(1), nil
+	return &Tx{originalTx: authStdTx, encoder: client.ctx.TxConfig.TxEncoder(), denom: string(client.opts.CoinDenom)}, pack.NewU64(1), nil
 }
 
 // SubmitTx to the Cosmos based network.
