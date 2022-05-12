@@ -114,6 +114,7 @@ const (
 	KAVA   = Asset("KAVA")   // Kava
 	LUNA   = Asset("LUNA")   // Luna
 	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
+	oETH   = Asset("oETH")   // Optimism Ether
 	SOL    = Asset("SOL")    // Solana
 	UST    = Asset("UST")    // TerraUSD
 	ZEC    = Asset("ZEC")    // Zcash
@@ -218,6 +219,8 @@ func (asset Asset) OriginChain() Chain {
 		return Terra
 	case MATIC:
 		return Polygon
+	case oETH:
+		return Optimism
 	case SOL:
 		return Solana
 	case UST:
@@ -254,8 +257,8 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, SOL,
-		UST:
+	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, oETH,
+		SOL, UST:
 		return ChainTypeAccountBased
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -281,7 +284,7 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, SOL, UST:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, oETH, SOL, UST:
 		return AssetTypeNative
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
@@ -340,6 +343,7 @@ const (
 	Filecoin          = Chain("Filecoin")
 	Kava              = Chain("Kava")
 	Moonbeam          = Chain("Moonbeam")
+	Optimism          = Chain("Optimism")
 	Polygon           = Chain("Polygon")
 	Solana            = Chain("Solana")
 	Terra             = Chain("Terra")
@@ -381,7 +385,7 @@ func (chain Chain) ChainType() ChainType {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
 	case Avalanche, BinanceSmartChain, Catalog, Ethereum, Arbitrum, Fantom,
-		Filecoin, Kava, Moonbeam, Polygon, Solana, Terra:
+		Filecoin, Kava, Moonbeam, Optimism, Polygon, Solana, Terra:
 		return ChainTypeAccountBased
 
 	case Kovan, Goerli:
@@ -442,6 +446,8 @@ func (chain Chain) NativeAsset() Asset {
 		return GLMR
 	case Polygon:
 		return MATIC
+	case Optimism:
+		return oETH
 	case Solana:
 		return SOL
 	case Terra:
