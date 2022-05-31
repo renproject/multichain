@@ -8,7 +8,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /app
 RUN git clone https://github.com/terra-money/classic-core.git
-WORKDIR /app/core
+WORKDIR /app/classic-core
 RUN git fetch --all -p
 RUN git checkout v0.5.5
 RUN make install
