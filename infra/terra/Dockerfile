@@ -10,7 +10,7 @@ WORKDIR /app
 RUN git clone https://github.com/terra-money/core.git
 WORKDIR /app/core
 RUN git fetch --all -p
-RUN git checkout v2.0.1
+RUN git checkout v0.5.5
 RUN make install
 
 COPY run.sh /root/run.sh
