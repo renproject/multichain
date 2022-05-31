@@ -97,6 +97,9 @@ func (encoder AddressEncoder) EncodeAddress(rawAddr address.RawAddress) (address
 func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAddress, error) {
 	// Legacy address decoding
 	if legacyAddr, err := btcutil.DecodeAddress(string(addr), decoder.params); err == nil {
+		if !legacyAddr.IsForNet(decoder.params) {
+			return nil, fmt.Errorf("address of different network")
+		}
 		switch legacyAddr.(type) {
 		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
 			return decodeLegacyAddress(addr, decoder.params)

@@ -56,6 +56,9 @@ func (txBuilder TxBuilder) BuildTx(inputs []utxo.Input, recipients []utxo.Recipi
 		if err != nil {
 			return nil, err
 		}
+		if !addr.IsForNet(txBuilder.params) {
+			return nil, fmt.Errorf("addr of a different network")
+		}
 		script, err := txscript.PayToAddrScript(addr)
 		if err != nil {
 			return nil, err
