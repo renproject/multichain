@@ -102,6 +102,9 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 	if err != nil {
 		return nil, fmt.Errorf("decode address: %v", err)
 	}
+	if !decodedAddr.IsForNet(decoder.params) {
+		return nil, fmt.Errorf("address of different network")
+	}
 
 	switch a := decodedAddr.(type) {
 	case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash:
