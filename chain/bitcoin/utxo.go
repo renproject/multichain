@@ -183,7 +183,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 				continue
 			}
 		} else {
-			if txscript.IsPayToWitnessScriptHash(sigScript) || txscript.IsPayToWitnessScriptHash(sigScript) {
+			if txscript.IsPayToWitnessPubKeyHash(sigScript) || txscript.IsPayToWitnessScriptHash(sigScript) {
 				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll)), pubKey, sigScript})
 				continue
 			}
