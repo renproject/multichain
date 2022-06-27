@@ -173,7 +173,7 @@ var _ = Describe("Encoding", func() {
 				resString := hex.EncodeToString(resBytes)
 
 				expectedBytes := make([]byte, 32)
-				copy(expectedBytes, x[:])
+				copy(expectedBytes[12:], x[:])
 				expectedString := hex.EncodeToString(expectedBytes)
 
 				Expect(resString).To(Equal(expectedString))
@@ -182,6 +182,58 @@ var _ = Describe("Encoding", func() {
 
 			err := quick.Check(f, nil)
 			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("when encoding slices", func() {
+		Context("when the elements are 256-bit unsigned integers", func() {
+			It("should return the correct result", func() {
+				f := func(x [][32]byte) bool {
+					arg := make([]pack.U256, len(x))
+					for i := range arg {
+						arg[i] = pack.NewU256(x[i])
+					}
+
+					resBytes := ethereum.Encode(arg)
+					resString := hex.EncodeToString(resBytes)
+					expectedString := fmt.Sprintf("%064x%064x", 32, len(x))
+					for i := range x {
+						expectedString = expectedString + fmt.Sprintf("%064x", x[i])
+					}
+
+					Expect(resString).To(Equal(expectedString))
+					return true
+				}
+
+				err := quick.Check(f, nil)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("when the elements are Ethereum addresses", func() {
+			It("should return the correct result", func() {
+				f := func(x [][20]byte) bool {
+					arg := make([]ethereum.Address, len(x))
+					for i := range arg {
+						arg[i] = ethereum.Address(x[i])
+					}
+
+					resBytes := ethereum.Encode(arg)
+					resString := hex.EncodeToString(resBytes)
+					expectedString := fmt.Sprintf("%064x%064x", 32, len(x))
+					for i := range x {
+						expectedBytes := make([]byte, 32)
+						copy(expectedBytes[12:], x[i][:])
+						expectedString = expectedString + hex.EncodeToString(expectedBytes)
+					}
+
+					Expect(resString).To(Equal(expectedString))
+					return true
+				}
+
+				err := quick.Check(f, nil)
+				Expect(err).ToNot(HaveOccurred())
+			})
 		})
 	})
 
