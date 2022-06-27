@@ -58,6 +58,21 @@ func Encode(vals ...interface{}) []byte {
 			ethval = val
 			ty, err = abi.NewType("address", "", nil)
 
+		case []pack.U256:
+			v := make([]*big.Int, len(val))
+			for i := range val {
+				elem, ok := big.NewInt(0).SetString(val[i].String(), 10)
+				if !ok {
+					panic(fmt.Errorf("encoding list item: %v", err))
+				}
+				v[i] = elem
+			}
+			ethval = v
+			ty, err = abi.NewType("uint256[]", "", nil)
+		case []Address:
+			ethval = val
+			ty, err = abi.NewType("address[]", "", nil)
+
 		default:
 			panic(fmt.Errorf("non-exhaustive pattern: %T", val))
 		}
