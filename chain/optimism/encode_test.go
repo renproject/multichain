@@ -1,4 +1,4 @@
-package evm_test
+package optimism_test
 
 import (
 	"encoding/hex"
@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing/quick"
 
-	"github.com/renproject/multichain/chain/ethereum"
+	"github.com/renproject/multichain/chain/kava"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -20,7 +20,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x []byte) bool {
 				arg := pack.NewBytes(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 
 				expectedBytes := make([]byte, int(math.Ceil(float64(len(x))/32)*32))
@@ -43,7 +43,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [32]byte) bool {
 				arg := pack.NewBytes32(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := hex.EncodeToString(x[:])
 
@@ -61,7 +61,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint8) bool {
 				arg := pack.NewU8(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -79,7 +79,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint16) bool {
 				arg := pack.NewU16(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -97,7 +97,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint32) bool {
 				arg := pack.NewU32(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -115,7 +115,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x uint64) bool {
 				arg := pack.NewU64(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -133,7 +133,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [16]byte) bool {
 				arg := pack.NewU128(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -151,7 +151,7 @@ var _ = Describe("Encoding", func() {
 			f := func(x [32]byte) bool {
 				arg := pack.NewU256(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 				expectedString := fmt.Sprintf("%064x", x)
 
@@ -167,13 +167,13 @@ var _ = Describe("Encoding", func() {
 	Context("when encoding Ethereum addresses", func() {
 		It("should return the correct result", func() {
 			f := func(x [20]byte) bool {
-				arg := ethereum.Address(x)
+				arg := kava.Address(x)
 
-				resBytes := ethereum.Encode(arg)
+				resBytes := kava.Encode(arg)
 				resString := hex.EncodeToString(resBytes)
 
 				expectedBytes := make([]byte, 32)
-				copy(expectedBytes[12:], x[:])
+				copy(expectedBytes, x[:])
 				expectedString := hex.EncodeToString(expectedBytes)
 
 				Expect(resString).To(Equal(expectedString))
@@ -185,63 +185,11 @@ var _ = Describe("Encoding", func() {
 		})
 	})
 
-	Context("when encoding slices", func() {
-		Context("when the elements are 256-bit unsigned integers", func() {
-			It("should return the correct result", func() {
-				f := func(x [][32]byte) bool {
-					arg := make([]pack.U256, len(x))
-					for i := range arg {
-						arg[i] = pack.NewU256(x[i])
-					}
-
-					resBytes := ethereum.Encode(arg)
-					resString := hex.EncodeToString(resBytes)
-					expectedString := fmt.Sprintf("%064x%064x", 32, len(x))
-					for i := range x {
-						expectedString = expectedString + fmt.Sprintf("%064x", x[i])
-					}
-
-					Expect(resString).To(Equal(expectedString))
-					return true
-				}
-
-				err := quick.Check(f, nil)
-				Expect(err).ToNot(HaveOccurred())
-			})
-		})
-
-		Context("when the elements are Ethereum addresses", func() {
-			It("should return the correct result", func() {
-				f := func(x [][20]byte) bool {
-					arg := make([]ethereum.Address, len(x))
-					for i := range arg {
-						arg[i] = ethereum.Address(x[i])
-					}
-
-					resBytes := ethereum.Encode(arg)
-					resString := hex.EncodeToString(resBytes)
-					expectedString := fmt.Sprintf("%064x%064x", 32, len(x))
-					for i := range x {
-						expectedBytes := make([]byte, 32)
-						copy(expectedBytes[12:], x[i][:])
-						expectedString = expectedString + hex.EncodeToString(expectedBytes)
-					}
-
-					Expect(resString).To(Equal(expectedString))
-					return true
-				}
-
-				err := quick.Check(f, nil)
-				Expect(err).ToNot(HaveOccurred())
-			})
-		})
-	})
-
 	Context("when encoding an unsupported type", func() {
 		It("should panic", func() {
 			f := func(x bool) bool {
 				arg := pack.NewBool(x)
-				Expect(func() { ethereum.Encode(arg) }).To(Panic())
+				Expect(func() { kava.Encode(arg) }).To(Panic())
 				return true
 			}
 
@@ -283,7 +231,7 @@ var _ = Describe("Encoding", func() {
 			addrBytes, err := hex.DecodeString(test.addr)
 			Expect(err).ToNot(HaveOccurred())
 
-			var addr ethereum.Address
+			var addr kava.Address
 			copy(addr[:], addrBytes)
 
 			hashBytes32 := [32]byte{}
@@ -296,7 +244,7 @@ var _ = Describe("Encoding", func() {
 				pack.NewU64(test.amount),
 				pack.NewBytes32(hashBytes32),
 			}
-			result := ethereum.Encode(args...)
+			result := kava.Encode(args...)
 			Expect(hex.EncodeToString(result)).To(Equal(test.result))
 		},
 
