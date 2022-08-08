@@ -48,3 +48,5 @@ WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
 RUN git checkout 720c0143d8655bfcd412ae73c949474df2c1dcf3
 RUN make clean && make
 RUN go install ./...
+
+RUN git config --global --remove-section url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/"
