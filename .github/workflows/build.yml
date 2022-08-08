@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: renbot/multichain:${{ steps.push-info.outputs.tag }}
+          tags: renbot/multichain:${{ steps.push-info.outputs.tag }}, renbot/multichain:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
           build-args: |
