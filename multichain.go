@@ -119,22 +119,26 @@ const (
 	UST    = Asset("UST")    // TerraUSD
 	ZEC    = Asset("ZEC")    // Zcash
 
-	BADGER = Asset("BADGER") // Badger DAO
-	BUSD   = Asset("BUSD")   // Binance USD
-	CRV    = Asset("CRV")    // Curve
-	DAI    = Asset("DAI")    // Dai
-	EURT   = Asset("EURT")   // Euro Tether
-	FTT    = Asset("FTT")    // FTX
-	ibBTC  = Asset("ibBTC")  // Interest Bearing Bitcoin
-	KNC    = Asset("KNC")    // Kyber Network
-	LINK   = Asset("LINK")   // Chainlink
-	MIM    = Asset("MIM")    // Magic Internet Money
-	REN    = Asset("REN")    // Ren
-	ROOK   = Asset("ROOK")   // KeeperDAO
-	SUSHI  = Asset("SUSHI")  // Sushiswap
-	UNI    = Asset("UNI")    // Uniswap
-	USDC   = Asset("USDC")   // Circle USD
-	USDT   = Asset("USDT")   // Tether
+	BADGER         = Asset("BADGER")         // Badger DAO
+	BUSD           = Asset("BUSD")           // Binance USD
+	CRV            = Asset("CRV")            // Curve
+	DAI            = Asset("DAI")            // Dai
+	EURT           = Asset("EURT")           // Euro Tether
+	FTT            = Asset("FTT")            // FTX
+	ibBTC          = Asset("ibBTC")          // Interest Bearing Bitcoin
+	KNC            = Asset("KNC")            // Kyber Network
+	LINK           = Asset("LINK")           // Chainlink
+	MIM            = Asset("MIM")            // Magic Internet Money
+	REN            = Asset("REN")            // Ren
+	ROOK           = Asset("ROOK")           // KeeperDAO
+	SUSHI          = Asset("SUSHI")          // Sushiswap
+	UNI            = Asset("UNI")            // Uniswap
+	USDC           = Asset("USDC")           // Circle USD (Ethereum)
+	USDC_Avalanche = Asset("USDC_Avalanche") // Circle USD (Avalanche)
+	USDC_Polygon   = Asset("USDC_Polygon")   // Circle USD (Polygon)
+	USDT           = Asset("USDT")           // Tether (Ethereum)
+	USDT_Avalanche = Asset("USDT_Avalanche") // Tether (Avalanche)
+	USDT_Polygon   = Asset("USDT_Polygon")   // Tether (Polygon)
 
 	// These assets are defined separately because their purpose is to help us
 	// differentiate between different testnets for the same blockchain.
@@ -191,7 +195,7 @@ func (asset Asset) OriginChain() Chain {
 	switch asset {
 	case ArbETH:
 		return Arbitrum
-	case AVAX:
+	case AVAX, USDC_Avalanche, USDT_Avalanche:
 		return Avalanche
 	case BCH:
 		return BitcoinCash
@@ -217,7 +221,7 @@ func (asset Asset) OriginChain() Chain {
 		return Kava
 	case LUNA:
 		return Terra
-	case MATIC:
+	case MATIC, USDC_Polygon, USDT_Polygon:
 		return Polygon
 	case oETH:
 		return Optimism
@@ -262,7 +266,8 @@ func (asset Asset) ChainType() ChainType {
 		return ChainTypeAccountBased
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+		SUSHI, UNI, USDC, USDC_Avalanche, USDC_Polygon, USDT, USDT_Avalanche,
+		USDT_Polygon:
 		return ChainTypeAccountBased
 
 	case KETH, GETH:
@@ -288,7 +293,8 @@ func (asset Asset) Type() AssetType {
 		return AssetTypeNative
 
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+		SUSHI, UNI, USDC, USDC_Avalanche, USDC_Polygon, USDT, USDT_Avalanche,
+		USDT_Polygon:
 		return AssetTypeToken
 
 	case KETH, GETH:
