@@ -53,12 +53,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -155,12 +155,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -186,7 +186,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -267,12 +267,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -298,7 +298,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -379,12 +379,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -410,7 +410,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -493,12 +493,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -524,7 +524,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -604,12 +604,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -635,7 +635,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -715,12 +715,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -746,7 +746,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -826,12 +826,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -857,7 +857,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
@@ -937,12 +937,12 @@ jobs:
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
           source $HOME/.cargo/env
-          go install github.com/onsi/ginkgo/ginkgo
-          go install github.com/onsi/gomega/...
-          go install golang.org/x/lint/golint
-          go install github.com/loongy/covermerge
-          go install github.com/mattn/goveralls
-          go install github.com/xlab/c-for-go
+          go get -u github.com/onsi/ginkgo/ginkgo
+          go get -u github.com/onsi/gomega/...
+          go get -u golang.org/x/lint/golint
+          go get -u github.com/loongy/covermerge
+          go get -u github.com/mattn/goveralls
+          go get -u github.com/xlab/c-for-go
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -968,7 +968,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           export PATH=$PATH:$(go env GOPATH)/bin
-          go install golang.org/x/lint/golint
+          go get -u golang.org/x/lint/golint
           golint $(go list ./...)
 
       - name: Run multichain infrastructure
