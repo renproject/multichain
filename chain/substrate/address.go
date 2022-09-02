@@ -3,7 +3,7 @@ package substrate
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/renproject/pack"
 )
 

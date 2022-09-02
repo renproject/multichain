@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
@@ -18,18 +18,14 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
+	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/base58"
-	"github.com/btcsuite/btcutil/hdkeychain"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cosmossdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
-	filaddress "github.com/filecoin-project/go-address"
-	filtypes "github.com/filecoin-project/lotus/chain/types"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
@@ -40,9 +36,7 @@ import (
 	"github.com/renproject/multichain/chain/dogecoin"
 	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/multichain/chain/fantom"
-	"github.com/renproject/multichain/chain/filecoin"
 	"github.com/renproject/multichain/chain/polygon"
-	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
@@ -260,7 +254,8 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.Address {
 					// Generate a random SECP256K1 private key.
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					// Get bitcoin WIF private key with the pub key configured to be in
 					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
@@ -272,7 +267,8 @@ var _ = Describe("Multichain", func() {
 				},
 				func() multichain.RawAddress {
 					// Generate a random SECP256K1 private key.
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					// Get bitcoin WIF private key with the pub key configured to be in
 					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
@@ -308,60 +304,14 @@ var _ = Describe("Multichain", func() {
 				},
 			},
 			{
-				multichain.Filecoin,
-				func() multichain.AddressEncodeDecoder {
-					return filecoin.NewAddressEncodeDecoder()
-				},
-				func() multichain.Address {
-					pubKey := make([]byte, 64)
-					r.Read(pubKey)
-					addr, err := filaddress.NewSecp256k1Address(pubKey)
-					Expect(err).NotTo(HaveOccurred())
-					return multichain.Address(addr.String())
-				},
-				func() multichain.RawAddress {
-					rawAddr := make([]byte, 20)
-					r.Read(rawAddr)
-					formattedRawAddr := append([]byte{byte(filaddress.SECP256K1)}, rawAddr[:]...)
-					return multichain.RawAddress(pack.NewBytes(formattedRawAddr[:]))
-				},
-				func() multichain.Address {
-					return multichain.Address("")
-				},
-				func() multichain.RawAddress {
-					return multichain.RawAddress([]byte{})
-				},
-			},
-			{
-				multichain.Terra,
-				func() multichain.AddressEncodeDecoder {
-					return terra.NewAddressEncodeDecoder()
-				},
-				func() multichain.Address {
-					pk := secp256k1.GenPrivKey()
-					addr := cosmossdk.AccAddress(pk.PubKey().Address())
-					return multichain.Address(addr.String())
-				},
-				func() multichain.RawAddress {
-					pk := secp256k1.GenPrivKey()
-					rawAddr := pk.PubKey().Address()
-					return multichain.RawAddress(pack.Bytes(rawAddr))
-				},
-				func() multichain.Address {
-					return multichain.Address("")
-				},
-				func() multichain.RawAddress {
-					return multichain.RawAddress([]byte{})
-				},
-			},
-			{
 				multichain.BitcoinCash,
 				func() multichain.AddressEncodeDecoder {
 					addrEncodeDecoder := bitcoincash.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
 					return addrEncodeDecoder
 				},
 				func() multichain.Address {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
@@ -369,7 +319,8 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(addrPubKeyHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
@@ -404,7 +355,8 @@ var _ = Describe("Multichain", func() {
 					return addrEncodeDecoder
 				},
 				func() multichain.Address {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), zcash.RegressionNetParams.Params, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &zcash.RegressionNetParams)
@@ -412,7 +364,8 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(addrPubKeyHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), zcash.RegressionNetParams.Params, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &zcash.RegressionNetParams)
@@ -763,136 +716,6 @@ var _ = Describe("Multichain", func() {
 				},
 				multichain.Fantom,
 			},
-			{
-				senderEnv: func() (id.PrivKey, *id.PubKey, multichain.Address) {
-					pkEnv := os.Getenv("TERRA_PK")
-					if pkEnv == "" {
-						panic("TERRA_PK is undefined")
-					}
-					pkBytes, err := hex.DecodeString(pkEnv)
-					Expect(err).NotTo(HaveOccurred())
-					pk := secp256k1.PrivKey{Key: pkBytes}
-					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
-					senderAddr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
-					Expect(err).NotTo(HaveOccurred())
-					senderPrivKey := id.PrivKey{}
-					err = surge.FromBinary(&senderPrivKey, pkBytes)
-					Expect(err).NotTo(HaveOccurred())
-					return senderPrivKey, senderPrivKey.PubKey(), senderAddr
-				},
-				privKeyToAddr: func(privKey id.PrivKey) multichain.Address {
-					pkBytes, err := surge.ToBinary(privKey)
-					Expect(err).NotTo(HaveOccurred())
-					pk := secp256k1.PrivKey{Key: pkBytes}
-					addrEncodeDecoder := terra.NewAddressEncodeDecoder()
-					addr, err := addrEncodeDecoder.EncodeAddress(pk.PubKey().Address().Bytes())
-					Expect(err).NotTo(HaveOccurred())
-					return addr
-				},
-				rpcURL: "http://127.0.0.1:26657",
-				randomRecipientAddr: func() multichain.Address {
-					recipientKey := secp256k1.GenPrivKey()
-					recipient := multichain.Address(cosmossdk.AccAddress(recipientKey.PubKey().Address()).String())
-					return recipient
-				},
-				initialise: func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client := terra.NewClient(
-						terra.DefaultClientOptions().
-							WithHost(rpcURL).
-							WithCoinDenom("uluna"),
-					)
-					txBuilder := terra.NewTxBuilder(
-						terra.DefaultTxBuilderOptions().
-							WithChainID("testnet"),
-						client,
-					)
-
-					return client, txBuilder
-				},
-				txParams: func(_ multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
-					amount := pack.NewU256FromU64(pack.U64(2000000))
-					gasLimit := pack.NewU256FromU64(pack.U64(100000))
-					gasPrice := pack.NewU256FromU64(pack.U64(1))
-					gasCap := pack.NewU256FromInt(gasPrice.Int())
-					payload := pack.NewBytes([]byte("multichain"))
-					return amount, gasLimit, gasPrice, gasCap, payload
-				},
-				chain: multichain.Terra,
-			},
-			{
-				func() (id.PrivKey, *id.PubKey, multichain.Address) {
-					pkEnv := os.Getenv("FILECOIN_PK")
-					if pkEnv == "" {
-						panic("FILECOIN_PK is undefined")
-					}
-					var ki filtypes.KeyInfo
-					data, err := hex.DecodeString(pkEnv)
-					Expect(err).NotTo(HaveOccurred())
-					err = json.Unmarshal(data, &ki)
-					Expect(err).NotTo(HaveOccurred())
-					privKey := id.PrivKey{}
-					err = surge.FromBinary(&privKey, ki.PrivateKey)
-					Expect(err).NotTo(HaveOccurred())
-					pubKey := privKey.PubKey()
-
-					// FIXME: add method in renproject/id to get uncompressed pubkey bytes
-					pubKeyCompressed, err := surge.ToBinary(pubKey)
-					Expect(err).NotTo(HaveOccurred())
-					/*addr*/ _, err = filaddress.NewSecp256k1Address(pubKeyCompressed)
-					Expect(err).NotTo(HaveOccurred())
-					addrStr := os.Getenv("FILECOIN_ADDRESS")
-					if addrStr == "" {
-						panic("FILECOIN_ADDRESS is undefined")
-					}
-
-					return privKey, pubKey, multichain.Address(pack.String(addrStr))
-				},
-				func(privKey id.PrivKey) multichain.Address {
-					pubKey := privKey.PubKey()
-					pubKeyCompressed, err := surge.ToBinary(pubKey)
-					Expect(err).NotTo(HaveOccurred())
-					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
-					Expect(err).NotTo(HaveOccurred())
-					return multichain.Address(pack.String(addr.String()))
-				},
-				"http://127.0.0.1:1234/rpc/v0",
-				func() multichain.Address {
-					pk := id.NewPrivKey()
-					pubKey := pk.PubKey()
-					pubKeyCompressed, err := surge.ToBinary(pubKey)
-					Expect(err).NotTo(HaveOccurred())
-					addr, err := filaddress.NewSecp256k1Address(pubKeyCompressed)
-					Expect(err).NotTo(HaveOccurred())
-					return multichain.Address(pack.String(addr.String()))
-				},
-				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					// dirty hack to fetch auth token
-					client, err := filecoin.NewClient(
-						filecoin.DefaultClientOptions().
-							WithRPCURL(rpcURL).
-							WithAuthToken(fetchAuthToken()),
-					)
-					Expect(err).NotTo(HaveOccurred())
-
-					txBuilder := filecoin.NewTxBuilder()
-
-					return client, txBuilder
-				},
-				func(client multichain.AccountClient) (pack.U256, pack.U256, pack.U256, pack.U256, pack.Bytes) {
-					amount := pack.NewU256FromU64(pack.NewU64(100000000))
-					gasLimit := pack.NewU256FromU64(pack.NewU64(2189560))
-
-					// Fetch gas price and gas cap using the gas estimator.
-					filecoinClient := client.(*filecoin.Client)
-					gasPrice, gasCap, err := filecoin.NewGasEstimator(filecoinClient, gasLimit.Int().Int64()).
-						EstimateGas(context.Background())
-					Expect(err).NotTo(HaveOccurred())
-
-					payload := pack.Bytes(nil)
-					return amount, gasLimit, gasPrice, gasCap, payload
-				},
-				multichain.Filecoin,
-			},
 		}
 
 		for _, accountChain := range accountChainTable {
@@ -1135,7 +958,8 @@ var _ = Describe("Multichain", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// Recipient 2
-					recipientPrivKey := id.NewPrivKey()
+					recipientPrivKey, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					recipientPubKey := recipientPrivKey.PubKey()
 					recipientPubKeyCompressed, err := surge.ToBinary(recipientPubKey)
 					Expect(err).NotTo(HaveOccurred())
@@ -1187,7 +1011,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).ToNot(HaveOccurred())
 					for i := range sighashes {
 						hash := id.Hash(sighashes[i])
-						privKey := (*id.PrivKey)(wif.PrivKey)
+						privKey := (*id.PrivKey)(wif.PrivKey.ToECDSA())
 						signature, err := privKey.Sign(&hash)
 						Expect(err).ToNot(HaveOccurred())
 						signatures[i] = pack.NewBytes65(signature)
@@ -1255,7 +1079,7 @@ var _ = Describe("Multichain", func() {
 					signatures2 := make([]pack.Bytes65, len(sighashes2))
 					for i := range sighashes2 {
 						hash := id.Hash(sighashes2[i])
-						privKey := (*id.PrivKey)(wif.PrivKey)
+						privKey := (*id.PrivKey)(wif.PrivKey.ToECDSA())
 						signature, err := privKey.Sign(&hash)
 						Expect(err).ToNot(HaveOccurred())
 						signatures2[i] = pack.NewBytes65(signature)
@@ -1273,9 +1097,11 @@ var _ = Describe("Multichain", func() {
 					signatures3 := make([]pack.Bytes65, len(sighashes3))
 					for i := range sighashes3 {
 						hash := id.Hash(sighashes3[i])
-						signature, err := recipientPrivKey.Sign(&hash)
+						signature := ecdsa.Sign(recipientPrivKey, hash[:])
 						Expect(err).ToNot(HaveOccurred())
-						signatures3[i] = pack.NewBytes65(signature)
+						var fixedSig [65]byte
+						copy(fixedSig[:], signature.Serialize())
+						signatures3[i] = pack.NewBytes65(fixedSig)
 					}
 					Expect(utxoTx3.Sign(signatures3, pack.NewBytes(recipientPubKeyCompressed))).To(Succeed())
 					Expect(utxoClient.SubmitTx(ctx, utxoTx3)).NotTo(HaveOccurred())
@@ -1295,7 +1121,8 @@ var _ = Describe("Multichain", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					// Recipient
-					recipientPrivKey := id.NewPrivKey()
+					recipientPrivKey, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					recipientPubKey := recipientPrivKey.PubKey()
 					recipientPubKeyCompressed, err := surge.ToBinary(recipientPubKey)
 					Expect(err).NotTo(HaveOccurred())
@@ -1346,7 +1173,7 @@ var _ = Describe("Multichain", func() {
 					Expect(err).ToNot(HaveOccurred())
 					for i := range sighashes {
 						hash := id.Hash(sighashes[i])
-						privKey := (*id.PrivKey)(wif.PrivKey)
+						privKey := (*id.PrivKey)(wif.PrivKey.ToECDSA())
 						signature, err := privKey.Sign(&hash)
 						Expect(err).ToNot(HaveOccurred())
 						signatures[i] = pack.NewBytes65(signature)
@@ -1412,13 +1239,15 @@ var _ = Describe("Multichain", func() {
 					Expect(err).ToNot(HaveOccurred())
 					for i := range sighashes2 {
 						hash := id.Hash(sighashes2[i])
-						signature, err := recipientPrivKey.Sign(&hash)
+						signature := ecdsa.Sign(recipientPrivKey, hash[:])
 						Expect(err).ToNot(HaveOccurred())
-						signatures2[i] = pack.NewBytes65(signature)
+						var fixedSig [65]byte
+						copy(fixedSig[:], signature.Serialize())
+						signatures2[i] = pack.NewBytes65(fixedSig)
 					}
 					for i := range sighashes2 {
 						hash := id.Hash(sighashes2[i])
-						privKey := (*id.PrivKey)(wif.PrivKey)
+						privKey := (*id.PrivKey)(wif.PrivKey.ToECDSA())
 						signature, err := privKey.Sign(&hash)
 						Expect(err).ToNot(HaveOccurred())
 						signatures3[i] = pack.NewBytes65(signature)

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
 	"github.com/renproject/pack"

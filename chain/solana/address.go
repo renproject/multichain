@@ -3,7 +3,7 @@ package solana
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
 )
 

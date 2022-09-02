@@ -1,35 +1,62 @@
 module github.com/renproject/multichain
 
-go 1.16
+go 1.17
 
 require (
-	github.com/btcsuite/btcd v0.22.0-beta
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
-	github.com/cosmos/cosmos-sdk v0.44.0
+	github.com/btcsuite/btcd v0.23.1
+	github.com/btcsuite/btcd/btcec/v2 v2.2.1
+	github.com/btcsuite/btcd/btcutil v1.1.1
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/dchest/blake2b v1.0.0
-	github.com/ethereum/go-ethereum v1.10.6
-	github.com/filecoin-project/go-address v0.0.5
-	github.com/filecoin-project/go-jsonrpc v0.1.4-0.20210217175800-45ea43ac2bec
-	github.com/filecoin-project/go-state-types v0.1.1-0.20210506134452-99b279731c48
-	github.com/filecoin-project/lotus v1.10.0
-	github.com/ipfs/go-cid v0.0.7
-	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
-	github.com/multiformats/go-varint v0.0.6
+	github.com/ethereum/go-ethereum v1.10.23
 	github.com/near/borsh-go v0.3.0
-	github.com/onsi/ginkgo v1.14.0
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/gomega v1.19.0
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.5
 	github.com/renproject/solana-ffi v0.1.2
 	github.com/renproject/surge v1.2.6
-	github.com/tendermint/tendermint v0.34.12
-	github.com/terra-money/core v0.5.5
 	github.com/tyler-smith/go-bip39 v1.1.0
-	go.uber.org/zap v1.17.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	go.uber.org/zap v1.21.0
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 )
 
-replace github.com/filecoin-project/filecoin-ffi => ./chain/filecoin/filecoin-ffi
+require (
+	github.com/StackExchange/wmi v1.2.1 // indirect
+	github.com/benbjohnson/clock v1.3.0 // indirect
+	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/deckarep/golang-set v1.8.0 // indirect
+	github.com/decred/dcrd/crypto/blake256 v1.0.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
+	github.com/mattn/go-colorable v0.1.9 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
+	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/rjeczalik/notify v0.9.1 // indirect
+	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
+	github.com/tklauser/go-sysconf v0.3.5 // indirect
+	github.com/tklauser/numcpus v0.2.2 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/goleak v1.1.12 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+)
 
 replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 

@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
@@ -82,7 +82,7 @@ var _ = Describe("Bitcoin Cash", func() {
 				Expect(err).ToNot(HaveOccurred())
 				for i := range sighashes {
 					hash := id.Hash(sighashes[i])
-					privKey := (*id.PrivKey)(wif.PrivKey)
+					privKey := (*id.PrivKey)(wif.PrivKey.ToECDSA())
 					signature, err := privKey.Sign(&hash)
 					Expect(err).ToNot(HaveOccurred())
 					signatures[i] = pack.NewBytes65(signature)
