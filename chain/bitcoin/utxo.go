@@ -188,7 +188,9 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 				// The witness script to spend a taproot input using the key-spend path
 				// is just the signature itself, given the public key is
 				// embedded in the previous output script.
-				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signature.Serialize(), byte(txscript.SigHashAll))})
+
+				// directly use the signature passed as that is the schnnor sig needed
+				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(rsv[0:64], byte(txscript.SigHashAll))})
 				continue
 			}
 		} else {

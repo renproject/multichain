@@ -195,6 +195,7 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	}
 	resp := ""
 	if err := client.send(ctx, &resp, "sendrawtransaction", hex.EncodeToString(serial)); err != nil {
+		log.Printf("failed here")
 		return fmt.Errorf("bad \"sendrawtransaction\": %v", err)
 	}
 	return nil
