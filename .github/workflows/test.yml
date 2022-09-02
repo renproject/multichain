@@ -10,7 +10,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
 
       - name: Configure git for Private Modules
         env:
@@ -124,7 +124,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -249,7 +249,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -374,7 +374,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -501,7 +501,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -625,7 +625,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -749,7 +749,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -873,7 +873,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
@@ -997,7 +997,7 @@ jobs:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.17
         id: go
 
       - name: Configure git for Private Modules
