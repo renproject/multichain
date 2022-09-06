@@ -12,11 +12,11 @@
 
 ## Example
 
-The `🔗 multichain` is designed to be flexible enough to support any kind of chain. Anyone is free to contribute to the `🔗 multichain` by adding support for a new chain, or improving support for an existing chain. To show how this is done, we will walk-through an example: adding support for Dogecoin.
+The `🔗 multichain` is designed to be flexible enough to support any kind of chain. Anyone is free to contribute to the `🔗 multichain` by adding support for a new chain, or improving support for an existing chain. To show how this is done, we will walk through an example: adding support for Dogecoin.
 
 ### Chains and Assets
 
-Before doing anything else, let's add an enumeration for the `Asset` and `Chain` types, which can be found in `package multichain`. To avoid favouritism, all assets and chains are listed in alphabetical order. Unless otherwise advised by an offiical team member, the names and tickers found on https://coinmarketcap.com must be used.
+Before doing anything else, let's add an enumeration for the `Asset` and `Chain` types, which can be found in `package multichain`. To avoid favouritism, all assets and chains are listed in alphabetical order. Unless otherwise advised by an official team member, the names and tickers found on https://coinmarketcap.com must be used.
 
 Adding an `Asset`:
 
