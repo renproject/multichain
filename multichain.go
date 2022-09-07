@@ -119,30 +119,33 @@ const (
 	SOL    = Asset("SOL")    // Solana
 	ZEC    = Asset("ZEC")    // Zcash
 
-	BADGER         = Asset("BADGER")         // Badger DAO
-	BUSD           = Asset("BUSD")           // Binance USD
-	CRV            = Asset("CRV")            // Curve
-	DAI            = Asset("DAI")            // Dai
-	DAI_Goerli     = Asset("DAI_Goerli")     // Dai (Goerli)
-	EURT           = Asset("EURT")           // Euro Tether
-	FTT            = Asset("FTT")            // FTX
-	ibBTC          = Asset("ibBTC")          // Interest Bearing Bitcoin
-	KNC            = Asset("KNC")            // Kyber Network
-	LINK           = Asset("LINK")           // Chainlink
-	MIM            = Asset("MIM")            // Magic Internet Money
-	REN            = Asset("REN")            // Ren
-	REN_Goerli     = Asset("REN_Goerli")     // Ren (Goerli)
-	ROOK           = Asset("ROOK")           // KeeperDAO
-	SUSHI          = Asset("SUSHI")          // Sushiswap
-	UNI            = Asset("UNI")            // Uniswap
-	USDC           = Asset("USDC")           // Circle USD (Ethereum)
 	USDC_Avalanche = Asset("USDC_Avalanche") // Circle USD (Avalanche)
-	USDC_Goerli    = Asset("USDC_Goerli")    // Circle USD (Goerli)
-	USDC_Polygon   = Asset("USDC_Polygon")   // Circle USD (Polygon)
-	USDT           = Asset("USDT")           // Tether (Ethereum)
 	USDT_Avalanche = Asset("USDT_Avalanche") // Tether (Avalanche)
-	USDT_Goerli    = Asset("USDT_Goerli")    // Tether (Goerli)
-	USDT_Polygon   = Asset("USDT_Polygon")   // Tether (Polygon)
+
+	BADGER = Asset("BADGER") // Badger DAO
+	BUSD   = Asset("BUSD")   // Binance USD
+	CRV    = Asset("CRV")    // Curve
+	DAI    = Asset("DAI")    // Dai
+	EURT   = Asset("EURT")   // Euro Tether
+	FTT    = Asset("FTT")    // FTX
+	ibBTC  = Asset("ibBTC")  // Interest Bearing Bitcoin
+	KNC    = Asset("KNC")    // Kyber Network
+	LINK   = Asset("LINK")   // Chainlink
+	MIM    = Asset("MIM")    // Magic Internet Money
+	REN    = Asset("REN")    // Ren
+	ROOK   = Asset("ROOK")   // KeeperDAO
+	SUSHI  = Asset("SUSHI")  // Sushiswap
+	UNI    = Asset("UNI")    // Uniswap
+	USDC   = Asset("USDC")   // Circle USD (Ethereum)
+	USDT   = Asset("USDT")   // Tether (Ethereum)
+
+	DAI_Goerli  = Asset("DAI_Goerli")  // Dai (Goerli)
+	REN_Goerli  = Asset("REN_Goerli")  // Ren (Goerli)
+	USDC_Goerli = Asset("USDC_Goerli") // Circle USD (Goerli)
+	USDT_Goerli = Asset("USDT_Goerli") // Tether (Goerli)
+
+	USDC_Polygon = Asset("USDC_Polygon") // Circle USD (Polygon)
+	USDT_Polygon = Asset("USDT_Polygon") // Tether (Polygon)
 
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -193,7 +196,7 @@ func (asset Asset) OriginChain() Chain {
 	switch asset {
 	case ArbETH:
 		return Arbitrum
-	case AVAX, USDC_Avalanche, USDT_Avalanche:
+	case AVAX:
 		return Avalanche
 	case BCH:
 		return BitcoinCash
@@ -221,7 +224,7 @@ func (asset Asset) OriginChain() Chain {
 		return Kava
 	case LUNA:
 		return Terra
-	case MATIC, USDC_Polygon, USDT_Polygon:
+	case MATIC:
 		return Polygon
 	case oETH:
 		return Optimism
@@ -230,12 +233,15 @@ func (asset Asset) OriginChain() Chain {
 	case ZEC:
 		return Zcash
 
+	case USDC_Avalanche, USDT_Avalanche:
+		return Avalanche
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
 		SUSHI, UNI, USDC, USDT:
 		return Ethereum
-
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return Goerli
+	case USDC_Polygon, USDT_Polygon:
+		return Polygon
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -261,9 +267,14 @@ func (asset Asset) ChainType() ChainType {
 		oETH, SOL:
 		return ChainTypeAccountBased
 
-	case BADGER, BUSD, CRV, DAI, DAI_Goerli, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, REN_Goerli, ROOK, SUSHI, UNI, USDC, USDC_Avalanche, USDC_Goerli,
-		USDC_Polygon, USDT, USDT_Avalanche, USDT_Goerli, USDT_Polygon:
+	case USDC_Avalanche, USDT_Avalanche:
+		return ChainTypeAccountBased
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
+		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		return ChainTypeAccountBased
+	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
+		return ChainTypeAccountBased
+	case USDC_Polygon, USDT_Polygon:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -285,9 +296,14 @@ func (asset Asset) Type() AssetType {
 	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GETH, GLMR, KAVA, MATIC, oETH, SOL:
 		return AssetTypeNative
 
-	case BADGER, BUSD, CRV, DAI, DAI_Goerli, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, REN_Goerli, ROOK, SUSHI, UNI, USDC, USDC_Avalanche, USDC_Goerli,
-		USDC_Polygon, USDT, USDT_Avalanche, USDT_Goerli, USDT_Polygon:
+	case USDC_Avalanche, USDT_Avalanche:
+		return AssetTypeToken
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
+		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		return AssetTypeToken
+	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
+		return AssetTypeToken
+	case USDC_Polygon, USDT_Polygon:
 		return AssetTypeToken
 
 	// These assets are handled separately because they are mock assets. These
