@@ -110,14 +110,17 @@ const (
 	ETH    = Asset("ETH")    // Ether
 	FIL    = Asset("FIL")    // Filecoin
 	FTM    = Asset("FTM")    // Fantom
+	GETH   = Asset("GETH")   // Goerli Ether
 	GLMR   = Asset("GLMR")   // Glimmer
 	KAVA   = Asset("KAVA")   // Kava
 	LUNA   = Asset("LUNA")   // Luna
 	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
 	oETH   = Asset("oETH")   // Optimism Ether
 	SOL    = Asset("SOL")    // Solana
-	UST    = Asset("UST")    // TerraUSD
 	ZEC    = Asset("ZEC")    // Zcash
+
+	USDC_Avalanche = Asset("USDC_Avalanche") // Circle USD (Avalanche)
+	USDT_Avalanche = Asset("USDT_Avalanche") // Tether (Avalanche)
 
 	BADGER = Asset("BADGER") // Badger DAO
 	BUSD   = Asset("BUSD")   // Binance USD
@@ -133,14 +136,16 @@ const (
 	ROOK   = Asset("ROOK")   // KeeperDAO
 	SUSHI  = Asset("SUSHI")  // Sushiswap
 	UNI    = Asset("UNI")    // Uniswap
-	USDC   = Asset("USDC")   // Circle USD
-	USDT   = Asset("USDT")   // Tether
+	USDC   = Asset("USDC")   // Circle USD (Ethereum)
+	USDT   = Asset("USDT")   // Tether (Ethereum)
 
-	// These assets are defined separately because their purpose is to help us
-	// differentiate between different testnets for the same blockchain.
+	DAI_Goerli  = Asset("DAI_Goerli")  // Dai (Goerli)
+	REN_Goerli  = Asset("REN_Goerli")  // Ren (Goerli)
+	USDC_Goerli = Asset("USDC_Goerli") // Circle USD (Goerli)
+	USDT_Goerli = Asset("USDT_Goerli") // Tether (Goerli)
 
-	KETH = Asset("KETH") // Kovan ETH
-	GETH = Asset("GETH") // Goerli ETH
+	USDC_Polygon = Asset("USDC_Polygon") // Circle USD (Polygon)
+	USDT_Polygon = Asset("USDT_Polygon") // Tether (Polygon)
 
 	// These assets are defined separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -211,6 +216,8 @@ func (asset Asset) OriginChain() Chain {
 		return Filecoin
 	case FTM:
 		return Fantom
+	case GETH:
+		return Goerli
 	case GLMR:
 		return Moonbeam
 	case KAVA:
@@ -223,19 +230,18 @@ func (asset Asset) OriginChain() Chain {
 		return Optimism
 	case SOL:
 		return Solana
-	case UST:
-		return Terra
 	case ZEC:
 		return Zcash
 
+	case USDC_Avalanche, USDT_Avalanche:
+		return Avalanche
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
 		SUSHI, UNI, USDC, USDT:
 		return Ethereum
-
-	case KETH:
-		return Kovan
-	case GETH:
+	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return Goerli
+	case USDC_Polygon, USDT_Polygon:
+		return Polygon
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -257,15 +263,18 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GLMR, KAVA, LUNA, MATIC, oETH,
-		SOL, UST:
+	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GETH, GLMR, KAVA, LUNA, MATIC,
+		oETH, SOL:
 		return ChainTypeAccountBased
 
-	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+	case USDC_Avalanche, USDT_Avalanche:
 		return ChainTypeAccountBased
-
-	case KETH, GETH:
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
+		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		return ChainTypeAccountBased
+	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
+		return ChainTypeAccountBased
+	case USDC_Polygon, USDT_Polygon:
 		return ChainTypeAccountBased
 
 	// These assets are handled separately because they are mock assets. These
@@ -284,15 +293,18 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GLMR, KAVA, MATIC, oETH, SOL, UST:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GETH, GLMR, KAVA, MATIC, oETH, SOL:
 		return AssetTypeNative
 
-	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+	case USDC_Avalanche, USDT_Avalanche:
 		return AssetTypeToken
-
-	case KETH, GETH:
-		return AssetTypeNative
+	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
+		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		return AssetTypeToken
+	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
+		return AssetTypeToken
+	case USDC_Polygon, USDT_Polygon:
+		return AssetTypeToken
 
 	// These assets are handled separately because they are mock assets. These
 	// assets should only be used for testing.
@@ -420,6 +432,8 @@ func (chain Chain) IsUTXOBased() bool {
 // root asset of Bitcoin chain is BTC.
 func (chain Chain) NativeAsset() Asset {
 	switch chain {
+	case Arbitrum:
+		return ArbETH
 	case Avalanche:
 		return AVAX
 	case BinanceSmartChain:
@@ -440,6 +454,8 @@ func (chain Chain) NativeAsset() Asset {
 		return FTM
 	case Filecoin:
 		return FIL
+	case Goerli:
+		return GETH
 	case Kava:
 		return KAVA
 	case Moonbeam:
@@ -454,13 +470,6 @@ func (chain Chain) NativeAsset() Asset {
 		return LUNA
 	case Zcash:
 		return ZEC
-	case Arbitrum:
-		return ArbETH
-
-	case Kovan:
-		return KETH
-	case Goerli:
-		return GETH
 
 	// These chains are handled separately because they are mock chains. These
 	// chains should only be used for testing.

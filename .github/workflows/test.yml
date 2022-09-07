@@ -58,7 +58,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -173,7 +173,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -299,7 +299,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -424,7 +424,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -549,7 +549,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -674,7 +674,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -801,7 +801,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -925,7 +925,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -1049,7 +1049,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -1173,7 +1173,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -1297,7 +1297,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Filecoin FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
