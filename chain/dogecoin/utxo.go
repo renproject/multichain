@@ -1,32 +1,32 @@
 package dogecoin
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 type (
-	// Tx re-exports bitcoin.Tx.
-	Tx = bitcoin.Tx
+	// Tx re-exports utxo.Tx.
+	Tx = utxochain.Tx
 
-	// TxBuilder re-exports bitcoin.TxBuilder.
-	TxBuilder = bitcoin.TxBuilder
+	// TxBuilder re-exports utxo.TxBuilder.
+	TxBuilder = utxochain.TxBuilder
 
-	// Client re-exports bitcoin.Client.
-	Client = bitcoin.Client
+	// Client re-exports utxo.Client.
+	Client = utxochain.Client
 
-	// ClientOptions re-exports bitcoin.ClientOptions.
-	ClientOptions = bitcoin.ClientOptions
+	// ClientOptions re-exports utxochain.ClientOptions.
+	ClientOptions = utxochain.ClientOptions
 )
 
 var (
-	// NewTxBuilder re-exports bitcoin.NewTxBuilder.
-	NewTxBuilder = bitcoin.NewTxBuilder
+	// NewTxBuilder re-exports utxochain.NewTxBuilder.
+	NewTxBuilder = utxochain.NewTxBuilder
 
-	// NewClient re-exports bitcoin.NewClient.
-	NewClient = bitcoin.NewClient
+	// NewClient re-exports utxochain.NewClient.
+	NewClient = utxochain.NewClient
 )
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
 // settings are valid for use with the default local deployment of the
 // multichain. In production, the host, user, and password should be changed.
 func DefaultClientOptions() ClientOptions {
-	return bitcoin.DefaultClientOptions().WithHost("http://0.0.0.0:18332")
+	return utxochain.DefaultClientOptions().WithHost("http://0.0.0.0:18332")
 }

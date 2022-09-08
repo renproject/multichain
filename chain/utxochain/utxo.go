@@ -1,15 +1,16 @@
-package bitcoin
+package utxochain
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/btcsuite/btcd/231/txscript"
-	"github.com/btcsuite/btcd/231/wire"
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
-	"github.com/btcsuite/btcd/btcutil"
+	"math/big"
+
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/pack"
 )
@@ -132,15 +133,13 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 		var err error
 		if sigScript == nil {
 			if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) {
-				hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
-			} else if txscript.IsPayToTaproot(pubKeyScript) {
-				hash, err = txscript.CalcTaprootSignatureHash(txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64()))
+				hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
 			} else {
 				hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i)
 			}
 		} else {
 			if txscript.IsPayToWitnessScriptHash(pubKeyScript) {
-				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
+				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
 			} else {
 				hash, err = txscript.CalcSignatureHash(sigScript, txscript.SigHashAll, tx.msgTx, i)
 			}
@@ -171,11 +170,12 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		var err error
 
 		// Decode the signature and the pubkey script.
-		r, s := new(btcec.ModNScalar), new(btcec.ModNScalar)
-		r.SetByteSlice(rsv[:32])
-		s.SetByteSlice(rsv[32:64])
-		signature := ecdsa.NewSignature(r, s)
-
+		r := new(big.Int).SetBytes(rsv[:32])
+		s := new(big.Int).SetBytes(rsv[32:64])
+		signature := btcec.Signature{
+			R: r,
+			S: s,
+		}
 		pubKeyScript := tx.inputs[i].Output.PubKeyScript
 		sigScript := tx.inputs[i].SigScript
 

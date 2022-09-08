@@ -1,4 +1,4 @@
-package digibyte_test
+package utxochain_test
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/digibyte"
 	"github.com/renproject/multichain/chain/utxochain"
 	"github.com/renproject/pack"
 
@@ -19,35 +19,35 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("DigiByte", func() {
+var _ = Describe("Bitcoin", func() {
 	Context("when submitting transactions", func() {
-		Context("when sending DigiByte to multiple addresses", func() {
+		Context("when sending BTC to multiple addresses", func() {
 			It("should work", func() {
 				// Load private key, and assume that the associated address has
-				// funds to spend. You can do this by setting DIGIBYTE_PK to the
+				// funds to spend. You can do this by setting BITCOIN_PK to the
 				// value specified in the `./multichaindeploy/.env` file.
-				pkEnv := os.Getenv("DIGIBYTE_PK")
+				pkEnv := os.Getenv("BITCOIN_PK")
 				if pkEnv == "" {
-					panic("DIGIBYTE_PK is undefined")
+					panic("BITCOIN_PK is undefined")
 				}
 				wif, err := btcutil.DecodeWIF(pkEnv)
 				Expect(err).ToNot(HaveOccurred())
 
 				// PKH
-				wpkhAddr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
+				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
-				log.Printf("WPKH               %v", wpkhAddr.EncodeAddress())
-
-				// PKH
-				pkhAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed()), &digibyte.RegressionNetParams)
-				Expect(err).ToNot(HaveOccurred())
-				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &digibyte.RegressionNetParams)
+				pkhAddrUncompressed, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &chaincfg.RegressionNetParams)
 				Expect(err).ToNot(HaveOccurred())
 				log.Printf("PKH                %v", pkhAddr.EncodeAddress())
 				log.Printf("PKH (uncompressed) %v", pkhAddrUncompressed.EncodeAddress())
 
+				// WPKH
+				wpkAddr, err := btcutil.NewAddressWitnessPubKeyHash([]byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, &chaincfg.RegressionNetParams)
+				Expect(err).ToNot(HaveOccurred())
+				log.Printf("WPKH               %v", wpkAddr.EncodeAddress())
+
 				// Setup the client and load the unspent transaction outputs.
-				client := utxochain.NewClient(utxochain.DefaultClientOptions().WithHost("http://127.0.0.1:20443"))
+				client := utxochain.NewClient(utxochain.DefaultClientOptions())
 				outputs, err := client.UnspentOutputs(context.Background(), 0, 999999999, address.Address(pkhAddr.EncodeAddress()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(outputs)).To(BeNumerically(">", 0))
@@ -59,17 +59,23 @@ var _ = Describe("DigiByte", func() {
 				output2, _, err := client.Output(context.Background(), output.Outpoint)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
+				output2, _, err = client.UnspentOutput(context.Background(), output.Outpoint)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
 
 				// Build the transaction by consuming the outputs and spending
 				// them to a set of recipients.
 				inputs := []utxo.Input{
-					{Output: output},
+					{Output: utxo.Output{
+						Outpoint: utxo.Outpoint{
+							Hash:  output.Outpoint.Hash[:],
+							Index: output.Outpoint.Index,
+						},
+						PubKeyScript: output.PubKeyScript,
+						Value:        output.Value,
+					}},
 				}
 				recipients := []utxo.Recipient{
-					{
-						To:    address.Address(wpkhAddr.EncodeAddress()),
-						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
-					},
 					{
 						To:    address.Address(pkhAddr.EncodeAddress()),
 						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
@@ -78,8 +84,12 @@ var _ = Describe("DigiByte", func() {
 						To:    address.Address(pkhAddrUncompressed.EncodeAddress()),
 						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
 					},
+					{
+						To:    address.Address(wpkAddr.EncodeAddress()),
+						Value: pack.NewU256FromU64(pack.NewU64((output.Value.Int().Uint64() - 1000) / 3)),
+					},
 				}
-				tx, err := digibyte.NewTxBuilder(&digibyte.RegressionNetParams).BuildTx(inputs, recipients)
+				tx, err := utxochain.NewTxBuilder(&chaincfg.RegressionNetParams).BuildTx(inputs, recipients)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Get the digests that need signing from the transaction, and
@@ -98,7 +108,7 @@ var _ = Describe("DigiByte", func() {
 				}
 				Expect(tx.Sign(signatures, pack.NewBytes(wif.SerializePubKey()))).To(Succeed())
 
-				// Submit the transaction to the DigiByte node. Again, this
+				// Submit the transaction to the Bitcoin node. Again, this
 				// should be running a la `./multichaindeploy`.
 				txHash, err := tx.Hash()
 				Expect(err).ToNot(HaveOccurred())
@@ -111,15 +121,19 @@ var _ = Describe("DigiByte", func() {
 					// confirmations. This implies that the transaction is
 					// definitely valid, and the test has passed. We were
 					// successfully able to use the multichain to construct and
-					// submit a DigiByte transaction!
+					// submit a Bitcoin transaction!
 					confs, err := client.Confirmations(context.Background(), txHash)
 					Expect(err).ToNot(HaveOccurred())
 					log.Printf("                   %v/3 confirmations", confs)
-					if confs >= 3 {
+					if confs >= 1 {
 						break
 					}
 					time.Sleep(10 * time.Second)
 				}
+				ctxWithTimeout, cancelCtxWithTimeout := context.WithTimeout(context.Background(), time.Second)
+				defer cancelCtxWithTimeout()
+				_, _, err = client.UnspentOutput(ctxWithTimeout, output.Outpoint)
+				Expect(err).To(HaveOccurred())
 
 				// Check that we can load the output and that it is equal.
 				// Otherwise, something strange is happening with the RPC

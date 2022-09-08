@@ -1,9 +1,9 @@
-package bitcoin_test
+package utxochain_test
 
 import (
 	"context"
-	"github.com/renproject/multichain/chain/bitcoin"
 
+	"github.com/renproject/multichain/chain/utxochain"
 	"github.com/renproject/pack"
 
 	. "github.com/onsi/ginkgo"
@@ -11,16 +11,16 @@ import (
 )
 
 var _ = Describe("Gas", func() {
-	Context("when estimating bitcoin network fee", func() {
+	Context("when estimating utxo network fee", func() {
 		It("should work", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			client := bitcoin.NewClient(bitcoin.DefaultClientOptions())
+			client := utxochain.NewClient(utxochain.DefaultClientOptions())
 
 			// estimate fee to include tx within 1 block.
 			fallback1 := uint64(123)
-			gasEstimator1 := bitcoin.NewGasEstimator(client, 1, pack.NewU256FromUint64(fallback1))
+			gasEstimator1 := utxochain.NewGasEstimator(client, 1, pack.NewU256FromUint64(fallback1))
 			gasPrice1, _, err := gasEstimator1.EstimateGas(ctx)
 			if err != nil {
 				Expect(gasPrice1).To(Equal(pack.NewU256FromUint64(fallback1)))
@@ -28,7 +28,7 @@ var _ = Describe("Gas", func() {
 
 			// estimate fee to include tx within 10 blocks.
 			fallback2 := uint64(234)
-			gasEstimator2 := bitcoin.NewGasEstimator(client, 10, pack.NewU256FromUint64(fallback2))
+			gasEstimator2 := utxochain.NewGasEstimator(client, 10, pack.NewU256FromUint64(fallback2))
 			gasPrice2, _, err := gasEstimator2.EstimateGas(ctx)
 			if err != nil {
 				Expect(gasPrice2).To(Equal(pack.NewU256FromUint64(fallback2)))
@@ -36,7 +36,7 @@ var _ = Describe("Gas", func() {
 
 			// estimate fee to include tx within 100 blocks.
 			fallback3 := uint64(345)
-			gasEstimator3 := bitcoin.NewGasEstimator(client, 100, pack.NewU256FromUint64(fallback3))
+			gasEstimator3 := utxochain.NewGasEstimator(client, 100, pack.NewU256FromUint64(fallback3))
 			gasPrice3, _, err := gasEstimator3.EstimateGas(ctx)
 			if err != nil {
 				Expect(gasPrice3).To(Equal(pack.NewU256FromUint64(fallback3)))

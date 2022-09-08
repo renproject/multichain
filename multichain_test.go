@@ -34,7 +34,6 @@ import (
 	"github.com/renproject/multichain"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/chain/avalanche"
-	"github.com/renproject/multichain/chain/bitcoin"
 	"github.com/renproject/multichain/chain/bitcoincash"
 	"github.com/renproject/multichain/chain/bsc"
 	"github.com/renproject/multichain/chain/dogecoin"
@@ -43,6 +42,7 @@ import (
 	"github.com/renproject/multichain/chain/filecoin"
 	"github.com/renproject/multichain/chain/polygon"
 	"github.com/renproject/multichain/chain/terra"
+	"github.com/renproject/multichain/chain/utxochain"
 	"github.com/renproject/multichain/chain/zcash"
 	"github.com/renproject/pack"
 	"github.com/renproject/surge"
@@ -251,30 +251,30 @@ var _ = Describe("Multichain", func() {
 			{
 				multichain.Bitcoin,
 				func() multichain.AddressEncodeDecoder {
-					addrEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
+					addrEncodeDecoder := utxochain.NewAddressEncodeDecoder(&chaincfg.RegressionNetParams)
 					return addrEncodeDecoder
 				},
 				func() multichain.Address {
 					// Generate a random SECP256K1 private key.
 					pk := id.NewPrivKey()
-					// Get bitcoin WIF private key with the pub key configured to be in
+					// Get utxo WIF private key with the pub key configured to be in
 					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
-					// Return the human-readable encoded bitcoin address in base58 format.
+					// Return the human-readable encoded utxo address in base58 format.
 					return multichain.Address(addrPubKeyHash.EncodeAddress())
 				},
 				func() multichain.RawAddress {
 					// Generate a random SECP256K1 private key.
 					pk := id.NewPrivKey()
-					// Get bitcoin WIF private key with the pub key configured to be in
+					// Get utxo WIF private key with the pub key configured to be in
 					// the compressed form.
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), &chaincfg.RegressionNetParams, true)
 					Expect(err).NotTo(HaveOccurred())
 					// Get the address pubKey hash. This is the most commonly used format
-					// for a bitcoin address.
+					// for a utxo address.
 					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), &chaincfg.RegressionNetParams)
 					Expect(err).NotTo(HaveOccurred())
 					// Encode into the checksummed base58 format.
@@ -476,7 +476,7 @@ var _ = Describe("Multichain", func() {
 				}
 
 				if chain.chain == multichain.Bitcoin {
-					mainnetEncodeDecoder := bitcoin.NewAddressEncodeDecoder(&chaincfg.MainNetParams)
+					mainnetEncodeDecoder := utxochain.NewAddressEncodeDecoder(&chaincfg.MainNetParams)
 
 					It("should decode a Bech32 address correctly", func() {
 						segwitAddrs := []string{
@@ -1014,12 +1014,12 @@ var _ = Describe("Multichain", func() {
 				},
 				pack.NewString("http://0.0.0.0:18443"),
 				func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
-					client := bitcoin.NewClient(bitcoin.DefaultClientOptions())
+					client := utxochain.NewClient(utxochain.DefaultClientOptions())
 					outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
 					Expect(err).NotTo(HaveOccurred())
 					return client, outputs, client.Confirmations
 				},
-				bitcoin.NewTxBuilder(&chaincfg.RegressionNetParams),
+				utxochain.NewTxBuilder(&chaincfg.RegressionNetParams),
 				multichain.Bitcoin,
 			},
 			{
@@ -1471,7 +1471,7 @@ var _ = Describe("Multichain", func() {
 })
 
 func txHashToHex(txHash pack.Bytes) pack.String {
-	// bitcoin's msgTx is a byte-reversed hash
+	// utxo's msgTx is a byte-reversed hash
 	// https://github.com/btcsuite/btcd/blob/master/chaincfg/chainhash/hash.go#L27-L28
 	txHashCopy := make([]byte, len(txHash))
 	copy(txHashCopy[:], txHash)

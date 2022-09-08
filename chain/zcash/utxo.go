@@ -15,7 +15,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/bitcoin"
+	"github.com/renproject/multichain/chain/utxochain"
 	"github.com/renproject/pack"
 )
 
@@ -23,20 +23,20 @@ import (
 const Version int32 = 4
 
 // ClientOptions are used to parameterise the behaviour of the Client.
-type ClientOptions = bitcoin.ClientOptions
+type ClientOptions = utxochain.ClientOptions
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
 // settings are valid for use with the default local deployment of the
 // multichain. In production, the host, user, and password should be changed.
 func DefaultClientOptions() ClientOptions {
-	return bitcoin.DefaultClientOptions().WithHost("http://127.0.0.1:18232")
+	return utxochain.DefaultClientOptions().WithHost("http://127.0.0.1:18232")
 }
 
-// Client re-exports bitcoin.Client.
-type Client = bitcoin.Client
+// Client re-exports utxo.Client.
+type Client = utxochain.Client
 
-// NewClient re-exports bitcoin.Client
-var NewClient = bitcoin.NewClient
+// NewClient re-exports utxo.Client
+var NewClient = utxochain.NewClient
 
 // The TxBuilder is an implementation of a UTXO-compatible transaction builder
 // for Bitcoin.
@@ -584,7 +584,7 @@ func calculateHashOutputs(tx *wire.MsgTx) (_ chainhash.Hash, err error) {
 	return blake2b(b.Bytes(), []byte(outputsHashPersonalization))
 }
 
-// writeTxOut encodes to into the bitcoin protocol encoding for a transaction
+// writeTxOut encodes to into the utxo protocol encoding for a transaction
 // output (TxOut) to w.
 //
 // NOTE: This function is exported in order to allow txscript to compute the
@@ -596,7 +596,7 @@ func writeTxOut(w io.Writer, pver uint32, version int32, to *wire.TxOut) error {
 	return writeVarBytes(w, pver, to.PkScript)
 }
 
-// writeTxIn encodes ti to the bitcoin protocol encoding for a transaction
+// writeTxIn encodes ti to the utxo protocol encoding for a transaction
 // input (TxIn) to w.
 func writeTxIn(w io.Writer, pver uint32, version int32, ti *wire.TxIn) error {
 	err := writeOutPoint(w, pver, version, &ti.PreviousOutPoint)
@@ -612,7 +612,7 @@ func writeTxIn(w io.Writer, pver uint32, version int32, ti *wire.TxIn) error {
 	return binary.Write(w, binary.LittleEndian, ti.Sequence)
 }
 
-// writeOutPoint encodes op to the bitcoin protocol encoding for an OutPoint
+// writeOutPoint encodes op to the utxo protocol encoding for an OutPoint
 // to w.
 func writeOutPoint(w io.Writer, pver uint32, version int32, op *wire.OutPoint) error {
 	_, err := w.Write(op.Hash[:])
@@ -622,7 +622,7 @@ func writeOutPoint(w io.Writer, pver uint32, version int32, op *wire.OutPoint) e
 	return binary.Write(w, binary.LittleEndian, op.Index)
 }
 
-// writeTxWitness encodes the bitcoin protocol encoding for a transaction
+// writeTxWitness encodes the utxo protocol encoding for a transaction
 // input's witness into to w.
 func writeTxWitness(w io.Writer, pver uint32, version int32, wit [][]byte) error {
 	err := writeVarInt(w, pver, uint64(len(wit)))

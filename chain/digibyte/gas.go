@@ -1,9 +1,9 @@
 package digibyte
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
-// GasEstimator re-exports bitcoin.GasEstimator.
-type GasEstimator = bitcoin.GasEstimator
+// GasEstimator re-exports utxochain.GasEstimator.
+type GasEstimator = utxochain.GasEstimator
 
-// NewGasEstimator re-exports bitcoin.NewGasEstimator.
-var NewGasEstimator = bitcoin.NewGasEstimator
+// NewGasEstimator re-exports utxochain.NewGasEstimator.
+var NewGasEstimator = utxochain.NewGasEstimator

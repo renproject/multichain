@@ -1,14 +1,14 @@
 package digibyte
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 // AddressEncoder encapsulates the chain specific configurations and implements
 // the address.Encoder interface
-type AddressEncoder = bitcoin.AddressEncoder
+type AddressEncoder = utxochain.AddressEncoder
 
 // AddressDecoder encapsulates the chain specific configurations and implements
 // the address.Decoder interface
-type AddressDecoder = bitcoin.AddressDecoder
+type AddressDecoder = utxochain.AddressDecoder
 
 // AddressEncodeDecoder implements the address.EncodeDecoder interface
-type AddressEncodeDecoder = bitcoin.AddressEncodeDecoder
+type AddressEncodeDecoder = utxochain.AddressEncodeDecoder

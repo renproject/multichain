@@ -12,7 +12,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/renproject/multichain/api/utxo"
-	"github.com/renproject/multichain/chain/bitcoin"
+	"github.com/renproject/multichain/chain/utxochain"
 	"github.com/renproject/pack"
 )
 
@@ -27,21 +27,21 @@ const SighashMask = txscript.SigHashType(0x1F)
 const Version int32 = 1
 
 // ClientOptions are used to parameterise the behaviour of the Client.
-type ClientOptions = bitcoin.ClientOptions
+type ClientOptions = utxochain.ClientOptions
 
 // DefaultClientOptions returns ClientOptions with the default settings. These
 // settings are valid for use with the default local deployment of the
 // multichain. In production, the host, user, and password should be changed.
 func DefaultClientOptions() ClientOptions {
-	return bitcoin.DefaultClientOptions().WithHost("http://127.0.0.1:19443")
+	return utxochain.DefaultClientOptions().WithHost("http://127.0.0.1:19443")
 }
 
 // A Client interacts with an instance of the Bitcoin network using the RPC
 // interface exposed by a Bitcoin node.
-type Client = bitcoin.Client
+type Client = utxochain.Client
 
 // NewClient returns a new Client.
-var NewClient = bitcoin.NewClient
+var NewClient = utxochain.NewClient
 
 // The TxBuilder is an implementation of a UTXO-compatible transaction builder
 // for Bitcoin.

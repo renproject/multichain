@@ -5,6 +5,8 @@ go 1.17
 require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcd/231 v0.0.0-00010101000000-000000000000
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0
+	github.com/btcsuite/btcd/btcutil v1.1.0
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.44.0
@@ -47,8 +49,6 @@ require (
 	github.com/armon/go-metrics v0.3.9 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.0 // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -64,6 +64,7 @@ require (
 	github.com/danieljoos/wincred v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
+	github.com/decred/dcrd/crypto/blake256 v1.0.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/detailyang/go-fallocate v0.0.0-20180908115635-432fa640bd2e // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
@@ -274,3 +275,5 @@ replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 replace github.com/btcsuite/btcd/231 => github.com/btcsuite/btcd v0.23.1
+
+replace github.com/btcsuite/btcd/btcutil/231 => github.com/btcsuite/btcd/btcutil v1.1.2

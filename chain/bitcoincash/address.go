@@ -104,9 +104,9 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 		case *btcutil.AddressPubKeyHash, *btcutil.AddressScriptHash, *btcutil.AddressPubKey:
 			return decodeLegacyAddress(addr, decoder.params)
 		case *btcutil.AddressWitnessPubKeyHash, *btcutil.AddressWitnessScriptHash:
-			return nil, fmt.Errorf("unsuported segwit bitcoin address type %T", legacyAddr)
+			return nil, fmt.Errorf("unsuported segwit utxo address type %T", legacyAddr)
 		default:
-			return nil, fmt.Errorf("unsuported legacy bitcoin address type %T", legacyAddr)
+			return nil, fmt.Errorf("unsuported legacy utxo address type %T", legacyAddr)
 		}
 	}
 
@@ -233,7 +233,7 @@ func (addr AddressPubKeyHash) ScriptAddress() []byte {
 }
 
 // IsForNet returns whether or not the address is associated with the passed
-// bitcoin network.
+// utxo network.
 func (addr AddressPubKeyHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressPubKeyHash.IsForNet(params)
 }
@@ -295,7 +295,7 @@ func (addr AddressScriptHash) ScriptAddress() []byte {
 }
 
 // IsForNet returns whether or not the address is associated with the passed
-// bitcoin network.
+// utxo network.
 func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }

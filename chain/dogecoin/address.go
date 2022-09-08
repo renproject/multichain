@@ -1,14 +1,14 @@
 package dogecoin
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 type (
-	// AddressEncoder re-exports bitcoin.AddressEncoder.
-	AddressEncoder = bitcoin.AddressEncoder
+	// AddressEncoder re-exports utxochain.AddressEncoder.
+	AddressEncoder = utxochain.AddressEncoder
 
-	// AddressDecoder re-exports bitcoin.AddressDecoder.
-	AddressDecoder = bitcoin.AddressDecoder
+	// AddressDecoder re-exports utxochain.AddressDecoder.
+	AddressDecoder = utxochain.AddressDecoder
 
-	// AddressEncodeDecoder re-exports bitcoin.AddressEncodeDecoder.
-	AddressEncodeDecoder = bitcoin.AddressEncodeDecoder
+	// AddressEncodeDecoder re-exports utxochain.AddressEncodeDecoder.
+	AddressEncodeDecoder = utxochain.AddressEncodeDecoder
 )

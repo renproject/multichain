@@ -1,4 +1,4 @@
-package bitcoin
+package utxochain
 
 import (
 	"bytes"
@@ -12,9 +12,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/btcsuite/btcd/231/btcjson"
-	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/utxo"
 	"github.com/renproject/pack"
@@ -256,9 +256,9 @@ func (client *client) Confirmations(ctx context.Context, txHash pack.Bytes) (int
 	return confirmations, nil
 }
 
-// EstimateSmartFee fetches the estimated bitcoin network fees to be paid (in
+// EstimateSmartFee fetches the estimated utxo network fees to be paid (in
 // BTC per kilobyte) needed for a transaction to be confirmed within `numBlocks`
-// blocks. An error will be returned if the bitcoin node hasn't observed enough
+// blocks. An error will be returned if the utxo node hasn't observed enough
 // blocks to make an estimate for the provided target `numBlocks`.
 func (client *client) EstimateSmartFee(ctx context.Context, numBlocks int64) (float64, error) {
 	resp := btcjson.EstimateSmartFeeResult{}

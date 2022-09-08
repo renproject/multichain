@@ -1,4 +1,4 @@
-package zcash
+package utxochain
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	multiplier     = 1e8
+	btcToSatoshis  = 1e8
 	kilobyteToByte = 1024
 )
 
@@ -43,7 +43,7 @@ func NewGasEstimator(client Client, numBlocks int64, fallbackGas pack.U256) GasE
 // An error will be returned if the utxo node hasn't observed enough blocks
 // to make an estimate for the provided target `numBlocks`.
 func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pack.U256, error) {
-	feeRate, err := gasEstimator.client.EstimateFeeLegacy(ctx, gasEstimator.numBlocks)
+	feeRate, err := gasEstimator.client.EstimateSmartFee(ctx, gasEstimator.numBlocks)
 	if err != nil {
 		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, err
 	}
@@ -52,6 +52,6 @@ func (gasEstimator GasEstimator) EstimateGas(ctx context.Context) (pack.U256, pa
 		return gasEstimator.fallbackGas, gasEstimator.fallbackGas, fmt.Errorf("invalid fee rate: %v", feeRate)
 	}
 
-	satsPerByte := uint64(math.Ceil(feeRate * multiplier / kilobyteToByte))
+	satsPerByte := uint64(math.Ceil(feeRate * btcToSatoshis / kilobyteToByte))
 	return pack.NewU256FromUint64(satsPerByte), pack.NewU256FromUint64(satsPerByte), nil
 }

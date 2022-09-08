@@ -107,7 +107,7 @@ All chains _should_ implement the Address API. Luckily for Dogecoin, it is so si
 ```go
 package dogecoin
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 type (
 	AddressEncoder       = bitcoin.AddressEncoder
@@ -125,7 +125,7 @@ Most, but not all, chains _should_ implement the Gas API. Again, Dogecoin is so 
 ```go
 package dogecoin
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 type GasEstimator = bitcoin.GasEstimator
 
@@ -143,7 +143,7 @@ Again, the implementation for Dogecoin is trivial. In `/chain/dogecoin/utxo`, we
 ```go
 package dogecoin
 
-import "github.com/renproject/multichain/chain/bitcoin"
+import "github.com/renproject/multichain/chain/utxochain"
 
 type (
 	Tx            = bitcoin.Tx
@@ -233,7 +233,7 @@ Example output:
 
 ```sh
 Creating network "docker_default" with the default driver
-Building bitcoin
+Building utxo
 
 ...
 

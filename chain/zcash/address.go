@@ -175,7 +175,7 @@ func (addr AddressPubKeyHash) ScriptAddress() []byte {
 }
 
 // IsForNet returns whether or not the address is associated with the passed
-// bitcoin network.
+// utxo network.
 func (addr AddressPubKeyHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressPubKeyHash.IsForNet(params)
 }
@@ -236,7 +236,7 @@ func (addr AddressScriptHash) ScriptAddress() []byte {
 }
 
 // IsForNet returns whether or not the address is associated with the passed
-// bitcoin network.
+// utxo network.
 func (addr AddressScriptHash) IsForNet(params *chaincfg.Params) bool {
 	return addr.AddressScriptHash.IsForNet(params)
 }
