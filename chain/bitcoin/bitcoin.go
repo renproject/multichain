@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/231/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/renproject/multichain/api/address"
