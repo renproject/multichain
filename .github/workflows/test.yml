@@ -58,7 +58,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -101,7 +101,6 @@ jobs:
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           cd $GITHUB_WORKSPACE/chain/solana
           go test -timeout 100s
-
   test-zcash:
     runs-on: ubuntu-latest
     env:
@@ -160,7 +159,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -272,7 +271,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -384,7 +383,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -498,7 +497,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -609,7 +608,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -720,7 +719,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -831,7 +830,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'
@@ -942,7 +941,7 @@ jobs:
           go get -u golang.org/x/lint/golint
           go get -u github.com/loongy/covermerge
           go get -u github.com/mattn/goveralls
-          go get -u github.com/xlab/c-for-go
+          go get -u github.com/xlab/c-for-go@cef5ec7
 
       - name: Install dependencies (Solana FFI)
         if: steps.cache-extern.outputs.cache-hit != 'true'

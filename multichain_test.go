@@ -139,10 +139,6 @@ var _ = Describe("Multichain", func() {
 					multichain.LUNA,
 				},
 				{
-					multichain.Kovan,
-					multichain.KETH,
-				},
-				{
 					multichain.Goerli,
 					multichain.GETH,
 				},
