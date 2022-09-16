@@ -121,6 +121,12 @@ var _ = Describe("Zcash", func() {
 				output2, _, err = client.Output(context.Background(), output.Outpoint)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reflect.DeepEqual(output, output2)).To(BeTrue())
+
+				// Check we can get the transaction inputs
+				senders, err := client.TxSenders(context.Background(), txHash)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(senders)).Should(Equal(1))
+				Expect(senders[0]).Should(Equal(pkhAddr.EncodeAddress()))
 			})
 		})
 	})

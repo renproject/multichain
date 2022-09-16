@@ -200,6 +200,26 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	return nil
 }
 
+func (client *client) TxSenders(ctx context.Context, id pack.Bytes) ([]string, error) {
+	resp, err := client.getRawTransaction(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("bad \"getrawtransaction\": %v", err)
+	}
+	addrs := make([]string, 0)
+	for _, vin := range resp.Vin {
+		txHash, err := chainhash.NewHashFromStr(vin.Txid)
+		if err != nil {
+			return nil, err
+		}
+		rawTx, err := client.getRawTransaction(ctx, txHash.CloneBytes())
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, rawTx.Vout[int(vin.Vout)].ScriptPubKey.Addresses...)
+	}
+	return addrs, nil
+}
+
 // UnspentOutputs spendable by the given address.
 func (client *client) UnspentOutputs(ctx context.Context, minConf, maxConf int64, addr address.Address) ([]utxo.Output, error) {
 	resp := []btcjson.ListUnspentResult{}
@@ -288,6 +308,16 @@ func (client *client) EstimateFeeLegacy(ctx context.Context, numBlocks int64) (f
 		}
 	}
 
+	return resp, nil
+}
+
+func (client *client) getRawTransaction(ctx context.Context, txhash pack.Bytes) (btcjson.TxRawResult, error) {
+	resp := btcjson.TxRawResult{}
+	hash := chainhash.Hash{}
+	copy(hash[:], txhash)
+	if err := client.send(ctx, &resp, "getrawtransaction", hash.String(), 1); err != nil {
+		return resp, fmt.Errorf("bad \"getrawtransaction\": %v", err)
+	}
 	return resp, nil
 }
 
