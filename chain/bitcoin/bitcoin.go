@@ -200,12 +200,12 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	return nil
 }
 
-func (client *client) TxSenders(ctx context.Context, id pack.Bytes) ([]string, error) {
+func (client *client) TxSenders(ctx context.Context, id pack.Bytes) ([]pack.String, error) {
 	resp, err := client.getRawTransaction(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("bad \"getrawtransaction\": %v", err)
 	}
-	addrs := make([]string, 0)
+	addrs := make([]pack.String, 0)
 	for _, vin := range resp.Vin {
 		txHash, err := chainhash.NewHashFromStr(vin.Txid)
 		if err != nil {
@@ -215,7 +215,9 @@ func (client *client) TxSenders(ctx context.Context, id pack.Bytes) ([]string, e
 		if err != nil {
 			return nil, err
 		}
-		addrs = append(addrs, rawTx.Vout[int(vin.Vout)].ScriptPubKey.Addresses...)
+		for _, addr := range rawTx.Vout[int(vin.Vout)].ScriptPubKey.Addresses {
+			addrs = append(addrs, pack.String(addr))
+		}
 	}
 	return addrs, nil
 }

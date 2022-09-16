@@ -103,5 +103,5 @@ type Client interface {
 	SubmitTx(context.Context, Tx) error
 
 	// TxSenders returns the sender address list
-	TxSenders(context.Context, pack.Bytes) ([]string, error)
+	TxSenders(context.Context, pack.Bytes) ([]pack.String, error)
 }
