@@ -28,10 +28,6 @@ var (
 	PriorityFeeIncreaseBoundary = big.NewInt(200)
 )
 
-type feeHistoryResult struct {
-	Reward [][]string `json:"reward"`
-}
-
 // GasOptions allow a user to configure the parameters used while heuristically recommending
 // fees for EIP-1559 compatible transactions.
 type GasOptions struct {
@@ -127,19 +123,19 @@ func (gasEstimator *GasEstimator) estimatePriorityFee(ctx context.Context, baseF
 	if baseFee.Cmp(gasEstimator.options.PriorityFeeEstimationTrigger) == -1 {
 		return gasEstimator.options.DefaultPriorityFee, nil
 	}
-	var feeHistory feeHistoryResult
 
-	if err := gasEstimator.client.RpcClient.CallContext(ctx, &feeHistory, "eth_feeHistory", gasEstimator.options.FeeHistoryBlocks, "0x"+blockNumber.Text(16), []int{int(gasEstimator.options.FeeHistoryPercentile)}); err != nil {
+	feeHistory, err := gasEstimator.client.EthClient.FeeHistory(ctx, gasEstimator.options.FeeHistoryBlocks, blockNumber, []float64{float64(gasEstimator.options.FeeHistoryPercentile)})
+	if err != nil {
 		return nil, fmt.Errorf("failed to get eth fee history: %v", err)
 	}
-	rewards := []*big.Int{}
 
-	// filter and remove outliers
+	rewards := make([]*big.Int, 0, len(feeHistory.Reward))
 	for _, r := range feeHistory.Reward {
-		if res, success := new(big.Int).SetString(r[0], 0); success && res.Cmp(big.NewInt(0)) != 0 {
-			rewards = append(rewards, res)
+		if len(r) > 0 && r[0].Cmp(big.NewInt(0)) != 0 {
+			rewards = append(rewards, r[0])
 		}
 	}
+
 	// sort in ascending order
 	sort.Slice(rewards, func(i, j int) bool { return rewards[j].Cmp(rewards[i]) >= 0 })
 

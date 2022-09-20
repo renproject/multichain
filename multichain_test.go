@@ -577,7 +577,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := ethereum.NewClient(string(rpcURL))
+					client, err := ethereum.NewClient(string(rpcURL), big.NewInt(1337))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
 
@@ -615,7 +615,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := polygon.NewClient(string(rpcURL))
+					client, err := polygon.NewClient(string(rpcURL), big.NewInt(15001))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := polygon.NewTxBuilder(big.NewInt(15001))
 
@@ -669,7 +669,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := bsc.NewClient(string(rpcURL))
+					client, err := bsc.NewClient(string(rpcURL), big.NewInt(420))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := bsc.NewTxBuilder(big.NewInt(420))
 
@@ -707,7 +707,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := avalanche.NewClient(string(rpcURL))
+					client, err := avalanche.NewClient(string(rpcURL), big.NewInt(43112))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := avalanche.NewTxBuilder(big.NewInt(43112))
 					return client, txBuilder
@@ -743,7 +743,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := fantom.NewClient(string(rpcURL))
+					client, err := fantom.NewClient(string(rpcURL), big.NewInt(4003))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := fantom.NewTxBuilder(big.NewInt(4003))
 
