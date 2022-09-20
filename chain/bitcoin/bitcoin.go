@@ -200,6 +200,7 @@ func (client *client) SubmitTx(ctx context.Context, tx utxo.Tx) error {
 	return nil
 }
 
+// TxSenders returns the senders of the transaction.
 func (client *client) TxSenders(ctx context.Context, id pack.Bytes) ([]pack.String, error) {
 	resp, err := client.getRawTransaction(ctx, id)
 	if err != nil {

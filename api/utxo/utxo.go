@@ -102,6 +102,6 @@ type Client interface {
 	// should be returned.
 	SubmitTx(context.Context, Tx) error
 
-	// TxSenders returns the sender address list
+	// TxSenders returns the senders' addresses of the transaction.
 	TxSenders(context.Context, pack.Bytes) ([]pack.String, error)
 }
