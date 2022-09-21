@@ -120,6 +120,14 @@ func (tx *Tx) Outputs() ([]utxo.Output, error) {
 func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 	sighashes := make([]pack.Bytes32, len(tx.inputs))
 
+	prevOuts := map[wire.OutPoint]*wire.TxOut{}
+	for i, txin := range tx.msgTx.TxIn {
+		prevOuts[txin.PreviousOutPoint] = &wire.TxOut{
+			Value:    tx.inputs[i].Value.Int().Int64(),
+			PkScript: tx.inputs[i].PubKeyScript,
+		}
+	}
+
 	for i, txin := range tx.inputs {
 		pubKeyScript := txin.PubKeyScript
 		sigScript := txin.SigScript
@@ -132,15 +140,15 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 		var err error
 		if sigScript == nil {
 			if txscript.IsPayToWitnessPubKeyHash(pubKeyScript) {
-				hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
+				hash, err = txscript.CalcWitnessSigHash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewMultiPrevOutFetcher(prevOuts)), txscript.SigHashAll, tx.msgTx, i, value)
 			} else if txscript.IsPayToTaproot(pubKeyScript) {
-				hash, err = txscript.CalcTaprootSignatureHash(txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64()))
+				hash, err = txscript.CalcTaprootSignatureHash(txscript.NewTxSigHashes(tx.msgTx, txscript.NewMultiPrevOutFetcher(prevOuts)), txscript.SigHashAll, tx.msgTx, i, txscript.NewMultiPrevOutFetcher(prevOuts))
 			} else {
 				hash, err = txscript.CalcSignatureHash(pubKeyScript, txscript.SigHashAll, tx.msgTx, i)
 			}
 		} else {
 			if txscript.IsPayToWitnessScriptHash(pubKeyScript) {
-				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
+				hash, err = txscript.CalcWitnessSigHash(sigScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewMultiPrevOutFetcher(prevOuts)), txscript.SigHashAll, tx.msgTx, i, value)
 			} else {
 				hash, err = txscript.CalcSignatureHash(sigScript, txscript.SigHashAll, tx.msgTx, i)
 			}
