@@ -175,13 +175,13 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 		return fmt.Errorf("expected %v signatures, got %v signatures", len(tx.msgTx.TxIn), len(signatures))
 	}
 
-	for i, rsv := range signatures {
+	for i := range signatures {
 		var err error
 
 		// Decode the signature and the pubkey script.
 		r, s := new(btcec.ModNScalar), new(btcec.ModNScalar)
-		r.SetByteSlice(rsv[:32])
-		s.SetByteSlice(rsv[32:64])
+		r.SetByteSlice(signatures[i][:32])
+		s.SetByteSlice(signatures[i][32:64])
 		signature := ecdsa.NewSignature(r, s)
 
 		pubKeyScript := tx.inputs[i].Output.PubKeyScript
@@ -198,7 +198,7 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 				// embedded in the previous output script.
 
 				// directly use the signature passed as that is the schnnor sig needed
-				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(rsv[0:64], byte(txscript.SigHashAll))})
+				tx.msgTx.TxIn[i].Witness = wire.TxWitness([][]byte{append(signatures[i][0:64], byte(txscript.SigHashAll))})
 				continue
 			}
 		} else {
