@@ -154,6 +154,8 @@ const (
 	AMOCK2 = Asset("AMOCK2") // Account-based mock asset
 	AMOCK3 = Asset("AMOCK3") // ERC-20 mock token asset on chain AccountMocker1
 	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
+
+	RenNFT = Asset("RenNFT") // erc721 asset
 )
 
 // AssetType represents the type of asset, whether native-asset of an account
@@ -236,7 +238,7 @@ func (asset Asset) OriginChain() Chain {
 	case USDC_Avalanche, USDT_Avalanche:
 		return Avalanche
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+		SUSHI, UNI, USDC, USDT, RenNFT:
 		return Ethereum
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return Goerli
@@ -270,7 +272,7 @@ func (asset Asset) ChainType() ChainType {
 	case USDC_Avalanche, USDT_Avalanche:
 		return ChainTypeAccountBased
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		REN, ROOK, SUSHI, UNI, USDC, USDT, RenNFT:
 		return ChainTypeAccountBased
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return ChainTypeAccountBased
@@ -299,7 +301,7 @@ func (asset Asset) Type() AssetType {
 	case USDC_Avalanche, USDT_Avalanche:
 		return AssetTypeToken
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		REN, ROOK, SUSHI, UNI, USDC, USDT, RenNFT:
 		return AssetTypeToken
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return AssetTypeToken
