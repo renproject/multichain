@@ -110,7 +110,7 @@ const (
 	ETH    = Asset("ETH")    // Ether
 	FIL    = Asset("FIL")    // Filecoin
 	FTM    = Asset("FTM")    // Fantom
-	GETH   = Asset("GETH")   // Goerli Ether
+	GETH   = Asset("gETH")   // Goerli Ether
 	GLMR   = Asset("GLMR")   // Glimmer
 	KAVA   = Asset("KAVA")   // Kava
 	LUNA   = Asset("LUNA")   // Luna
