@@ -35,4 +35,5 @@ RUN git checkout 7912389334e347bbb2eac0520c836830875c39de
 RUN make
 RUN go install
 
-COPY /home/runner/work/multichain/multichain/solana-ffi/* $GOPATH/src/github.com/renproject/
+RUN pwd
+COPY solana-ffi/* $GOPATH/src/github.com/renproject/
