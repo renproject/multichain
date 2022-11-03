@@ -40,6 +40,7 @@ jobs:
       - name: Install dependencies (Solana FFI)
         run: |
           set +x
+          apt-get install -y libudev-dev
           cd solana-ffi
           go get -u github.com/xlab/c-for-go@cef5ec7
           make clean
