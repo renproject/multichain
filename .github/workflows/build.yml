@@ -43,7 +43,6 @@ jobs:
           cd solana-ffi
           make clean
           make
-          go install ./...
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
