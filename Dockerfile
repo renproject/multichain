@@ -35,5 +35,4 @@ RUN git checkout 7912389334e347bbb2eac0520c836830875c39de
 RUN make
 RUN go install
 
-RUN pwd
 COPY ./solana-ffi $GOPATH/src/github.com/renproject/solana-ffi
