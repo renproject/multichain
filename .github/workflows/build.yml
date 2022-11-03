@@ -53,7 +53,7 @@ jobs:
         with:
            push: true
            context: /home/runner/work/multichain/multichain
-           tags: renbot/multichain:v0.4.11
+           tags: renbot/multichain:v0.4.12
 #           tags: renbot/multichain:${{ steps.push-info.outputs.tag }}, renbot/multichain:latest
 
 
