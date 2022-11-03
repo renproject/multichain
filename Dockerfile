@@ -36,4 +36,4 @@ RUN make
 RUN go install
 
 RUN pwd
-COPY ./solana-ffi $GOPATH/src/github.com/renproject/
+COPY ./solana-ffi $GOPATH/src/github.com/renproject/solana-ffi
