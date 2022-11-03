@@ -11,7 +11,10 @@ jobs:
       SOLANA_FFI_COMMIT: 720c0143d8655bfcd412ae73c949474df2c1dcf3
     steps:
       - uses: actions/checkout@v2
-
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.16.6"
       - name: Set output
         id: push-info
         run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
@@ -39,10 +42,9 @@ jobs:
           path: solana-ffi
       - name: Install dependencies (Solana FFI)
         run: |
-          set +x
+          go get -u github.com/xlab/c-for-go@cef5ec7
           sudo apt-get install -y libudev-dev
           cd solana-ffi
-          go get -u github.com/xlab/c-for-go@cef5ec7
           make clean
           make
       - name: Build and push
