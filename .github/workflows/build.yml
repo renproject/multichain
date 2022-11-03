@@ -39,8 +39,9 @@ jobs:
           path: solana-ffi
       - name: Install dependencies (Solana FFI)
         run: |
-          go get -u github.com/xlab/c-for-go@cef5ec7
+          set +x
           cd solana-ffi
+          go get -u github.com/xlab/c-for-go@cef5ec7
           make clean
           make
       - name: Build and push
