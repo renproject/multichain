@@ -1,11 +1,14 @@
 name: Docker Build
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  push
+#    tags:
+#      - 'v*.*.*'
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FILECOIN_FFI_COMMIT: 7912389334e347bbb2eac0520c836830875c39de
+      SOLANA_FFI_COMMIT: 720c0143d8655bfcd412ae73c949474df2c1dcf3
     steps:
       - uses: actions/checkout@v2
 
@@ -24,17 +27,31 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+      - name: Configure git for private modules
+        env:
+          TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: git config --global url."https://tok-kkk:${TOKEN}@github.com".insteadOf "https://github.com"
+      - name: Check out solana-ffi with the reference
+        uses: actions/checkout@v2
+        with:
+          repository: renproject/solana-ffi
+          ref: ${{ env.SOLANA_FFI_COMMIT }}
+          path: solana-ffi
+      - name: Install dependencies (Solana FFI)
+        run: |
+          go get -u github.com/xlab/c-for-go@cef5ec7
+          cd solana-ffi
+          make clean
+          make
+          go install ./...
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          push: true
-          tags: renbot/multichain:${{ steps.push-info.outputs.tag }}, renbot/multichain:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}
+           push: false
+#          push: true
+#          tags: renbot/multichain:${{ steps.push-info.outputs.tag }}, renbot/multichain:latest
+
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
