@@ -40,13 +40,13 @@ jobs:
           repository: renproject/solana-ffi
           ref: ${{ env.SOLANA_FFI_COMMIT }}
           path: solana-ffi
-#      - name: Install dependencies (Solana FFI)
-#        run: |
-#          sudo apt-get install -y libudev-dev
-#          cd solana-ffi
-#          go get -u github.com/xlab/c-for-go@cef5ec7
-#          make clean
-#          make
+      - name: Install dependencies (Solana FFI)
+        run: |
+          sudo apt-get install -y libudev-dev
+          cd solana-ffi
+          go get -u github.com/xlab/c-for-go@cef5ec7
+          make clean
+          make
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
