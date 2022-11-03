@@ -42,6 +42,8 @@ jobs:
           path: solana-ffi
       - name: Install dependencies (Solana FFI)
         run: |
+          pwd
+          ls -la
           sudo apt-get install -y libudev-dev
           cd solana-ffi
           go get -u github.com/xlab/c-for-go@cef5ec7

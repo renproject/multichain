@@ -35,4 +35,4 @@ RUN git checkout 7912389334e347bbb2eac0520c836830875c39de
 RUN make
 RUN go install
 
-COPY solana-ffi/* $GOPATH/src/github.com/renproject/
+COPY ../solana-ffi/* $GOPATH/src/github.com/renproject/
