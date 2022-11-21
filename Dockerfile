@@ -22,10 +22,6 @@ RUN apt-get update && \
 ENV GO111MODULE=on
 ENV GOPROXY=https://proxy.golang.org
 
-ARG GITHUB_TOKEN
-RUN git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-ENV GOPRIVATE="github.com/renproject/ren-solana,github.com/renproject/solana-ffi"
-
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
@@ -39,14 +35,4 @@ RUN git checkout 7912389334e347bbb2eac0520c836830875c39de
 RUN make
 RUN go install
 
-WORKDIR $GOPATH
-RUN go install github.com/xlab/c-for-go@master
-RUN mkdir -p src/github.com/renproject
-WORKDIR $GOPATH/src/github.com/renproject
-RUN git clone https://github.com/renproject/solana-ffi
-WORKDIR $GOPATH/src/github.com/renproject/solana-ffi
-RUN git checkout 720c0143d8655bfcd412ae73c949474df2c1dcf3
-RUN make clean && make
-RUN go install ./...
-
-RUN git config --global --remove-section url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/"
+COPY ./solana-ffi $GOPATH/src/github.com/renproject/solana-ffi
