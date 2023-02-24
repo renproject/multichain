@@ -27,6 +27,19 @@ services:
       - "${BINANCE_ADDRESS}"
 
   #
+  # Arbitrum
+  #
+  arbitrum:
+    build:
+      context: ./arbitrum
+    ports:
+      - "0.0.0.0:8565:8565"
+    entrypoint:
+      - "./root/run.sh"
+      - "${ARBITRUM_MNEMONIC}"
+      - "${ARBITRUM_ADDRESS}"
+
+  #
   # Bitcoin
   #
   bitcoin:
