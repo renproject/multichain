@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/renproject/id"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/bitcoincash"
 )
@@ -38,7 +37,8 @@ var _ = Describe("Bitcoin Cash", func() {
 			addrEncodeDecoder := addrEncodeDecoder
 			Context(fmt.Sprintf("Encode/Decode for %v network", addrEncodeDecoder.network.Name), func() {
 				Specify("AddressPubKeyHash", func() {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), addrEncodeDecoder.network, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := bitcoincash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), addrEncodeDecoder.network)
@@ -67,7 +67,8 @@ var _ = Describe("Bitcoin Cash", func() {
 				})
 
 				Specify("AddressLegacy", func() {
-					pk := id.NewPrivKey()
+					pk, err := btcec.NewPrivateKey()
+					Expect(err).NotTo(HaveOccurred())
 					wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), addrEncodeDecoder.network, true)
 					Expect(err).NotTo(HaveOccurred())
 					addrPubKeyHash, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(wif.SerializePubKey()), addrEncodeDecoder.network)

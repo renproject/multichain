@@ -108,15 +108,12 @@ const (
 	DGB    = Asset("DGB")    // DigiByte
 	DOGE   = Asset("DOGE")   // Dogecoin
 	ETH    = Asset("ETH")    // Ether
-	FIL    = Asset("FIL")    // Filecoin
 	FTM    = Asset("FTM")    // Fantom
 	GETH   = Asset("gETH")   // Goerli Ether
 	GLMR   = Asset("GLMR")   // Glimmer
 	KAVA   = Asset("KAVA")   // Kava
-	LUNA   = Asset("LUNA")   // Luna
 	MATIC  = Asset("MATIC")  // Matic PoS (Polygon)
 	oETH   = Asset("oETH")   // Optimism Ether
-	SOL    = Asset("SOL")    // Solana
 	ZEC    = Asset("ZEC")    // Zcash
 
 	USDC_Avalanche = Asset("USDC_Avalanche") // Circle USD (Avalanche)
@@ -154,6 +151,8 @@ const (
 	AMOCK2 = Asset("AMOCK2") // Account-based mock asset
 	AMOCK3 = Asset("AMOCK3") // ERC-20 mock token asset on chain AccountMocker1
 	UMOCK  = Asset("UMOCK")  // UTXO-based mock asset
+
+	RenNFT = Asset("RenNFT") // erc721 asset
 )
 
 // AssetType represents the type of asset, whether native-asset of an account
@@ -212,8 +211,6 @@ func (asset Asset) OriginChain() Chain {
 		return Dogecoin
 	case ETH:
 		return Ethereum
-	case FIL:
-		return Filecoin
 	case FTM:
 		return Fantom
 	case GETH:
@@ -222,21 +219,17 @@ func (asset Asset) OriginChain() Chain {
 		return Moonbeam
 	case KAVA:
 		return Kava
-	case LUNA:
-		return Terra
 	case MATIC:
 		return Polygon
 	case oETH:
 		return Optimism
-	case SOL:
-		return Solana
 	case ZEC:
 		return Zcash
 
 	case USDC_Avalanche, USDT_Avalanche:
 		return Avalanche
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM, REN, ROOK,
-		SUSHI, UNI, USDC, USDT:
+		SUSHI, UNI, USDC, USDT, RenNFT:
 		return Ethereum
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return Goerli
@@ -263,14 +256,14 @@ func (asset Asset) ChainType() ChainType {
 	switch asset {
 	case BCH, BTC, DGB, DOGE, ZEC:
 		return ChainTypeUTXOBased
-	case ArbETH, AVAX, BNB, CAT, ETH, FIL, FTM, GETH, GLMR, KAVA, LUNA, MATIC,
-		oETH, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GETH, GLMR, KAVA, MATIC,
+		oETH:
 		return ChainTypeAccountBased
 
 	case USDC_Avalanche, USDT_Avalanche:
 		return ChainTypeAccountBased
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		REN, ROOK, SUSHI, UNI, USDC, USDT, RenNFT:
 		return ChainTypeAccountBased
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return ChainTypeAccountBased
@@ -293,13 +286,13 @@ func (asset Asset) ChainType() ChainType {
 // Type returns the asset-type (Native or Token) for the given asset.
 func (asset Asset) Type() AssetType {
 	switch asset {
-	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GETH, GLMR, KAVA, MATIC, oETH, SOL:
+	case ArbETH, AVAX, BNB, CAT, ETH, FTM, GETH, GLMR, KAVA, MATIC, oETH:
 		return AssetTypeNative
 
 	case USDC_Avalanche, USDT_Avalanche:
 		return AssetTypeToken
 	case BADGER, BUSD, CRV, DAI, EURT, FTT, ibBTC, KNC, LINK, MIM,
-		REN, ROOK, SUSHI, UNI, USDC, USDT:
+		REN, ROOK, SUSHI, UNI, USDC, USDT, RenNFT:
 		return AssetTypeToken
 	case DAI_Goerli, REN_Goerli, USDC_Goerli, USDT_Goerli:
 		return AssetTypeToken
@@ -352,13 +345,10 @@ const (
 	Dogecoin          = Chain("Dogecoin")
 	Ethereum          = Chain("Ethereum")
 	Fantom            = Chain("Fantom")
-	Filecoin          = Chain("Filecoin")
 	Kava              = Chain("Kava")
 	Moonbeam          = Chain("Moonbeam")
 	Optimism          = Chain("Optimism")
 	Polygon           = Chain("Polygon")
-	Solana            = Chain("Solana")
-	Terra             = Chain("Terra")
 	Zcash             = Chain("Zcash")
 
 	Kovan  = Chain("Kovan")
@@ -396,8 +386,7 @@ func (chain Chain) ChainType() ChainType {
 	switch chain {
 	case Bitcoin, BitcoinCash, DigiByte, Dogecoin, Zcash:
 		return ChainTypeUTXOBased
-	case Avalanche, BinanceSmartChain, Catalog, Ethereum, Arbitrum, Fantom,
-		Filecoin, Kava, Moonbeam, Optimism, Polygon, Solana, Terra:
+	case Avalanche, BinanceSmartChain, Catalog, Ethereum, Arbitrum, Fantom, Kava, Moonbeam, Optimism, Polygon:
 		return ChainTypeAccountBased
 
 	case Kovan, Goerli:
@@ -452,8 +441,6 @@ func (chain Chain) NativeAsset() Asset {
 		return ETH
 	case Fantom:
 		return FTM
-	case Filecoin:
-		return FIL
 	case Goerli:
 		return GETH
 	case Kava:
@@ -464,10 +451,6 @@ func (chain Chain) NativeAsset() Asset {
 		return MATIC
 	case Optimism:
 		return oETH
-	case Solana:
-		return SOL
-	case Terra:
-		return LUNA
 	case Zcash:
 		return ZEC
 
@@ -491,7 +474,7 @@ type ChainType string
 
 const (
 	// ChainTypeAccountBased is an identifier for all account-based chains,
-	// namely, BinanceSmartChain, Ethereum, Filecoin, and so on.
+	// namely, BinanceSmartChain, Ethereum, and so on.
 	ChainTypeAccountBased = ChainType("Account")
 
 	// ChainTypeUTXOBased is an identifier for all utxo-based chains, namely,

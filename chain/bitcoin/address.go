@@ -2,10 +2,9 @@ package bitcoin
 
 import (
 	"fmt"
-
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/renproject/multichain/api/address"
 )
 
@@ -67,6 +66,13 @@ func (encoder AddressEncoder) encodeBech32(rawAddr address.RawAddress) (address.
 		}
 		return address.Address(addr.EncodeAddress()), nil
 	case 33:
+		if rawAddr[0] == 1 {
+			addr, err := btcutil.NewAddressTaproot(rawAddr[1:], encoder.params)
+			if err != nil {
+				return address.Address(""), fmt.Errorf("new address taproot: %v", err)
+			}
+			return address.Address(addr.EncodeAddress()), nil
+		}
 		addr, err := btcutil.NewAddressWitnessScriptHash(rawAddr[1:], encoder.params)
 		if err != nil {
 			return address.Address(""), fmt.Errorf("new address witness script hash: %v", err)
@@ -113,6 +119,9 @@ func (decoder AddressDecoder) DecodeAddress(addr address.Address) (address.RawAd
 		rawAddr := append([]byte{a.WitnessVersion()}, a.WitnessProgram()...)
 		return address.RawAddress(rawAddr), nil
 	case *btcutil.AddressWitnessScriptHash:
+		rawAddr := append([]byte{a.WitnessVersion()}, a.WitnessProgram()...)
+		return address.RawAddress(rawAddr), nil
+	case *btcutil.AddressTaproot:
 		rawAddr := append([]byte{a.WitnessVersion()}, a.WitnessProgram()...)
 		return address.RawAddress(rawAddr), nil
 	default:

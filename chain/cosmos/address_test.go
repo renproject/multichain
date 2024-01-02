@@ -1,1 +1,0 @@
-package cosmos_test

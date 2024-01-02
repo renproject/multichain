@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/big"
-
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -169,9 +168,9 @@ func (tx *Tx) Sighashes() ([]pack.Bytes32, error) {
 
 		var hash []byte
 		if sigScript == nil {
-			hash = CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+			hash = CalculateBip143Sighash(pubKeyScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
 		} else {
-			hash = CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx), txscript.SigHashAll, tx.msgTx, i, value)
+			hash = CalculateBip143Sighash(sigScript, txscript.NewTxSigHashes(tx.msgTx, txscript.NewCannedPrevOutputFetcher(txin.PubKeyScript, txin.Value.Int().Int64())), txscript.SigHashAll, tx.msgTx, i, value)
 		}
 
 		sighash := [32]byte{}
@@ -192,13 +191,10 @@ func (tx *Tx) Sign(signatures []pack.Bytes65, pubKey pack.Bytes) error {
 	}
 
 	for i, rsv := range signatures {
-		r := new(big.Int).SetBytes(rsv[:32])
-		s := new(big.Int).SetBytes(rsv[32:64])
-		signature := btcec.Signature{
-			R: r,
-			S: s,
-		}
-
+		r, s := new(btcec.ModNScalar), new(btcec.ModNScalar)
+		r.SetByteSlice(rsv[:32])
+		s.SetByteSlice(rsv[32:64])
+		signature := ecdsa.NewSignature(r, s)
 		builder := txscript.NewScriptBuilder()
 		builder.AddData(append(signature.Serialize(), byte(txscript.SigHashAll|SighashForkID)))
 		builder.AddData(pubKey)
@@ -263,7 +259,7 @@ func CalculateBip143Sighash(subScript []byte, sigHashes *txscript.TxSigHashes, h
 	// If anyone can pay isn't active, then we can use the cached
 	// hashPrevOuts, otherwise we just write zeroes for the prev outs.
 	if hashType&txscript.SigHashAnyOneCanPay == 0 {
-		sigHash.Write(sigHashes.HashPrevOuts[:])
+		sigHash.Write(sigHashes.HashPrevOutsV0[:])
 	} else {
 		sigHash.Write(zeroHash[:])
 	}
@@ -274,7 +270,7 @@ func CalculateBip143Sighash(subScript []byte, sigHashes *txscript.TxSigHashes, h
 	if hashType&txscript.SigHashAnyOneCanPay == 0 &&
 		hashType&SighashMask != txscript.SigHashSingle &&
 		hashType&SighashMask != txscript.SigHashNone {
-		sigHash.Write(sigHashes.HashSequence[:])
+		sigHash.Write(sigHashes.HashSequenceV0[:])
 	} else {
 		sigHash.Write(zeroHash[:])
 	}
@@ -305,7 +301,7 @@ func CalculateBip143Sighash(subScript []byte, sigHashes *txscript.TxSigHashes, h
 	// pre-image.
 	if hashType&SighashMask != txscript.SigHashSingle &&
 		hashType&SighashMask != txscript.SigHashNone {
-		sigHash.Write(sigHashes.HashOutputs[:])
+		sigHash.Write(sigHashes.HashOutputsV0[:])
 	} else if hashType&SighashMask == txscript.SigHashSingle && idx < len(tx.TxOut) {
 		var b bytes.Buffer
 		wire.WriteTxOut(&b, 0, 0, tx.TxOut[idx])

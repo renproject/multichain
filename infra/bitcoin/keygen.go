@@ -3,14 +3,16 @@ package main
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
-	"github.com/renproject/id"
 )
 
 func main() {
-	privKey := id.NewPrivKey()
+	privKey, err := btcec.NewPrivateKey()
+	if err != nil {
+		panic(err)
+	}
 	wif, err := btcutil.NewWIF((*btcec.PrivateKey)(privKey), &chaincfg.RegressionNetParams, true)
 	if err != nil {
 		panic(err)

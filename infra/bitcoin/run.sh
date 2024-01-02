@@ -9,7 +9,7 @@ sleep 20
 # Print setup
 echo "BITCOIN_ADDRESS=$ADDRESS"
 
-/app/bin/bitcoin-cli createwallet "testwallet"
+/app/bin/bitcoin-cli -named createwallet wallet_name=testwallet descriptors=false
 
 
 # Import the address

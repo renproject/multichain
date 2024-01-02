@@ -7,9 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
-	"github.com/renproject/id"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/chain/zcash"
 )
@@ -19,7 +18,8 @@ var _ = Describe("Zcash Address", func() {
 		addrEncodeDecoder := zcash.NewAddressEncodeDecoder(&zcash.RegressionNetParams)
 
 		It("addr pub key hash", func() {
-			pk := id.NewPrivKey()
+			pk, err := btcec.NewPrivateKey()
+			Expect(err).NotTo(HaveOccurred())
 			wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), zcash.RegressionNetParams.Params, true)
 			Expect(err).NotTo(HaveOccurred())
 			addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &zcash.RegressionNetParams)
@@ -58,7 +58,8 @@ var _ = Describe("Zcash Address", func() {
 
 			for i, param := range params {
 				// Generate a P2PKH address with the params
-				pk := id.NewPrivKey()
+				pk, err := btcec.NewPrivateKey()
+				Expect(err).NotTo(HaveOccurred())
 				wif, err := btcutil.NewWIF((*btcec.PrivateKey)(pk), param.Params, true)
 				Expect(err).NotTo(HaveOccurred())
 				addrPubKeyHash, err := zcash.NewAddressPubKeyHash(btcutil.Hash160(wif.PrivKey.PubKey().SerializeUncompressed()), &param)

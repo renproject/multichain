@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 
-	"github.com/renproject/id"
 	"github.com/renproject/multichain/chain/dogecoin"
 )
 
 func main() {
-	privKey := id.NewPrivKey()
+	privKey, err := btcec.NewPrivateKey()
+	if err != nil {
+		panic(err)
+	}
 	wif, err := btcutil.NewWIF((*btcec.PrivateKey)(privKey), &dogecoin.RegressionNetParams, true)
 	if err != nil {
 		panic(err)
