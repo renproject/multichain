@@ -3,12 +3,12 @@ package evm
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/renproject/multichain/api/account"
 	"github.com/renproject/multichain/api/address"
 	"github.com/renproject/multichain/api/contract"
@@ -24,19 +24,22 @@ const (
 // Client holds the underlying RPC client instance.
 type Client struct {
 	EthClient *ethclient.Client
-	RpcClient *rpc.Client
+	ChainID   *big.Int
 }
 
 // NewClient creates and returns a new JSON-RPC client to the Ethereum node
-func NewClient(rpcURL string) (*Client, error) {
-	c, err := rpc.DialContext(context.Background(), rpcURL)
+func NewClient(rpcURL string, chainID *big.Int) (*Client, error) {
+	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("dialing url: %v", rpcURL))
+		return nil, fmt.Errorf("dialing url: %v", rpcURL)
 	}
-	client := ethclient.NewClient(c)
+	clientChainID, err := client.ChainID(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("mismatched chain id: expected %v, got %v", chainID, clientChainID)
+	}
 	return &Client{
 		client,
-		c,
+		chainID,
 	}, nil
 }
 
@@ -56,15 +59,24 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	if err != nil {
 		return nil, pack.NewU64(0), fmt.Errorf(fmt.Sprintf("fetching tx by hash '%v': %v", txID, err))
 	}
-	chainID, err := client.EthClient.ChainID(ctx)
-	if err != nil {
-		return nil, pack.NewU64(0), fmt.Errorf("fetching chain ID: %v", err)
+
+	// Check the chain id for replay-protected tx.
+	if tx.Protected() {
+		chainID := tx.ChainId()
+		if client.ChainID != nil {
+			if chainID == nil {
+				return nil, 0, fmt.Errorf("nil chain ID")
+			}
+			if chainID.Cmp(client.ChainID) != 0 {
+				return nil, 0, fmt.Errorf("invalid chain ID, expected = %v, got = %v", client.ChainID.String(), chainID.String())
+			}
+		}
 	}
 
 	// If the transaction is still pending, use default EIP-155 Signer.
 	pendingTx := Tx{
 		EthTx:  tx,
-		Signer: types.NewEIP155Signer(chainID),
+		Signer: types.NewEIP155Signer(client.ChainID),
 	}
 	if pending {
 		// Transaction has not been included in a block yet.
@@ -89,7 +101,7 @@ func (client *Client) Tx(ctx context.Context, txID pack.Bytes) (account.Tx, pack
 	// Transaction has been confirmed.
 	confirmedTx := Tx{
 		tx,
-		types.LatestSignerForChainID(chainID),
+		types.LatestSignerForChainID(client.ChainID),
 	}
 
 	header, err := client.EthClient.HeaderByNumber(ctx, nil)

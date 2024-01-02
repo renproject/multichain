@@ -8,6 +8,7 @@ RUN apt-get update                                                              
     apt-get update && apt-get install -y --no-install-recommends zcash                                && \
     mkdir -p /root/.zcash-params && zcash-fetch-params
 
+
 COPY zcash.conf /root/.zcash/zcash.conf
 COPY run.sh /root/run.sh
 RUN chmod +x /root/run.sh

@@ -80,7 +80,7 @@ type TxBuilder interface {
 // The Client interface defines the functionality required to interact with a
 // chain over RPC.
 type Client interface {
-	// LatestBlock returns the the height of the longest blockchain.
+	// LatestBlock returns the height of the longest blockchain.
 	LatestBlock(context.Context) (pack.U64, error)
 
 	// Output returns the transaction output identified by the given outpoint.
@@ -101,4 +101,7 @@ type Client interface {
 	// before the context is done, or the transaction is invalid, then an error
 	// should be returned.
 	SubmitTx(context.Context, Tx) error
+
+	// TxSenders returns the senders' addresses of the transaction.
+	TxSenders(context.Context, pack.Bytes) ([]pack.String, error)
 }

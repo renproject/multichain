@@ -94,17 +94,6 @@ services:
       - "0.0.0.0:18545:18545"
 
   #
-  # Filecoin
-  #
-  filecoin:
-    build:
-      context: ./filecoin
-    ports:
-      - "0.0.0.0:1234:1234"
-    entrypoint:
-      - "/root/run.sh"
-
-  #
   # Zcash
   #
   zcash:
@@ -117,18 +106,6 @@ services:
       - "${ZCASH_ADDRESS}"
 
   ##
-  ## Terra
-  ##
-  terra:
-    build:
-      context: ./terra
-    ports:
-      - "0.0.0.0:26657:26657"
-    entrypoint:
-      - "./root/run.sh"
-      - "${TERRA_ADDRESS}"
-
-  ##
   ## Polygon
   ##
   polygon:
@@ -138,14 +115,6 @@ services:
       - "0.0.0.0:28545:8545"
     entrypoint:
       - "./root/run.sh"
-
-  ##
-  ## Solana
-  ##
-  solana:
-    image: renbot/ren-solana:latest
-    ports:
-      - "0.0.0.0:8899-8900:8899-8900"
 
   ##
   ## Moonbeam

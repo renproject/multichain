@@ -1,24 +1,23 @@
 package multichain_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing/quick"
 	"time"
 
-	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/schnorr"
+
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
@@ -52,13 +51,11 @@ var (
 	testBTC   = flag.Bool("btc", false, "Pass this flag to test Bitcoin")
 	testBCH   = flag.Bool("bch", false, "Pass this flag to test Bitcoincash")
 	testDOGE  = flag.Bool("doge", false, "Pass this flag to test Dogecoin")
-	testFIL   = flag.Bool("fil", false, "Pass this flag to test Filecoin")
 	testETH   = flag.Bool("eth", false, "Pass this flag to test Ethereum")
 	testMATIC = flag.Bool("matic", false, "Pass this flag to test Polygon")
 	testAVAX  = flag.Bool("avax", false, "Pass this flag to test Avalanche")
 	testBSC   = flag.Bool("bsc", false, "Pass this flag to test Binance Smart Chain")
 	testFTM   = flag.Bool("ftm", false, "Pass this flag to test Fantom")
-	testLUNA  = flag.Bool("luna", false, "Pass this flag to test Terra")
 	testZEC   = flag.Bool("zec", false, "Pass this flag to test Zcash")
 )
 
@@ -80,13 +77,11 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.Bitcoin] = *testBTC
 	testFlags[multichain.BitcoinCash] = *testBCH
 	testFlags[multichain.Dogecoin] = *testDOGE
-	testFlags[multichain.Filecoin] = *testFIL
 	testFlags[multichain.Ethereum] = *testETH
 	testFlags[multichain.BinanceSmartChain] = *testBSC
 	testFlags[multichain.Polygon] = *testMATIC
 	testFlags[multichain.Avalanche] = *testAVAX
 	testFlags[multichain.Fantom] = *testFTM
-	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
 	//
@@ -111,10 +106,6 @@ var _ = Describe("Multichain", func() {
 					multichain.FTM,
 				},
 				{
-					multichain.Filecoin,
-					multichain.FIL,
-				},
-				{
 					multichain.Ethereum,
 					multichain.ETH,
 				},
@@ -129,14 +120,6 @@ var _ = Describe("Multichain", func() {
 				{
 					multichain.Polygon,
 					multichain.MATIC,
-				},
-				{
-					multichain.Solana,
-					multichain.SOL,
-				},
-				{
-					multichain.Terra,
-					multichain.LUNA,
 				},
 				{
 					multichain.Goerli,
@@ -194,7 +177,7 @@ var _ = Describe("Multichain", func() {
 		Context("Assets are declared appropriately", func() {
 			nativeAssets := []multichain.Asset{
 				multichain.ArbETH, multichain.AVAX, multichain.BNB, multichain.ETH,
-				multichain.FTM, multichain.GLMR, multichain.MATIC, multichain.SOL,
+				multichain.FTM, multichain.GLMR, multichain.MATIC,
 			}
 			tokenAssets := []struct {
 				asset multichain.Asset
@@ -530,7 +513,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := ethereum.NewClient(string(rpcURL))
+					client, err := ethereum.NewClient(string(rpcURL), big.NewInt(1337))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := ethereum.NewTxBuilder(big.NewInt(1337))
 
@@ -568,7 +551,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := polygon.NewClient(string(rpcURL))
+					client, err := polygon.NewClient(string(rpcURL), big.NewInt(15001))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := polygon.NewTxBuilder(big.NewInt(15001))
 
@@ -622,7 +605,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := bsc.NewClient(string(rpcURL))
+					client, err := bsc.NewClient(string(rpcURL), big.NewInt(420))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := bsc.NewTxBuilder(big.NewInt(420))
 
@@ -660,7 +643,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := avalanche.NewClient(string(rpcURL))
+					client, err := avalanche.NewClient(string(rpcURL), big.NewInt(43112))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := avalanche.NewTxBuilder(big.NewInt(43112))
 					return client, txBuilder
@@ -696,7 +679,7 @@ var _ = Describe("Multichain", func() {
 					return multichain.Address(crypto.PubkeyToAddress(recipientKey.PublicKey).Hex())
 				},
 				func(rpcURL pack.String) (multichain.AccountClient, multichain.AccountTxBuilder) {
-					client, err := fantom.NewClient(string(rpcURL))
+					client, err := fantom.NewClient(string(rpcURL), big.NewInt(4003))
 					Expect(err).NotTo(HaveOccurred())
 					txBuilder := fantom.NewTxBuilder(big.NewInt(4003))
 
@@ -789,10 +772,6 @@ var _ = Describe("Multichain", func() {
 							Expect(tx.Value()).To(Equal(accountTx.Value()))
 							Expect(tx.From()).To(Equal(accountTx.From()))
 							Expect(tx.To()).To(Equal(accountTx.To()))
-							// FIXME: Filecoin signed message hash is different, so we ignore this check for filecoin. Appropriate check should be added for Filecoin.
-							if accountChain.chain != multichain.Filecoin {
-								Expect(tx.Hash()).To(Equal(accountTx.Hash()))
-							}
 							break
 						}
 						// wait and retry querying for the transaction
@@ -1396,7 +1375,7 @@ var _ = Describe("Multichain", func() {
 					signatures3 := make([]pack.Bytes65, len(sighashes2))
 					Expect(err).ToNot(HaveOccurred())
 					// the privkey was generated using ComputeTaprootKeyNoScript hence []byte{} used for tapscript
-					privKeyTweak := txscript.TweakTaprootPrivKey(recipientPrivKey, []byte{})
+					privKeyTweak := txscript.TweakTaprootPrivKey(*recipientPrivKey, []byte{})
 					for i := range sighashes2 {
 						hash := id.Hash(sighashes2[i])
 						// special signature method for schnorr \
@@ -1476,23 +1455,6 @@ func txHashToHex(txHash pack.Bytes) pack.String {
 		txHashCopy[i], txHashCopy[hashSize-1-i] = txHashCopy[hashSize-1-i], txHashCopy[i]
 	}
 	return pack.String(hex.EncodeToString(txHashCopy))
-}
-
-func fetchAuthToken() pack.String {
-	// fetch the auth token from filecoin's running docker container
-	cmd := exec.Command("docker", "exec", "infra_filecoin_1", "/bin/bash", "-c", "/app/lotus auth api-info --perm admin")
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		panic(fmt.Sprintf("could not run command: %v", err))
-	}
-	tokenWithSuffix := strings.TrimPrefix(out.String(), "FULLNODE_API_INFO=")
-	authToken := strings.Split(tokenWithSuffix, ":/")
-	return pack.NewString(fmt.Sprintf("Bearer %s", authToken[0]))
 }
 
 func getScript(pubKey pack.Bytes) (pack.Bytes, error) {

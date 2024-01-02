@@ -6,8 +6,8 @@ RUN apt-get install --yes curl
 # bitcoind PPA is unmaintained, so we download it from the bitcoincore website.
 # This can sometimes stall, which can be fixed by killing and restarting the
 # build.
-RUN curl https://bitcoincore.org/bin/bitcoin-core-23.0/bitcoin-23.0-x86_64-linux-gnu.tar.gz | tar -xz
-RUN mv ./bitcoin-23.0 /app
+RUN curl https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz | tar -xz
+RUN mv ./bitcoin-26.0 /app
 RUN chmod +x /app/bin/bitcoind
 RUN chmod +x /app/bin/bitcoin-cli
 

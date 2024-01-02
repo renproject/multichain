@@ -3,18 +3,16 @@ module github.com/renproject/multichain
 go 1.21
 
 require (
-	github.com/btcsuite/btcd v0.23.1
-	github.com/btcsuite/btcd/btcec/v2 v2.2.1
-	github.com/btcsuite/btcd/btcutil v1.1.1
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
+	github.com/btcsuite/btcd v0.24.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/btcsuite/btcd/btcutil v1.1.5
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0
 	github.com/dchest/blake2b v1.0.0
 	github.com/ethereum/go-ethereum v1.10.23
-	github.com/near/borsh-go v0.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
 	github.com/renproject/id v0.4.2
 	github.com/renproject/pack v0.2.5
-	github.com/renproject/solana-ffi v0.1.2
 	github.com/renproject/surge v1.2.6
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/zap v1.21.0
@@ -57,7 +55,5 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/renproject/solana-ffi => ./chain/solana/solana-ffi
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
