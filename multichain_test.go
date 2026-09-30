@@ -41,6 +41,7 @@ import (
 	"github.com/renproject/multichain/chain/ethereum"
 	"github.com/renproject/multichain/chain/fantom"
 	"github.com/renproject/multichain/chain/filecoin"
+	"github.com/renproject/multichain/chain/lbry"
 	"github.com/renproject/multichain/chain/polygon"
 	"github.com/renproject/multichain/chain/terra"
 	"github.com/renproject/multichain/chain/zcash"
@@ -64,6 +65,7 @@ var (
 	testAVAX  = flag.Bool("avax", false, "Pass this flag to test Avalanche")
 	testBSC   = flag.Bool("bsc", false, "Pass this flag to test Binance Smart Chain")
 	testFTM   = flag.Bool("ftm", false, "Pass this flag to test Fantom")
+	testLBC   = flag.Bool("lbc", false, "Pass this flag to test LBRY")
 	testLUNA  = flag.Bool("luna", false, "Pass this flag to test Terra")
 	testZEC   = flag.Bool("zec", false, "Pass this flag to test Zcash")
 )
@@ -92,6 +94,7 @@ var _ = Describe("Multichain", func() {
 	testFlags[multichain.Polygon] = *testMATIC
 	testFlags[multichain.Avalanche] = *testAVAX
 	testFlags[multichain.Fantom] = *testFTM
+	testFlags[multichain.LBRY] = *testLBC
 	testFlags[multichain.Terra] = *testLUNA
 	testFlags[multichain.Zcash] = *testZEC
 
@@ -1061,6 +1064,26 @@ var _ = Describe("Multichain", func() {
 				},
 				dogecoin.NewTxBuilder(&dogecoin.RegressionNetParams),
 				multichain.Dogecoin,
+			},
+			{
+				"LBRY_PK",
+				func(pkh []byte) (btcutil.Address, error) {
+					addr, err := btcutil.NewAddressPubKeyHash(pkh, &lbry.RegressionNetParams)
+					return addr, err
+				},
+				func(script []byte) (btcutil.Address, error) {
+					addr, err := btcutil.NewAddressScriptHash(script, &lbry.RegressionNetParams)
+					return addr, err
+				},
+				pack.NewString("http://0.0.0.0:29245"),
+				func(rpcURL pack.String, pkhAddr btcutil.Address) (multichain.UTXOClient, []multichain.UTXOutput, func(context.Context, pack.Bytes) (int64, error)) {
+					client := lbry.NewClient(lbry.DefaultClientOptions())
+					outputs, err := client.UnspentOutputs(ctx, 0, 999999999, multichain.Address(pkhAddr.EncodeAddress()))
+					Expect(err).NotTo(HaveOccurred())
+					return client, outputs, client.Confirmations
+				},
+				lbry.NewTxBuilder(&lbry.RegressionNetParams),
+				multichain.LBRY,
 			},
 			{
 				"ZCASH_PK",
